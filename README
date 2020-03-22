@@ -2,27 +2,33 @@ Modifications to SDR-SHELL v4.25
 
 Partial list:
 
-* Ability to capture / snapshot GUI automatically or on-demand, saved as PNG to configurable dirctory
+* Ability to capture / snapshot GUI automatically or on-demand, saved as PNG to configurable dirctory [main config: General]
 
-* Add hardware gain config option (calls setGain and sets input gain)
+* Add hardware gain config option (calls setGain and sets input gain) [main config: IQ]
 
 * Major changes to spectrum and spectrogram:
 
-  > Many color palette options (ie. WSJTX, FLDigi, GMFSK, Rocky, etc.)
-  > Waterfall scrolling, user can choose standard or Linrad style
-  > Spectrum dots, lines (connect dots), fill, peak markers, average line options
-  > Spectrum normal, average, and peak modes
-  > Waterfall normal and moving average modes
-  > Waterfall time markers
-  > Manual or automatic aperature settings for waterfall (ie. gain and contrast)  
+  > moved Spectrum above spectrogram
+  > Many color palette options (ie. WSJTX, FLDigi, GMFSK, Rocky, etc.) [main config: Spectrum]
+  > Spectrum dots, lines (connect dots), fill, peak markers, average line options [main config: Spectrum]
+  > Spectrum normal, average, and peak modes [button on bottom panel = SPEC NORM, etc.]
+  > Waterfall normal and moving average modes [button on bottom panel = WF NORM, etc.]
+  > Waterfall time markers [main config: Spectrum]
+  > Manual or automatic aperature settings for waterfall (ie. gain and contrast) [MAN/AUTO button bottom panel]  
+  > Numerous spectrogram scrolling options [main config: Spectrum]:
+    * Waterfall down / up
+    * Linrad style normal and reverse
+    * SDR-shell style normal or reverse
 
 * added AGC off back in, also sets output gain to compensate
 
 * date and time display under logo
 
-* added preamp and attenuator buttons (both configurable gain)
+* added preamp and attenuator buttons (both configurable gain - right click to set) [DSP: Gain]
 
-* added noise blanker #2 (ie. SDROM)
+* added noise blanker #2 (ie. SDROM) (right click NB2 to set) [DSP: NB}
+
+* added receive spot tone with user configurable parameters [main config: General]
 
 BUGS
 
@@ -31,13 +37,10 @@ BUGS
 TODO
 
 * fix zooming
-* add spot function
 * add user defined AGC w/ config parameters
-* add original SDR-shell style waterfall scrolling as an option
 
 ================================
 
 Get dttsp / sdr-core here:
 https://github.com/glenoverby/dttsp.git
-
 
