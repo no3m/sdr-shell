@@ -9,7 +9,7 @@ Partial list:
 * Major changes to spectrum and spectrogram:
 
   > Many color palette options (ie. WSJTX, FLDigi, GMFSK, Rocky, etc.)
-  > More standard waterfall scrolling, user can choose Linrad style also
+  > Waterfall scrolling, user can choose standard or Linrad style
   > Spectrum dots, lines (connect dots), fill, peak markers, average line options
   > Spectrum normal, average, and peak modes
   > Waterfall normal and moving average modes
@@ -33,6 +33,7 @@ TODO
 * fix zooming
 * add spot function
 * add user defined AGC w/ config parameters
+* add original SDR-shell style waterfall scrolling as an option
 
 ================================
 
