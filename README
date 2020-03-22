@@ -24,6 +24,17 @@ Partial list:
 
 * added noise blanker #2 (ie. SDROM)
 
+BUGS
+
+* zooming broke
+
+TODO
+
+* fix zooming
+* add spot function
+* add user defined AGC w/ config parameters
+
+================================
 
 Get dttsp / sdr-core here:
 https://github.com/glenoverby/dttsp.git
