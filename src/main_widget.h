@@ -294,7 +294,7 @@ class Main_Widget : public QWidget
 		QRadioButton *specLineFillButton;
         QRadioButton *SpectrogramFilterButton;
         QRadioButton *SpectrogramTimeMarkersButton;
-        QRadioButton *SpectrogramLinradScrollingButton;
+        QComboBox *cfgSpecScrolling;
         QRadioButton *cfgPalette_1, *cfgPalette_2;
         QComboBox *cfgPalette, *fftWindowBox;
         QRadioButton *specAvgLineButton;
@@ -326,6 +326,7 @@ class Main_Widget : public QWidget
         bool autoSpecAperture;
         bool specAvgLine;
         bool specLines;
+        int spectrumScrolling;
         bool windowResize;
         int sample_rate;
         bool spotTone;
@@ -587,7 +588,7 @@ class Main_Widget : public QWidget
         void updateCaptureDirectory ( );
 		void setLineFill ( );
         void setFilterLine ( );
-        void setSpecLinradScrolling ( );
+        void setSpectrumScrolling ( int );
         void setSpecTimeMarkers ( );
         void setSpectrumAvgLine ( );
         void setSpectrumLines ( );

@@ -51,8 +51,8 @@ void Main_Widget::init()
     setAttribute( Qt::WA_NoSystemBackground, true);
     setPalette(QPalette(QColor(0, 0, 0)));
     setAutoFillBackground(true);
-    setMinimumWidth( 1024 );
-    setMinimumHeight( 512 );
+    setMinimumWidth( 1060 );
+    setMinimumHeight( 400 );
     initConstants();
     slopeTuneOffset = 0;
 
@@ -545,7 +545,7 @@ void Main_Widget::init()
 
     // Spectrum Averaging
     QLabel *cfgSpecAvgInputLabel = new QLabel ( cfgSpecDisplay );
-    cfgSpecAvgInputLabel->setText ( "Spectrum Averaging" );
+    cfgSpecAvgInputLabel->setText ( "Spectrum Averaging: " );
     cfgSpecAvgInputLabel->setGeometry ( 10, 100, 160, 20 );
     cfgSpecAvgInputLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     cfgSpecAvgInput = new QSpinBox ( cfgSpecDisplay );
@@ -558,7 +558,7 @@ void Main_Widget::init()
 
     // Spectrum Scale
     QLabel *cfgSpecScaleLabel = new QLabel ( cfgSpecDisplay );
-    cfgSpecScaleLabel->setText ( "Spectrum Scale" );
+    cfgSpecScaleLabel->setText ( "Spectrum Scale: " );
     cfgSpecScaleLabel->setGeometry ( 10, 120, 160, 20 );
     cfgSpecScaleLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     cfgSpecLowInput = new QSpinBox ( cfgSpecDisplay );
@@ -594,19 +594,29 @@ void Main_Widget::init()
     connect( SpectrogramTimeMarkersButton, SIGNAL(clicked()),
              this, SLOT ( setSpecTimeMarkers () ) );
     if (specTimeMarkers) SpectrogramTimeMarkersButton->setChecked(true);
-    SpectrogramLinradScrollingButton = new QRadioButton( tr("Linrad Style Scrolling"), cfgSpectrogram);
-    SpectrogramLinradScrollingButton->setGeometry ( 10, 60, 200, 20 );
-    SpectrogramLinradScrollingButton->setAutoExclusive(false);
-    connect( SpectrogramLinradScrollingButton, SIGNAL(clicked()),
-             this, SLOT ( setSpecLinradScrolling () ) );
-    if (specLinradScrolling) SpectrogramLinradScrollingButton->setChecked(true);
+
+    // scrolling style
+    QLabel *cfgSpecScrollingLabel = new QLabel ( cfgSpectrogram );
+    cfgSpecScrollingLabel->setText ( "Scrolling Type: " );
+    cfgSpecScrollingLabel->setGeometry ( 10, 60, 160, 20 );
+    cfgSpecScrollingLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    cfgSpecScrolling = new QComboBox (cfgSpectrogram);
+    cfgSpecScrolling->insertItem(0, "Waterfall Down");
+    cfgSpecScrolling->insertItem(1, "Waterfall Up");
+    cfgSpecScrolling->insertItem(2, "Linrad");
+    cfgSpecScrolling->insertItem(3, "Linrad Rev");
+    cfgSpecScrolling->insertItem(4, "SDR-shell");
+    cfgSpecScrolling->insertItem(5, "SDR-shell Rev");
+    cfgSpecScrolling->setGeometry ( 180, 60, 150, 20 );
+    cfgSpecScrolling->setCurrentIndex(spectrumScrolling);
+    connect( cfgSpecScrolling, SIGNAL( activated ( int ) ), this, SLOT ( setSpectrumScrolling ( int ) ) );
 
     QLabel *cfgSpectrogramRefreshLabel = new QLabel ( cfgSpectrogram );
-    cfgSpectrogramRefreshLabel->setText ( "Waterfall Refresh" );
-    cfgSpectrogramRefreshLabel->setGeometry ( 10, 80, 130, 20 );
-    cfgSpectrogramRefreshLabel->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
+    cfgSpectrogramRefreshLabel->setText ( "Waterfall Refresh: " );
+    cfgSpectrogramRefreshLabel->setGeometry ( 10, 80, 160, 20 );
+    cfgSpectrogramRefreshLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     SpectrogramRefreshInput = new QSpinBox ( cfgSpectrogram );
-    SpectrogramRefreshInput->setGeometry ( 135, 80, 70, 20 );
+    SpectrogramRefreshInput->setGeometry ( 180, 80, 70, 20 );
     SpectrogramRefreshInput->setMinimum ( 1 );
     SpectrogramRefreshInput->setMaximum ( 30 );
     SpectrogramRefreshInput->setValue ( spectrogramRefresh );
@@ -1898,8 +1908,15 @@ void Main_Widget::init()
     //specLow = -140;
     //specHigh = -40;
     spectrogramRefreshCounter = 0;
-    if (specLinradScrolling)
-      spectrogramPos = 20;
+    if (spectrumScrolling == 2) {
+       spectrogramPos = 30;
+    } else if (spectrumScrolling == 1) {
+       spectrogramPos = spectrogram->height() -1;
+    } else if (spectrumScrolling == 3) {
+       spectrogramPos = spectrogram->height() - 31;
+    } else {
+       spectrogramPos = 0;
+    }
     capture_cntr = 0;
     spectrumMode = SPEC_NORM;
     waterfallMode = 0;
@@ -2394,8 +2411,8 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/specrefresh", 1 ).toInt();
     specPeakMarkers = settings->value(
                 "/sdr-shell/specpeak", false).toBool();
-    specLinradScrolling = settings->value(
-                "/sdr-shell/speclinradscrolling", false).toBool();
+    spectrumScrolling = settings->value(
+                "/sdr-shell/spectrumScrolling", 0).toInt();
     specTimeMarkers = settings->value(
                 "/sdr-shell/spectimemarkers", false).toBool();
     specLines = settings->value(
@@ -2604,7 +2621,7 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/speclines", specLines );
     settings->setValue ( "/sdr-shell/specavgline", specAvgLine );
     settings->setValue ( "/sdr-shell/specpeak", specPeakMarkers );
-    settings->setValue ( "/sdr-shell/speclinradscrolling", specLinradScrolling);
+    settings->setValue ( "/sdr-shell/spectrumScrolling", spectrumScrolling);
     settings->setValue ( "/sdr-shell/spectimemarkers", specTimeMarkers);
     settings->setValue ( "/sdr-shell/specpalette", spectrumPalette);
     settings->setValue ( "/sdr-shell/capture_dir", capture_directory );
@@ -3568,6 +3585,16 @@ void Main_Widget::drawSpectrogram( int y )
         //p.eraseRect( QRect(spectrogram->rect().topLeft(),spectrogram->rect().bottomRight()));
         windowResize = false;
         capture_cntr = 0;
+        if (spectrumScrolling == 2) {
+          spectrogramPos = 30;
+        } else if (spectrumScrolling == 1) {
+          spectrogramPos = spectrogram->height() - 1;
+        } else if (spectrumScrolling == 3) {
+          spectrogramPos = spectrogram->height() - 31;
+        } else {
+          spectrogramPos = 0;
+        }
+        //printf("spectrogramPos: %d\n", spectrogramPos);
     }
 
     spectrogramRefreshCounter++;
@@ -3644,30 +3671,56 @@ void Main_Widget::drawSpectrogram( int y )
         }
 
         //////////////////////////////////////////////// Now, draw this spectrum line
-
-        //// NO3M - 2014-05-26 //// upward scrolling waterfall
-        //this->scroll(0,-1,QRect(0,TOPFRM_V,spectrum_width,spectrogram->height()));
-        if (!specLinradScrolling)
-          this->scroll(0,1,QRect(0,TOPFRM_V + SPECFRM_V + PBSFRM_V,spectrum_width,spectrogram->height()));
-        //this->scroll(0, 1, QRect(spectrogram->rect().topLeft(),spectrogram->rect().bottomRight()));
         QPainter p;
         p.begin( this );
         p.scale((1.0 / hScale), 1.0);
-        //y = (y+1) % spectrogram->height();
-        //p.drawImage( 0, TOPFRM_V + spectrogram->height() - 1, spectrogramLine );
-        //p.drawImage( 0, TOPFRM_V+SPECFRM_V+PBSFRM_V, spectrogramLine );
-        p.drawImage( 0, TOPFRM_V+SPECFRM_V+PBSFRM_V + spectrogramPos, spectrogramLine );
-        //p.drawImage( spectrogram->rect().topLeft(), spectrogramLine );
 
-        if (specLinradScrolling) {
+        //p.setPen( Qt::red );
+        //p.drawLine(0, TOPFRM_V + SPECFRM_V + PBSFRM_V + spectrogram->height(), spectrum_width, TOPFRM_V + SPECFRM_V + PBSFRM_V + spectrogram->height());
+
+        //// NO3M
+        if (spectrumScrolling == 0) { // waterfall
+          this->scroll(0,1,QRect(0,TOPFRM_V + SPECFRM_V + PBSFRM_V,spectrum_width,spectrogram->height()));
+        } else if (spectrumScrolling == 1) { // waterfall reversed
+          this->scroll(0,-1,QRect(0,TOPFRM_V + SPECFRM_V + PBSFRM_V,spectrum_width,spectrogram->height()));
+        }
+        p.drawImage( 0, TOPFRM_V+SPECFRM_V+PBSFRM_V + spectrogramPos, spectrogramLine );
+
+        if (spectrumScrolling == 2) { // linrad
            spectrogramPos--;
            if (spectrogramPos < 0) {
-              this->scroll(0,21,QRect(0,TOPFRM_V + SPECFRM_V + PBSFRM_V,spectrum_width,spectrogram->height()));
-              p.eraseRect( QRect(0,TOPFRM_V+SPECFRM_V+PBSFRM_V,spectrum_width,21));
-              spectrogramPos = 20;
+              this->scroll(0,31,QRect(0,TOPFRM_V + SPECFRM_V + PBSFRM_V,spectrum_width,spectrogram->height()));
+              p.eraseRect( QRect(0,TOPFRM_V+SPECFRM_V+PBSFRM_V,spectrum_width,31));
+              spectrogramPos = 30;
            }
         }
-        // time markers
+        if (spectrumScrolling == 3) { // linrad reversed
+           spectrogramPos++;
+           if (spectrogramPos > spectrogram->height()-1) {
+              this->scroll(0,-31,QRect(0,TOPFRM_V + SPECFRM_V + PBSFRM_V,spectrum_width,spectrogram->height()));
+              p.eraseRect( QRect(0,TOPFRM_V+SPECFRM_V+PBSFRM_V + spectrogram->height() - 31,spectrum_width,31));
+              spectrogramPos = spectrogram->height()-31;
+           }
+        }
+        if (spectrumScrolling == 4) { //sdr-shell
+           spectrogramPos++;
+           p.setPen( Qt::white );
+           if (spectrogramPos > spectrogram->height()-1)
+              spectrogramPos = 0;
+           else 
+              p.drawLine(0, TOPFRM_V + SPECFRM_V + PBSFRM_V + spectrogramPos, spectrum_width, TOPFRM_V + SPECFRM_V + PBSFRM_V + spectrogramPos);
+        }
+        if (spectrumScrolling == 5) { //sdr-shell reversed
+           spectrogramPos--;
+           p.setPen( Qt::white );
+           if (spectrogramPos < 0)
+              spectrogramPos = spectrogram->height()-1;
+           else 
+              p.drawLine(0, TOPFRM_V + SPECFRM_V + PBSFRM_V + spectrogramPos, spectrum_width, TOPFRM_V + SPECFRM_V + PBSFRM_V + spectrogramPos);
+        }
+
+
+        // time markers // fix for sdr-shell and linrad styled scrolling
         int step;
         int span = ( ( ( ( spectrogramRefresh * FFT_TIMER ) * spectrogram->height() ) / 2 ) / 1000 );
         if (span < 10)
@@ -3681,7 +3734,7 @@ void Main_Widget::drawSpectrogram( int y )
         else
             step = 60;
 
-        if (specTimeMarkers && !specLinradScrolling) {
+        if (specTimeMarkers && spectrumScrolling == 0) {
             QTime t;
             t.start();
             if (t.second() % step == 0) {
@@ -5217,13 +5270,12 @@ void Main_Widget::setSpectrumPeakMarkers ( )
         specPeakMarkers = 0;
 }
 
-void Main_Widget::setSpecLinradScrolling ( )
+void Main_Widget::setSpectrumScrolling ( int value )
 {
-    if ( SpectrogramLinradScrollingButton->isChecked() )
-        specLinradScrolling = true;
-    else {
-        specLinradScrolling = false;
-        spectrogramPos = 0;
+    if (spectrumScrolling != value) {
+      spectrumScrolling = value;
+      windowResize = true;
+      capture_cntr = 0;
     }
 }
 
