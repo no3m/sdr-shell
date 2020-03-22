@@ -299,7 +299,7 @@ void Main_Widget::init()
 
     QGroupBox *cfgCaptureBox = new QGroupBox ( cfgFrame1 );
     cfgCaptureBox->setTitle ( "Capture" );
-    cfgCaptureBox->setGeometry( 5, 300, 330, 90 );
+    cfgCaptureBox->setGeometry( 5, 300, 330, 70 );
     QLabel *captureDirectoryLabel = new QLabel ( cfgCaptureBox );
     captureDirectoryLabel->setText ( "Directory: " );
     captureDirectoryLabel->setGeometry ( 10, 18, 80, 20 );
@@ -333,6 +333,37 @@ void Main_Widget::init()
     //cfgCaptureAutoSec->setText ( "minutes" );
     //cfgCaptureAutoSec->setGeometry ( 115, 60, 80, 20 );
     //cfgCaptureAutoSec->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
+
+    QGroupBox *cfgSpotting = new QGroupBox ( cfgFrame1 );
+    cfgSpotting->setTitle ( "RX Spotting Tone" );
+    cfgSpotting->setGeometry( 5, 380, 330, 60 );
+    QLabel *cfgSpotFreqLabel = new QLabel ( cfgSpotting );
+    cfgSpotFreqLabel->setText ( "Freq(Hz): " );
+    cfgSpotFreqLabel->setGeometry ( 10, 18, 70, 20 );
+    cfgSpotFreqLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    cfgSpotFreqInput = new QDoubleSpinBox ( cfgSpotting );
+    cfgSpotFreqInput->setGeometry ( 80, 18, 70, 20 );
+    cfgSpotFreqInput->setMinimum( 10 );
+    cfgSpotFreqInput->setMaximum( 5000 );
+    cfgSpotFreqInput->setDecimals(1);
+    cfgSpotFreqInput->setValue ( spotFreq );
+    connect ( cfgSpotFreqInput, SIGNAL ( valueChanged ( double ) ),
+              this, SLOT (  updateSpotFreq ( double ) ) );
+    QLabel *cfgSpotAmplLabel = new QLabel ( cfgSpotting );
+    cfgSpotAmplLabel->setText ( "Amp(dB): " );
+    cfgSpotAmplLabel->setGeometry ( 10, 40, 70, 20 );
+    cfgSpotAmplLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    cfgSpotAmplInput = new QDoubleSpinBox ( cfgSpotting );
+    cfgSpotAmplInput->setGeometry ( 80, 40, 70, 20 );
+    cfgSpotAmplInput->setMinimum( -30 );
+    cfgSpotAmplInput->setMaximum( 10 );
+    cfgSpotAmplInput->setDecimals(1);
+    cfgSpotAmplInput->setValue ( spotAmpl );
+    connect ( cfgSpotAmplInput, SIGNAL ( valueChanged ( double ) ),
+              this, SLOT (  updateSpotAmpl ( double ) ) );
+
+
+
 
     // IQ Phase Calibration
     QGroupBox *cfgIQCal = new QGroupBox ( cfgFrame2 );
@@ -1305,6 +1336,16 @@ void Main_Widget::init()
     connect ( SPEC_label, SIGNAL ( mouseRelease ( int ) ),
               this, SLOT ( toggle_SPEC ( int ) ) );
 
+    QPixmap spot_pix ( spot_xpm );
+    spotTone_label = new Varilabel ( swFrame );
+    spotTone_label->setLabel( 0 );
+    spotTone_label->setPixmap ( spot_pix );
+    spotTone_label->setGeometry ( 93, 17, 27, 11 );
+    connect ( spotTone_label, SIGNAL ( mouseRelease ( int ) ),
+              this, SLOT ( toggle_spotTone ( int ) ) );
+    connect ( spotTone_label, SIGNAL ( mouseRelease2 ( int ) ),
+              this, SLOT ( setCfg ( int ) ) );
+
     // -----------------------------------------------------------------------
     // Band Frame
     QFrame *bFrame = new QFrame ( this );
@@ -1866,6 +1907,8 @@ void Main_Widget::init()
     if (enableTransmit) {
         TXoff();
     }
+    spotTone = 0;
+    setSpotTone ( );
 
     QTimer *cpuTimer = new QTimer ( this );
     connect ( cpuTimer, SIGNAL ( timeout() ), this, SLOT ( processorLoad() ) );
@@ -2304,6 +2347,10 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/my_lat", "0" ).toDouble();
     my_lon = settings->value (
                 "/sdr-shell/my_lon", "0" ).toDouble();
+    spotAmpl = settings->value (
+                "/sdr-shell/spotAmpl", -10 ).toDouble();
+    spotFreq = settings->value (
+                "/sdr-shell/spotFreq", 500 ).toDouble();
     font1PointSize = settings->value(
                 "/sdr-shell/font1PointSize", 8 ).toInt();
     polyphaseFFT = settings->value(
@@ -2400,7 +2447,7 @@ void Main_Widget::loadSettings()
     SAM_filter_l = settings->value(
                 "/sdr-shell/SAM_filter_l", -4000 ).toInt();
     SAM_filter_h = settings->value(
-                "/sdr-shell/SAM_filter_h", "4000" ).toInt();
+                "/sdr-shell/SAM_filter_h", 4000 ).toInt();
     FMN_filter_l = settings->value(
                 "/sdr-shell/FMN_filter_l", -4000 ).toInt();
     FMN_filter_h = settings->value(
@@ -2410,7 +2457,7 @@ void Main_Widget::loadSettings()
     AM_filter_h = settings->value(
                 "/sdr-shell/AM_filter_h", 2400 ).toInt();
     useHamlib = settings->value (
-                "/sdr-shell/useHamlib", "0" ).toInt();
+                "/sdr-shell/useHamlib", 0 ).toInt();
     rigString = settings->value (
                 "/sdr-shell/hamlib_rig", "1901" ).toString();
     rig = rigString.toInt();
@@ -2540,6 +2587,8 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/filterLine", filterLine );
     settings->setValue ( "/sdr-shell/my_lat", my_lat );
     settings->setValue ( "/sdr-shell/my_lon", my_lon );
+    settings->setValue ( "/sdr-shell/spotAmpl", spotAmpl );
+    settings->setValue ( "/sdr-shell/spotFreq", spotFreq );
     settings->setValue ( "/sdr-shell/font1PointSize", font1PointSize );
     settings->setValue ( "/sdr-shell/polyphaseFFT", polyphaseFFT );
     settings->setValue ( "/sdr-shell/fftWindow", fftWindow );
@@ -2659,6 +2708,8 @@ void Main_Widget::saveSettings()
 void Main_Widget::finish()
 {
     saveSettings();
+    spotTone = 0;
+    setSpotTone ( );
     //
     // terminate the sdr-core
     //
@@ -4299,7 +4350,6 @@ void Main_Widget::plotSpectrum( int y )
     p.setPen(QColor(255,0,0,255));
     p.drawLine( spectrogram->width() / 2 - 1, TOPFRM_V + PBSFRM_V, spectrogram->width() / 2 - 1, TOPFRM_V + PBSFRM_V + SPECFRM_V -1);
 
-/*
 
     ////////////////////////////////////////////////// Draw the color aperture lines
     QPen pen( Qt::DotLine );
@@ -4317,7 +4367,6 @@ void Main_Widget::plotSpectrum( int y )
     p.drawLine( 0, qBound(TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V - ((specApertureHigh-140) - specLow) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1),
                 spectrum_width, qBound(TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V - ((specApertureHigh-140) - specLow) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1));
 
-*/
 
 
     p.end();
@@ -5421,6 +5470,49 @@ void Main_Widget::setAtt_Gain ( int value )
     if(verbose) fprintf ( stderr, "attGain spinbox changed to %d\n",value );
     attGain = value;
     setRX_gain();
+}
+
+void Main_Widget::updateSpotFreq ( double value )
+{
+    spotFreq = value;
+    setSpotToneVals ( );
+}
+
+void Main_Widget::updateSpotAmpl ( double value )
+{
+    spotAmpl = value;
+    setSpotToneVals ( );
+}
+
+void Main_Widget::setSpotToneVals ( )
+{
+
+    pCmd->sendCommand ("setSpotToneVals %f %f 5 5\n", spotAmpl, spotFreq );
+    if(verbose) fprintf ( stderr, "setSpotToneVals %f %f 5 5\n", spotAmpl, spotFreq );
+
+    if (spotTone) { // restart tone after val changes
+        pCmd->sendCommand ("setSpotTone 0\n");
+        if(verbose) fprintf ( stderr, "setSpotTone 0\n");
+        pCmd->sendCommand ("setSpotTone 1\n");
+        if(verbose) fprintf ( stderr, "setSpotTone 1\n");
+    }
+}
+
+void Main_Widget::toggle_spotTone ( int )
+{
+    spotTone = !spotTone;
+    setSpotTone ( );
+}
+
+void Main_Widget::setSpotTone ( )
+{
+    pCmd->sendCommand ("setSpotTone %d\n", spotTone);
+    if(verbose) fprintf ( stderr, "setSpotTone %d\n", spotTone);
+
+    if (spotTone) spotTone_label->setPalette( QColor( 200, 0, 0 ) );
+    else spotTone_label->setPalette( QColor( 0, 0, 0 ) );
+    spotTone_label->setAutoFillBackground( true );
+
 }
 
 void Main_Widget::setIF ( bool value )

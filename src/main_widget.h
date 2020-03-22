@@ -121,6 +121,7 @@ class Main_Widget : public QWidget
 		QSpinBox *cfgIQPhaseInput, *cfgIQGainInput, *cfgUSBOffsetInput;
 		QSpinBox *cfgTxIQPhaseInput, *cfgTxIQGainInput;
                 QDoubleSpinBox *cfgHwGain;
+                QDoubleSpinBox *cfgSpotAmplInput, *cfgSpotFreqInput;
 		QSpinBox *cfgTxMicGainInput, *cfgTxOutputGainInput;
 		QSpinBox *specCalSpinBox, *metrCalSpinBox, *cfgLSBOffsetInput;
 		QSpinBox *cfgSlopeLowOffsetInput, *cfgSlopeHighOffsetInput;
@@ -186,6 +187,7 @@ class Main_Widget : public QWidget
 		Varilabel *SPLIT_label;
                 Varilabel *preamp_label;
                 Varilabel *att_label;
+                Varilabel *spotTone_label;
 		QLabel *RX_label;
 		QLabel *MHz_label;
 
@@ -326,6 +328,7 @@ class Main_Widget : public QWidget
         bool specLines;
         bool windowResize;
         int sample_rate;
+        bool spotTone;
 		int tuneCenter;		// where to put tune center when using usbsoftrock
 		int spec_width;		// spectrum display width
 		int rx_delta_f;		// relative to center frequeny
@@ -354,6 +357,7 @@ class Main_Widget : public QWidget
 		float SDROM_Threshold;
                 float preampGain;
                 float attGain;
+                float spotFreq, spotAmpl;
         int NR_state;
 		int ANF_state;
 		int NB_state;
@@ -532,6 +536,11 @@ class Main_Widget : public QWidget
         void toggle_CAmode ( int );
         void screenshot ( int );
         void autoCapture ( );
+        void updateSpotFreq ( double );
+        void updateSpotAmpl ( double );
+        void setSpotToneVals ( );
+        void toggle_spotTone ( int );
+        void setSpotTone ( );
 
 		void setFilter_l ( int );
 		void setFilter_h ( int );
