@@ -347,8 +347,8 @@ void Main_Widget::init()
 
     cfgIQPhaseInput = new QSpinBox ( cfgIQCal );
     cfgIQPhaseInput->setGeometry ( 80, 18, 70, 20 );
-    cfgIQPhaseInput->setMinimum( -1000 );
-    cfgIQPhaseInput->setMaximum( 1000 );
+    cfgIQPhaseInput->setMinimum( -400 );
+    cfgIQPhaseInput->setMaximum( 400 );
     cfgIQPhaseInput->setValue ( iqPhase );
     connect ( cfgIQPhaseInput, SIGNAL ( valueChanged ( int ) ),
               this, SLOT ( updateIQPhase ( int ) ) );
@@ -362,8 +362,8 @@ void Main_Widget::init()
 
     cfgIQGainInput = new QSpinBox ( cfgIQCal );
     cfgIQGainInput->setGeometry ( 245, 18, 70, 20 );
-    cfgIQGainInput->setMinimum( -1000 );
-    cfgIQGainInput->setMaximum( 1000 );
+    cfgIQGainInput->setMinimum( -500 );
+    cfgIQGainInput->setMaximum( 500 );
     cfgIQGainInput->setValue ( iqGain );
     connect ( cfgIQGainInput, SIGNAL ( valueChanged ( int ) ),
               this, SLOT ( updateIQGain ( int ) ) );
@@ -381,8 +381,8 @@ void Main_Widget::init()
 
     cfgTxIQPhaseInput = new QSpinBox ( cfgTxIQCal );
     cfgTxIQPhaseInput->setGeometry ( 80, 18, 70, 20 );
-    cfgTxIQPhaseInput->setMinimum ( -1000 );
-    cfgTxIQPhaseInput->setMaximum ( 1000 );
+    cfgTxIQPhaseInput->setMinimum ( -400 );
+    cfgTxIQPhaseInput->setMaximum ( 400 );
     cfgTxIQPhaseInput->setValue ( txIQPhase );
     connect ( cfgTxIQPhaseInput, SIGNAL ( valueChanged ( int ) ),
               this, SLOT ( updateTxIQPhase ( int ) ) );
@@ -396,8 +396,8 @@ void Main_Widget::init()
 
     cfgTxIQGainInput = new QSpinBox ( cfgTxIQCal );
     cfgTxIQGainInput->setGeometry ( 245, 18, 70, 20 );
-    cfgTxIQGainInput->setMinimum ( -1000 );
-    cfgTxIQGainInput->setMaximum ( 1000 );
+    cfgTxIQGainInput->setMinimum ( -500 );
+    cfgTxIQGainInput->setMaximum ( 500 );
     cfgTxIQGainInput->setValue ( txIQGain );
     connect ( cfgTxIQGainInput, SIGNAL ( valueChanged ( int ) ),
               this, SLOT ( updateTxIQGain ( int ) ) );
@@ -1009,8 +1009,8 @@ void Main_Widget::init()
     NB_ThresholdLabel->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
     NB_ThresholdSpinBox = new QDoubleSpinBox ( nbvaluesBox );
     NB_ThresholdSpinBox->setGeometry (260, 18, 70, 20 );
-    NB_ThresholdSpinBox->setMinimum( 0 );
-    NB_ThresholdSpinBox->setMaximum( 255 );
+    NB_ThresholdSpinBox->setMinimum( 1.0 );
+    NB_ThresholdSpinBox->setMaximum( 20.0 );
     NB_ThresholdSpinBox->setSingleStep( 0.1);
     NB_ThresholdSpinBox->setValue ( ( double ) NB_Threshold );
     connect ( NB_ThresholdSpinBox, SIGNAL ( valueChanged ( double ) ),
@@ -1024,8 +1024,8 @@ void Main_Widget::init()
     SDROM_ThresholdLabel->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
     SDROM_ThresholdSpinBox = new QDoubleSpinBox ( sdromvaluesBox );
     SDROM_ThresholdSpinBox->setGeometry (260, 18, 70, 20 );
-    SDROM_ThresholdSpinBox->setMinimum( 0 );
-    SDROM_ThresholdSpinBox->setMaximum( 255 );
+    SDROM_ThresholdSpinBox->setMinimum( 0.0 );
+    SDROM_ThresholdSpinBox->setMaximum( 15.0 );
     SDROM_ThresholdSpinBox->setSingleStep( 0.1);
     SDROM_ThresholdSpinBox->setValue ( ( double ) SDROM_Threshold );
     connect ( SDROM_ThresholdSpinBox, SIGNAL ( valueChanged ( double ) ),
@@ -1675,6 +1675,7 @@ void Main_Widget::init()
     subFrame->setGeometry ( 655, 0, 33, 32 ); // RIT, SPLT
     rit->setGeometry ( 689, 1, 130, 30 ); // RIT/SPLT value
 
+
     logoFrame = new QFrame ( ctlFrame );
     logoFrame->setPalette( QColor( 0, 0, 0 ) );
     //logoFrame->setPalette( QColor( 0, 0, 255 ) );
@@ -1686,6 +1687,7 @@ void Main_Widget::init()
     logoLabel->setPalette( QColor( 0, 0, 0 ) );
     //logoLabel->setPalette( QColor( 0, 255, 0 ) );
     logoLabel->setAutoFillBackground(true);
+
 
     // -----------------------------------------------------------------------
     // Arbitrary SSP commands
@@ -2053,9 +2055,9 @@ void Main_Widget::updateLayout()
                 width(),
                 TOPFRM_V );
     logoFrame->setGeometry (
-                755,
+                ctlFrame->width()-100,
                 1,
-                ctlFrame->width() - 756,
+                100,
                 30 );
     logoLabel->setGeometry (
                 logoFrame->width() - 89,
@@ -4766,6 +4768,8 @@ void Main_Widget::set_RIT ( int state )
         set_SPLIT( 0 );
         tx_f = rx_f;
         tx_delta_f = rx_delta_f;
+        tx_f_string.sprintf ("%11.0lf", ( double ) ( tx_delta_f - rx_delta_f ) );
+        rit->setText( tx_f_string );
     } else {
         RIT_label->setPalette(QColor(0, 0, 0) );
         rit->setText( "" );
