@@ -1,0 +1,27 @@
+Modifications to SDR-SHELL v4.25
+
+Partial list:
+
+* Ability to capture / snapshot GUI automatically or on-demand, saved as PNG to configurable dirctory
+
+* Add hardware gain config option (calls setGain and sets input gain)
+
+* Major changes to spectrum and spectrogram:
+
+  > Many color palette options (ie. WSJTX, FLDigi, GMFSK, Rocky, etc.)
+  > More standard waterfall scrolling, user can choose Linrad style also
+  > Spectrum dots, lines (connect dots), fill, peak markers, average line options
+  > Spectrum normal, average, and peak modes
+  > Waterfall normal and moving average modes
+  > Waterfall time markers
+  > Manual or automatic aperature settings for waterfall (ie. gain and contrast)  
+
+* added AGC off back in, also sets output gain to compensate
+
+* date and time display under logo
+
+* added preamp and attenuator buttons (both configurable gain)
+
+* added noise blanker #2 (ie. SDROM)
+
+
