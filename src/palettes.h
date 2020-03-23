@@ -1371,6 +1371,7 @@ static unsigned long rockyPalette[256] =
     0x00FBFBE7,0x00FBFBEB,0x00FCFCEE,0x00FCFCF1,0x00FDFDF5,0x00FDFDF8,0x00FEFEFB,0x00FFFFFF
 };
 
+/*
 static unsigned long testPalette[256] =
 {
 
@@ -1407,6 +1408,7 @@ static unsigned long testPalette[256] =
     0x00FFFFFF,0x00FFFFFF,0x00FFFFFF,0x00FFFFFF,0x00FFFFFF,0x00FFFFFF,0x00FFFFFF,0x00FFFFFF,
     0x00FFFFFF,0x00FFFFFF,0x00FFFFFF,0x00FFFFFF,0x00FFFFFF,0x00FFFFFF,0x00FFFFFF,0x00FFFFFF
 };
+*/
 
 // Additional palettes from Fldigi
 /*

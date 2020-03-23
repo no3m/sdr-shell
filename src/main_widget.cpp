@@ -1,12 +1,10 @@
 #include <sys/types.h>
 #include <unistd.h>
-
 #include "main_widget.h"
 #include "switches.h"
 #include "palettes.h"
 #include "modes.h"
 #include "agc.h"
-
 #include "meter1.xpm"
 #include "mhz.xpm"
 #include "rx.xpm"
@@ -14,8 +12,6 @@
 #include "logo.xpm"
 #include "text.h"
 #include "dttsp.h"
-
-/* formatting note: in vi :set tab=4 */
 
 static int old_PTT = 1;		// start with checking PTT, and do a reset to Rx
 int CW_tone = 700;		// default CW tone 700 Hz
@@ -37,27 +33,30 @@ Main_Widget::Main_Widget()
     {
         sample_rate = atoi ( ep );
         if(verbose) fprintf ( stderr, "sample_rate = %d\n", sample_rate );
-        //tuneCenter = -sample_rate / 4;
+        //tuneCenter = -sample_rate / 4; // no3m - set in loadSettings()
     }
 }
 void Main_Widget::init()
 {
     QString version;
     setFocusPolicy ( Qt::TabFocus );
-    setMinimumWidth ( 1024 );
-    setMinimumHeight ( 512 );
+    setMinimumWidth ( 1060 ); // no3m
+    setMinimumHeight ( 400 ); // no3m
 
     //setAttribute( Qt::WA_OpaquePaintEvent, true);
     setAttribute( Qt::WA_NoSystemBackground, true);
     setPalette(QPalette(QColor(0, 0, 0)));
     setAutoFillBackground(true);
-    setMinimumWidth( 1060 );
-    setMinimumHeight( 400 );
+    setMinimumWidth( 1060 ); // no3m
+    setMinimumHeight( 400 ); // no3m
     initConstants();
     slopeTuneOffset = 0;
 
     loadSettings();
+
+    // no3m
     initSpectrumPalette();
+
     if (sample_rate == 0) {
         fprintf ( stderr, "Unable to get SDR_DEFRATE environment variable.\n"
                           "Use the -f or --sample-rate option or\n"
@@ -65,7 +64,7 @@ void Main_Widget::init()
                           "bash$ export SDR_DEFRATE=48000\n" );
         exit ( 1 );
     }
-    bin_bw = sample_rate / 4096.0;
+    bin_bw = (float)sample_rate / (float)DEFSPEC;
     setupSDR();
 
     version.sprintf("%5.2f", VERSION);
@@ -138,6 +137,7 @@ void Main_Widget::init()
               this, SLOT ( spectrogramClicked ( int ) ) );
     connect ( spectrumFrame, SIGNAL ( tune2 ( int ) ),
               this, SLOT ( tune ( int ) ) );
+    // no3m
     connect ( spectrumFrame, SIGNAL ( tune3 ( int ) ),
               this, SLOT ( tunewheel ( int ) ) );
 
@@ -160,6 +160,8 @@ void Main_Widget::init()
 
     // -----------------------------------------------------------------------
     // Configuration Frame
+
+    // no3m - keep popup windows on same monitor
     QDesktopWidget *desktop = QApplication::desktop();
     //QRect geometry = desktop->screenGeometry(desktop->primaryScreen());
     QRect geometry = desktop->screenGeometry(desktop->screenNumber(this));
@@ -297,6 +299,7 @@ void Main_Widget::init()
     connect ( metrCalSpinBox, SIGNAL ( valueChanged ( int ) ),
               this, SLOT ( calibrateMetr ( int ) ) );
 
+    // no3m
     QGroupBox *cfgCaptureBox = new QGroupBox ( cfgFrame1 );
     cfgCaptureBox->setTitle ( "Capture" );
     cfgCaptureBox->setGeometry( 5, 300, 330, 70 );
@@ -321,19 +324,8 @@ void Main_Widget::init()
               this, SLOT ( updateCaptureAuto ( bool ) ) );
     if( capture_auto )
         cfgCaptureAuto->setChecked (true);
-    //capture_interval
-    //cfgCaptureAutoSpinBox = new QSpinBox ( cfgCaptureBox );
-    //cfgCaptureAutoSpinBox->setGeometry ( 40, 60, 70, 20 );
-    //cfgCaptureAutoSpinBox->setMinimum( 1 );
-    //cfgCaptureAutoSpinBox->setMaximum( 15 );
-    //cfgCaptureAutoSpinBox->setValue (capture_interval);
-    //connect ( cfgCaptureAutoSpinBox, SIGNAL ( valueChanged ( int ) ),
-    //          this, SLOT ( updateCaptureAutoInterval( int ) ) );
-    //QLabel *cfgCaptureAutoSec = new QLabel ( cfgCaptureBox );
-    //cfgCaptureAutoSec->setText ( "minutes" );
-    //cfgCaptureAutoSec->setGeometry ( 115, 60, 80, 20 );
-    //cfgCaptureAutoSec->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
 
+    // no3m
     QGroupBox *cfgSpotting = new QGroupBox ( cfgFrame1 );
     cfgSpotting->setTitle ( "RX Spotting Tone" );
     cfgSpotting->setGeometry( 5, 380, 330, 60 );
@@ -361,9 +353,6 @@ void Main_Widget::init()
     cfgSpotAmplInput->setValue ( spotAmpl );
     connect ( cfgSpotAmplInput, SIGNAL ( valueChanged ( double ) ),
               this, SLOT (  updateSpotAmpl ( double ) ) );
-
-
-
 
     // IQ Phase Calibration
     QGroupBox *cfgIQCal = new QGroupBox ( cfgFrame2 );
@@ -433,6 +422,7 @@ void Main_Widget::init()
     connect ( cfgTxIQGainInput, SIGNAL ( valueChanged ( int ) ),
               this, SLOT ( updateTxIQGain ( int ) ) );
 
+    // no3m
     QGroupBox *cfgHwCal = new QGroupBox ( cfgFrame2 );
     cfgHwCal->setTitle ( "Hardware Calibration" );
     cfgHwCal->setGeometry( 5, 95, 330, 45 );
@@ -511,7 +501,7 @@ void Main_Widget::init()
     cfgSpecDisplay->setTitle("Spectrum Display");
     cfgSpecDisplay->setGeometry( 5, 150, 330, 140 );
 
-    // SpecLineFill
+    // no3m - SpecLineFill
     specLineFillButton = new QRadioButton( tr("Fill Spectrum Line"), cfgSpecDisplay);
     specLineFillButton->setGeometry ( 10, 20, 200, 20 );
     specLineFillButton->setAutoExclusive(false);
@@ -519,7 +509,7 @@ void Main_Widget::init()
              this, SLOT ( setLineFill () ) );
     if (specLineFill) specLineFillButton->setChecked(true);
 
-    // Spectrum Average Line
+    // no3m - Spectrum Average Line
     specLinesButton = new QRadioButton( tr("Connect Spectrum Points"), cfgSpecDisplay);
     specLinesButton->setGeometry ( 10, 40, 200, 20 );
     specLinesButton->setAutoExclusive(false);
@@ -527,7 +517,7 @@ void Main_Widget::init()
              this, SLOT ( setSpectrumLines () ) );
     if (specLines) specLinesButton->setChecked(true);
 
-    // Spectrum Average Line
+    // no3m - Spectrum Average Line
     specAvgLineButton = new QRadioButton( tr("Spectrum Average Line"), cfgSpecDisplay);
     specAvgLineButton->setGeometry ( 10, 60, 200, 20 );
     specAvgLineButton->setAutoExclusive(false);
@@ -535,7 +525,7 @@ void Main_Widget::init()
              this, SLOT ( setSpectrumAvgLine () ) );
     if (specAvgLine) specAvgLineButton->setChecked(true);
 
-    // Spectrum Peak markers
+    // no3m - Spectrum Peak markers
     specPeakMarkersButton = new QRadioButton( tr("Peak Markers"), cfgSpecDisplay);
     specPeakMarkersButton->setGeometry ( 10, 80, 200, 20 );
     specPeakMarkersButton->setAutoExclusive(false);
@@ -623,6 +613,7 @@ void Main_Widget::init()
     connect( SpectrogramRefreshInput, SIGNAL( valueChanged ( int ) ),
              this, SLOT ( updateSpectrogramRefresh ( int ) ) );
 
+    // no3m
     QGroupBox *cfgColorPalette = new QGroupBox( cfgFrame3 );
     cfgColorPalette->setTitle("Color Palette");
     cfgColorPalette->setGeometry( 5, 400, 330, 40 );
@@ -898,23 +889,14 @@ void Main_Widget::init()
     // -----------------------------------------------------------------------
     // DSP frame
     dspFrame = new QFrame();
-    //dspFrame = new QFrame(this, Qt::Widget);
-    //dspFrame->setWindowFlags( Qt::Tool
-    //                               //  | Qt::CustomizeWindowHint
-    //                                 | Qt::WindowTitleHint
-    //                                 | Qt::WindowCloseButtonHint );
     dspFrame->setGeometry ( 50, 50, 380, 250 );
     dspFrame->setMinimumWidth ( 380 );
     dspFrame->setMaximumWidth ( 380 );
     dspFrame->setMinimumHeight ( 250 );
     dspFrame->setMaximumHeight ( 250 );
     dspFrame->setWindowTitle("SDR-Shell : DSP ");
-    //dspFrame->move(QCursor::pos());
-    //dspFrame->move(geometry.topLeft()); // top corner
-    //dspFrame->move(geometry.x()+50, geometry.y()+50);  // top corner, moved to avoid taskbar/panel
+    // no3m
     dspFrame->move(geometry.x() + geometry.width()/2 - dspFrame->width()/2, geometry.y() + geometry.height()/2 - dspFrame->height()/2);
-    //dspFrame->move(geometry.center());
-
     //QFrame *dspFrame1 = new QFrame( dspFrame );
     //QFrame *dspFrame2 = new QFrame( dspFrame );
     //QFrame *dspFrame3 = new QFrame( dspFrame );
@@ -1872,9 +1854,6 @@ void Main_Widget::init()
     set_NR ( NR_state );
     set_ANF ( ANF_state );
     set_NB ( NB_state );
-    set_NBvals ( );
-    set_SDROM ( SDROM_state );
-    set_SDROMvals ( );
     set_BIN ( BIN_state );
     set_SPEC ( SPEC_state );
     set_MUTE ( 0 );
@@ -1883,30 +1862,40 @@ void Main_Widget::init()
     UP_label->setPalette(QColor(0, 0, 0) );
     DOWN_label->setPalette(QColor(0, 0, 0) );
     setCA_label();
-    setTuneStep ( tuneStep );
+    setTuneStep ( tuneStep ); // no3m
     setTheme ( 2 );
     setPolyFFT ( );
     setSpectrumDefaults();
     setAGC ( agcType );
-    setRX_gain ( );
     setTxIQGain();
     setTxIQPhase();
     setTxGain( 0 );
     setTxGain( 1 );
     processorLoad();
     hScale = 1.0;
-    //vsScale = 1.0;
-    //specLineFill = 0; saved in config
-    //filterLine = 1;
+    //vsScale = 1.0; // no3m
+    //specLineFill = 0; // no3m - saved in config
+    //filterLine = 1; // no3m - saved in config
     if ( useHamlib )
     {
         initHamlib();
     }
     initRigCtl();
     setMode(mode, FALSE, TRUE);
-    //specAveraging = 1;
-    //specLow = -140;
-    //specHigh = -40;
+    //specAveraging = 1; // no3m - saved in config
+    //specLow = -140; // no3m - saved in config
+    //specHigh = -40; // no3m - saved in config
+    cfgTransmit->setChecked ( enableTransmit );
+    if (enableTransmit) {
+        TXoff();
+    }
+
+    // no3m
+    set_NRvals ( );
+    set_ANFvals ( );
+    set_NBvals ( ); 
+    set_SDROM ( SDROM_state );
+    set_SDROMvals ( );
     spectrogramRefreshCounter = 0;
     if (spectrumScrolling == 2) {
        spectrogramPos = 30;
@@ -1920,13 +1909,11 @@ void Main_Widget::init()
     capture_cntr = 0;
     spectrumMode = SPEC_NORM;
     waterfallMode = 0;
-    cfgTransmit->setChecked ( enableTransmit );
-    if (enableTransmit) {
-        TXoff();
-    }
     spotTone = 0;
     setSpotTone ( );
+    setRX_gain ( );
 
+    // timers
     QTimer *cpuTimer = new QTimer ( this );
     connect ( cpuTimer, SIGNAL ( timeout() ), this, SLOT ( processorLoad() ) );
     cpuTimer->start( 5000 );
@@ -1939,6 +1926,7 @@ void Main_Widget::init()
     connect ( fftTimer, SIGNAL ( timeout() ), this, SLOT ( readSpectrum() ) );
     fftTimer->start( FFT_TIMER );
 
+    // no3m
     QTimer *captureTimer = new QTimer ( this );
     connect ( captureTimer, SIGNAL ( timeout() ), this, SLOT ( autoCapture() ) );
     captureTimer->start(1000);
@@ -2054,6 +2042,10 @@ void Main_Widget::initConstants()
     s_dbm[32] = -17; signalColor[32] = new QColor ( 255,  40, 40 );
     s_dbm[33] = -13; signalColor[33] = new QColor ( 255,  40, 40 ); // S9+60dB
 
+   // Spectrogram colors
+
+   // no3m - moved to palettes
+
 }
 
 void Main_Widget::setTheme ( int t )
@@ -2074,11 +2066,6 @@ void Main_Widget::setTheme ( int t )
     }
 }
 
-void Main_Widget::resizeEvent( QResizeEvent *)
-{
-    windowResize = true;
-}
-
 void Main_Widget::paintEvent ( QPaintEvent * )
 {
     if (updated) {
@@ -2087,11 +2074,13 @@ void Main_Widget::paintEvent ( QPaintEvent * )
         drawPassBandScale();
         if ( SPEC_state ) {
             //drawSpectrogram();			// update the spectrogram (middle) display
+            // no3m
             saveSpectrum();
             plotSpectrum( spectrum_head );	// plots the spectrum display
             drawSpectrogram( spectrum_head );			// update the spectrogram (middle) display
 
         } else {
+            // no3m
             QPainter p;
             p.begin( this );
             p.scale(1.0, 1.0);
@@ -2109,6 +2098,9 @@ void Main_Widget::paintEvent ( QPaintEvent * )
 
 void Main_Widget::updateLayout()
 {
+
+// no3m - misc layout changes
+
     ctlFrame->setGeometry (
                 0,
                 0,
@@ -2167,6 +2159,7 @@ void Main_Widget::updateLayout()
                 1,
                 font1Metrics->maxWidth() * 5,
                 15 );
+    // no3m
     Capture_label->setGeometry (
                 ctlFrame2->width() - CPU_label->width() - CFG_label->width() - HELP_label->width() - font1Metrics->maxWidth() * 5 - 2,
                 1,
@@ -2181,6 +2174,8 @@ void Main_Widget::updateLayout()
             15 );
 
     spectrum_width = int(spectrumFrame->width() * hScale);
+
+    // no3m
     if (capture_auto) {
         Capture_label->setPalette( QColor( 0, 60, 0 ) );
     } else {
@@ -2301,8 +2296,6 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/txGain", "0" ).toInt();
     micGain = settings->value (
                 "/sdr-shell/micGain", "0" ).toInt();
-    hwGain = settings->value (
-                "/sdr-shell/hwGain", "0" ).toDouble();
     enableTransmit = settings->value (
                 "/sdr-shell/enableTransmit", "0" ).toInt();
     dualConversion = settings->value (
@@ -2342,18 +2335,6 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/NB_state", 0 ).toInt();
     NB_Threshold = settings->value(
                 "/sdr-shell/NB_Threshold", 3.3 ).toDouble();
-    SDROM_state = settings->value(
-                "/sdr-shell/SDROM_state", 0 ).toInt();
-    SDROM_Threshold = settings->value(
-                "/sdr-shell/SDROM_Threshold", 2.5 ).toDouble();
-    preamp_state = settings->value(
-                "/sdr-shell/preamp_state", 0 ).toInt();
-    preampGain = settings->value(
-                "/sdr-shell/preampGain", 6 ).toDouble();
-    att_state = settings->value(
-                "/sdr-shell/att_state", 0 ).toInt();
-    attGain = settings->value(
-                "/sdr-shell/attGain", -6 ).toDouble();
     BIN_state = settings->value(
                 "/sdr-shell/BIN_state", 0 ).toInt();
     SPEC_state = settings->value(
@@ -2364,10 +2345,6 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/my_lat", "0" ).toDouble();
     my_lon = settings->value (
                 "/sdr-shell/my_lon", "0" ).toDouble();
-    spotAmpl = settings->value (
-                "/sdr-shell/spotAmpl", -10 ).toDouble();
-    spotFreq = settings->value (
-                "/sdr-shell/spotFreq", 500 ).toDouble();
     font1PointSize = settings->value(
                 "/sdr-shell/font1PointSize", 8 ).toInt();
     polyphaseFFT = settings->value(
@@ -2386,6 +2363,26 @@ void Main_Widget::loadSettings()
     //		"/sdr-shell/hScale", 3 ).toInt();
     specLineFill = settings->value(
                 "/sdr-shell/specfill", false ).toBool();
+
+    // no3m >>
+    hwGain = settings->value (
+                "/sdr-shell/hwGain", "0" ).toDouble();
+    SDROM_state = settings->value(
+                "/sdr-shell/SDROM_state", 0 ).toInt();
+    SDROM_Threshold = settings->value(
+                "/sdr-shell/SDROM_Threshold", 2.5 ).toDouble();
+    preamp_state = settings->value(
+                "/sdr-shell/preamp_state", 0 ).toInt();
+    preampGain = settings->value(
+                "/sdr-shell/preampGain", 6 ).toDouble();
+    att_state = settings->value(
+                "/sdr-shell/att_state", 0 ).toInt();
+    attGain = settings->value(
+                "/sdr-shell/attGain", -6 ).toDouble();
+    spotAmpl = settings->value (
+                "/sdr-shell/spotAmpl", -10 ).toDouble();
+    spotFreq = settings->value (
+                "/sdr-shell/spotFreq", 500 ).toDouble();
     specAveraging = settings->value(
                 "/sdr-shell/specavg", 0 ).toInt();
     specLow = settings->value(
@@ -2425,13 +2422,13 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/capture_auto", false).toBool();
     capture_interval = settings->value(
                 "/sdr-shell/capture_interval", 1 ).toInt();
-
     specApertureLowTmp = specApertureLow;
     apertureSize = DEFAPERTURE_SIZE;
     apertureAutoDelta = 0;
     spectrumPalette = settings->value(
                 "/sdr-shell/specpalette", 0 ).toInt();
     windowResize = false;
+    // << no3m
 
     // Restore window geometry
     setGeometry (
@@ -2570,6 +2567,7 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/useSlopeTune", intMuteXmit );
     settings->setValue ( "/sdr-shell/cwPitch", cwPitch );
     settings->setValue ( "/sdr-shell/rx_delta_f", rx_delta_f );
+    // no3m
     if (autoSpecAperture) {
         specApertureLow = specApertureLowTmp;
     }
@@ -2584,7 +2582,6 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/txIQPhase", txIQPhase );
     settings->setValue ( "/sdr-shell/txGain", txGain );
     settings->setValue ( "/sdr-shell/micGain", micGain );
-    settings->setValue ( "/sdr-shell/hwGain", hwGain );
     int intEnableTransmit = ( int ) enableTransmit;
     settings->setValue ( "/sdr-shell/enableTransmit", intEnableTransmit );
     settings->setValue ( "/sdr-shell/dualConversion", dualConversion );
@@ -2593,19 +2590,11 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/ANF_state", ANF_state );
     settings->setValue ( "/sdr-shell/NB_state", NB_state );
     settings->setValue ( "/sdr-shell/NB_Threshold", NB_Threshold );
-    settings->setValue ( "/sdr-shell/SDROM_state", SDROM_state );
-    settings->setValue ( "/sdr-shell/SDROM_Threshold", SDROM_Threshold );
-    settings->setValue ( "/sdr-shell/preamp_state", preamp_state );
-    settings->setValue ( "/sdr-shell/att_state", att_state );
-    settings->setValue ( "/sdr-shell/preampGain", preampGain );
-    settings->setValue ( "/sdr-shell/attGain", attGain );
     settings->setValue ( "/sdr-shell/BIN_state", BIN_state );
     settings->setValue ( "/sdr-shell/SPEC_state", SPEC_state );
     settings->setValue ( "/sdr-shell/filterLine", filterLine );
     settings->setValue ( "/sdr-shell/my_lat", my_lat );
     settings->setValue ( "/sdr-shell/my_lon", my_lon );
-    settings->setValue ( "/sdr-shell/spotAmpl", spotAmpl );
-    settings->setValue ( "/sdr-shell/spotFreq", spotFreq );
     settings->setValue ( "/sdr-shell/font1PointSize", font1PointSize );
     settings->setValue ( "/sdr-shell/polyphaseFFT", polyphaseFFT );
     settings->setValue ( "/sdr-shell/fftWindow", fftWindow );
@@ -2613,6 +2602,17 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/agcType", agcType );
     settings->setValue ( "/sdr-shell/specCal", specCal );
     settings->setValue ( "/sdr-shell/metrCal", metrCal );
+
+    // no3m
+    settings->setValue ( "/sdr-shell/hwGain", hwGain );
+    settings->setValue ( "/sdr-shell/SDROM_state", SDROM_state );
+    settings->setValue ( "/sdr-shell/SDROM_Threshold", SDROM_Threshold );
+    settings->setValue ( "/sdr-shell/preamp_state", preamp_state );
+    settings->setValue ( "/sdr-shell/att_state", att_state );
+    settings->setValue ( "/sdr-shell/preampGain", preampGain );
+    settings->setValue ( "/sdr-shell/attGain", attGain );
+    settings->setValue ( "/sdr-shell/spotAmpl", spotAmpl );
+    settings->setValue ( "/sdr-shell/spotFreq", spotFreq );
     settings->setValue ( "/sdr-shell/specfill", specLineFill );
     settings->setValue ( "/sdr-shell/specavg", specAveraging );
     settings->setValue ( "/sdr-shell/speclow", specLow );
@@ -2725,6 +2725,7 @@ void Main_Widget::saveSettings()
 void Main_Widget::finish()
 {
     saveSettings();
+    // no3m
     spotTone = 0;
     setSpotTone ( );
     //
@@ -3545,22 +3546,6 @@ void Main_Widget::readSpectrum()
     //drawSpectrogram();
     //if ( SPEC_state ) plotSpectrum ( spectrum_head );
     repaint();
-}
-
-void Main_Widget::saveSpectrum ()
-{
-    int x, specval;
-    static int y = 0;
-
-    for (x = 0; x < DEFSPEC; x++)		// for number of fft samples per line..
-    {
-        specval = (int)(spectrum[ x ] + specCal);	//Save power for spectrum display
-        //if(specval > 119) specval = 119;
-        //if(specval < 0) specval = 0;
-        spectrum_history[y][x] = specval;
-    }
-    spectrum_head = y;
-    y = (y+1) % spectrogram->height();
 }
 
 void Main_Widget::drawSpectrogram( int y )
@@ -4589,45 +4574,6 @@ void Main_Widget::set_NBvals (  )
     pCmd->sendCommand ("setNBvals %f\n", NB_Threshold );
     if(verbose) fprintf ( stderr, "setNBvals %f\n", NB_Threshold );
 }
-void Main_Widget::set_SDROMvals (  )
-{
-    pCmd->sendCommand ("setSDROMvals %f\n", SDROM_Threshold );
-    if(verbose) fprintf ( stderr, "setSDROMvals %f\n", SDROM_Threshold );
-}
-
-void Main_Widget::setRX_gain ( )
-{
-    double inp_gain = 0.0;
-    double outp_gain = 0.0;
-    inp_gain += hwGain;
-    if (!agcType) outp_gain += 60.0; // agc off, add 60dB
-    if (preamp_state) outp_gain += preampGain;
-    if (att_state) outp_gain += attGain;
-
-    pCmd->sendCommand ("setGain 0 0 %f\n", inp_gain );
-    if(verbose) fprintf ( stderr, "setGain 0 0 %f\n", inp_gain );
-    pCmd->sendCommand ("setGain 0 1 %f\n", outp_gain );
-    if(verbose) fprintf ( stderr, "setGain 0 1 %f\n", outp_gain );
-
-    if (att_state) att_label->setPalette( QColor( 200, 0, 0 ) );
-    else att_label->setPalette( QColor( 0, 0, 0 ) );
-    att_label->setAutoFillBackground( true );
-    if (preamp_state) preamp_label->setPalette( QColor( 200, 0, 0 ) );
-    else preamp_label->setPalette( QColor( 0, 0, 0 ) );
-    preamp_label->setAutoFillBackground( true );
-
-}
-
-void Main_Widget::updateHwGain ( double gain )
-{
-    hwGain = gain;
-    setRX_gain ( );
-}
-
-void Main_Widget::setHwGain ( )
-{
-   setRX_gain ( );
-}
 
 void Main_Widget::toggle_ANF ( int )
 {
@@ -4659,34 +4605,6 @@ void Main_Widget::set_NB ( int state )
 
     pCmd->sendCommand ("setNB %d\n", NB_state );
     if(verbose) fprintf ( stderr, "setNB %d\n", NB_state );
-}
-
-void Main_Widget::toggle_SDROM ( int )
-{
-    set_SDROM ( !SDROM_state );
-}
-
-void Main_Widget::toggle_preamp ( int )
-{
-    preamp_state = !preamp_state;
-    setRX_gain ( );
-}
-
-void Main_Widget::toggle_att ( int )
-{
-    att_state = !att_state;
-    setRX_gain ( );
-}
-
-void Main_Widget::set_SDROM ( int state )
-{
-    SDROM_state = state;
-    if ( SDROM_state ) SDROM_label->setPalette( QColor( 0, 100, 200 ) );
-    else SDROM_label->setPalette( QColor( 0, 0, 0 ) );
-    SDROM_label->setAutoFillBackground( true );
-
-    pCmd->sendCommand ("setSDROM %d\n", SDROM_state );
-    if(verbose) fprintf ( stderr, "setSDROM %d\n", SDROM_state );
 }
 
 void Main_Widget::toggle_BIN ( int )
@@ -4870,8 +4788,10 @@ void Main_Widget::set_RIT ( int state )
         set_SPLIT( 0 );
         tx_f = rx_f;
         tx_delta_f = rx_delta_f;
+        // diff
         tx_f_string.sprintf ("%11.0lf", ( double ) ( tx_delta_f - rx_delta_f ) );
         rit->setText( tx_f_string );
+        // diff
     } else {
         RIT_label->setPalette(QColor(0, 0, 0) );
         rit->setText( "" );
@@ -4881,94 +4801,6 @@ void Main_Widget::set_RIT ( int state )
 void Main_Widget::toggle_RIT ( int )
 {
     set_RIT(!enableRIT);
-}
-
-void Main_Widget::autoCapture ()
-{
-    capture_cntr++;
-    if (capture_auto) {
-        //if (capture_cntr >= (capture_interval * 60)) {
-        if (capture_cntr >= (((spectrogramRefresh * FFT_TIMER) * spectrogram->height()) / 1000) ) {
-            screenshot( 1 );
-            capture_cntr = 0;
-        }
-    }
-}
-
-void Main_Widget::screenshot (int)
-{
-    QDir d;
-    if (!d.exists(capture_directory)) {
-        if (!d.mkpath(capture_directory)) {
-            printf("Cannot create Directory");
-            return;
-        }
-    }
-    QCoreApplication::processEvents();
-    QPixmap screenshot = QPixmap::grabWindow(winId());
-    QCoreApplication::processEvents();
-    if(screenshot.isNull()){
-        printf("ERROR");
-        return;
-    }
-    QString format = "png";
-    screenshot.save(capture_directory+"/sdr-shell-"+QDateTime::currentDateTimeUtc().toString(Qt::ISODate)+".png",
-                    format.toAscii());
-    QCoreApplication::processEvents();
-}
-
-void Main_Widget::toggle_CAmode (int)
-{
-    QPixmap manual_pix ( manual_xpm );
-    QPixmap auto_pix ( auto_xpm );
-    autoSpecAperture ^= 1;
-    if (autoSpecAperture) {
-        specApertureLowTmp = specApertureLow;
-        CAauto_label->setPixmap ( auto_pix );
-    } else {
-        specApertureLow = specApertureLowTmp;
-        CAauto_label->setPixmap ( manual_pix );
-    }
-    setCA_label();
-}
-
-void Main_Widget::toggle_WFMODE ( int )
-{
-    QPixmap wfmodenorm_pix ( wfnorm_xpm );
-    QPixmap wfmodeavg_pix ( wfavg_xpm );
-
-    if (waterfallMode == 0) {
-        waterfallMode = 1; //avg
-        WFMODE_label->setPixmap ( wfmodeavg_pix );
-    } else { //norm
-        waterfallMode = 0;
-        WFMODE_label->setPixmap ( wfmodenorm_pix );
-    }
-
-}
-
-void Main_Widget::toggle_SPECMODE ( int )
-{
-    QPixmap specmodenorm_pix ( norm_xpm );
-    QPixmap specmodeavg_pix ( avg_xpm );
-    QPixmap specmodepeak_pix ( peak_xpm );
-
-    if (spectrumMode == SPEC_NORM) { // switch to SPEC_AVG
-        spectrumMode = SPEC_AVG;
-        SPECMODE_label->setPixmap ( specmodeavg_pix );
-
-    } else if (spectrumMode == SPEC_AVG) { // switch SPEC_PEAK
-        spectrumMode = SPEC_PEAK;
-        SPECMODE_label->setPixmap ( specmodepeak_pix );
-
-        for (int i=0; i<DEFSPEC; i++) {
-            spectrum_peak[i] = -140;
-        }
-
-    } else { // switch to SPEC_NORM
-        spectrumMode = SPEC_NORM;
-        SPECMODE_label->setPixmap ( specmodenorm_pix );
-    }
 }
 
 void Main_Widget::set_SPLIT ( int state )
@@ -5161,52 +4993,9 @@ void Main_Widget::setPolyFFT ( )
     if(verbose) fprintf ( stderr, "setSpectrumPolyphase %d\n", polyphaseFFT );
 }
 
-void Main_Widget::initSpectrumPalette ( )
-{
-
-    static unsigned long (*palette)[256];
-    apertureSize = 256;
-    switch(spectrumPalette) {
-    case 1: palette = &gqrxPalette; apertureAutoDelta = -12; break;
-    case 2: palette = &linradPalette; apertureAutoDelta = -4; break;
-    case 3: palette = &winradPalette; apertureAutoDelta = 0; break;
-    case 4: palette = &ghpsdrPalette; apertureAutoDelta = -2; break;
-    case 5: palette = &spectranPalette; apertureAutoDelta = -2; break;
-    case 6: palette = &spectrogramPalette; apertureAutoDelta = -2; break;
-    case 7: palette = &spectrumlabPalette; apertureAutoDelta = -14; break;
-    case 8: palette = &wsjtxPalette; apertureAutoDelta = -17; break;
-    case 9: palette = &fldigiPalette; apertureAutoDelta = -2; break;
-    case 10: palette = &digipanPalette; apertureAutoDelta = -17; break;
-    case 11: palette = &gmfskPalette; apertureAutoDelta = -2; break;
-    case 12: palette = &rockyPalette; apertureAutoDelta = -9; break;
-    case 13: palette = &hornePalette; apertureAutoDelta = -2; break;
-    case 14: palette = &lightPalette; apertureAutoDelta = -16; break;
-    case 15: palette = &darkPalette; apertureAutoDelta = -17; break;
-    case 16: palette = &specextPalette; apertureAutoDelta = -13; break;
-    case 17: palette = &negativePalette; apertureAutoDelta = 0; break;
-    case 18: palette = &stereo3dPalette; apertureAutoDelta = -2; break;
-    case 19: palette = &no3m1Palette; apertureAutoDelta = -27; break;
-    case 20: palette = &no3m1linPalette; apertureAutoDelta = -3; break;
-    case 21: palette = &no3m1negPalette; apertureAutoDelta = -20; break;
-    case 22: palette = &no3m1linnegPalette; apertureAutoDelta = -9; break;
-    case 23: palette = &linradPalette2; apertureAutoDelta = -4; break;
-    default: palette = &linradPalette; apertureAutoDelta = -4; break;
-    }
-    for(int i = 0; i < 256; i++) {
-        spec_b[i] = ((*palette)[i] >> 16) & 0x000000ff;
-        spec_g[i] = ((*palette)[i] >> 8)  & 0x000000ff;
-        spec_r[i] = ((*palette)[i])       & 0x000000ff;
-    }
-}
-
-void Main_Widget::setSpectrumPalette ( int index )
-{
-    spectrumPalette = index;
-    initSpectrumPalette();
-}
-
 void Main_Widget::setFFTWindow ( int index )
 {
+    // no3m // dropmenu
     fftWindow = index;
     pCmd->sendCommand ("setSpectrumWindow %d\n", fftWindow );
     if(verbose) fprintf ( stderr, "setSpectrumWindow %d\n", fftWindow );
@@ -5215,9 +5004,9 @@ void Main_Widget::setFFTWindow ( int index )
 void Main_Widget::setSpectrumType()
 {
     if ( preFilter_button->isChecked() )
-    { spectrumType = 1; }		// SPEC_PRE_FILT
+       { spectrumType = 1; }		// SPEC_PRE_FILT
     else
-    { spectrumType = 2; };		// SPEC_POST_FILT
+       { spectrumType = 2; };		// SPEC_POST_FILT
     pCmd->sendCommand ("setSpectrumType %d\n", spectrumType );
     if(verbose) fprintf ( stderr, "setSpectrumType %d\n", spectrumType );
 
@@ -5246,55 +5035,6 @@ void Main_Widget::setLineFill ( )
         specLineFill = 0;
 }
 
-void Main_Widget::setSpectrumLines ( )
-{
-    if ( specLinesButton->isChecked() )
-        specLines = 1;
-    else
-        specLines = 0;
-}
-
-void Main_Widget::setSpectrumAvgLine ( )
-{
-    if ( specAvgLineButton->isChecked() )
-        specAvgLine = 1;
-    else
-        specAvgLine = 0;
-}
-
-void Main_Widget::setSpectrumPeakMarkers ( )
-{
-    if ( specPeakMarkersButton->isChecked() )
-        specPeakMarkers = 1;
-    else
-        specPeakMarkers = 0;
-}
-
-void Main_Widget::setSpectrumScrolling ( int value )
-{
-    if (spectrumScrolling != value) {
-      spectrumScrolling = value;
-      windowResize = true;
-      capture_cntr = 0;
-    }
-}
-
-void Main_Widget::setSpecTimeMarkers ( )
-{
-    if ( SpectrogramTimeMarkersButton->isChecked() )
-        specTimeMarkers = true;
-    else
-        specTimeMarkers = false;
-}
-
-void Main_Widget::setFilterLine ( )
-{
-    if ( SpectrogramFilterButton->isChecked() )
-        filterLine = 1;
-    else
-        filterLine = 0;
-}
-
 void Main_Widget::updateSpecLow ( int value )
 {
     specLow = value;
@@ -5310,20 +5050,16 @@ void Main_Widget::updateSpecHigh ( int value )
     specHigh = value;
     if (specHigh <= specLow)
         specHigh = specLow + 1;
-    // vsScale is the vertical spectrum scale
-    // 1.0 = -40 to -140
-    //a = (specLow - specHigh) * -1;
-    //if (a > 100)
-    //    a = 100;
-    //vsScale = 100 / a;
+    // // vsScale is the vertical spectrum scale
+    // // 1.0 = -40 to -140
+    // a = (specLow - specHigh) * -1;
+    // if (a > 100)
+    //         a = 100;
+    // vsScale = 100 / a;
+    // no3m
     a = specHigh - specLow;
     vsScale = (spectrum_height / a);
     if(verbose) fprintf(stderr, "vsScale = (%d to %d) %f %f\n", specLow, specHigh, a, vsScale);
-}
-
-void Main_Widget::updateSpectrogramRefresh ( int value )
-{
-    spectrogramRefresh = value;
 }
 
 void Main_Widget::setAGC ( int type )
@@ -5332,27 +5068,26 @@ void Main_Widget::setAGC ( int type )
     pCmd->sendCommand ("setRXAGC %d\n", type );
     if(verbose) fprintf ( stderr, "setRXAGC %d\n", type );
 
-    setRX_gain ( );
+    setRX_gain ( ); //no3m
 
     QColor on ( 150, 50, 50 );
     QColor off ( 0, 0, 0 );
 
-    AGC_O_label->setAutoFillBackground(true);
+    AGC_O_label->setAutoFillBackground(true); //no3m
     AGC_L_label->setAutoFillBackground(true);
     AGC_S_label->setAutoFillBackground(true);
     AGC_M_label->setAutoFillBackground(true);
     AGC_F_label->setAutoFillBackground(true);
     switch( type ) {
     case 0:
-        AGC_O_label->setPalette( on );
+        AGC_O_label->setPalette( on ); //no3m
         AGC_L_label->setPalette( off );
         AGC_S_label->setPalette( off );
         AGC_M_label->setPalette( off );
         AGC_F_label->setPalette( off );
-        AGC_O_label->setAutoFillBackground(true);
         break;
     case 1:
-        AGC_O_label->setPalette( off );
+        AGC_O_label->setPalette( off ); //no3m
         AGC_L_label->setPalette( on );
         AGC_S_label->setPalette( off );
         AGC_M_label->setPalette( off );
@@ -5360,21 +5095,21 @@ void Main_Widget::setAGC ( int type )
 
         break;
     case 2:
-        AGC_O_label->setPalette( off );
+        AGC_O_label->setPalette( off ); //no3m
         AGC_L_label->setPalette( off );
         AGC_S_label->setPalette( on );
         AGC_M_label->setPalette( off );
         AGC_F_label->setPalette( off );
         break;
     case 3:
-        AGC_O_label->setPalette( off );
+        AGC_O_label->setPalette( off ); //no3m
         AGC_L_label->setPalette( off );
         AGC_S_label->setPalette( off );
         AGC_M_label->setPalette( on );
         AGC_F_label->setPalette( off );
         break;
     case 4:
-        AGC_O_label->setPalette( off );
+        AGC_O_label->setPalette( off ); //no3m
         AGC_L_label->setPalette( off );
         AGC_S_label->setPalette( off );
         AGC_M_label->setPalette( off );
@@ -5503,69 +5238,6 @@ void Main_Widget::setNB_Threshold ( double value )
     set_NBvals();
 }
 
-void Main_Widget::setSDROM_Threshold ( double value )
-{
-    if(verbose) fprintf ( stderr, "SDROM_Threshold spinbox changed to %f\n",value );
-    SDROM_Threshold = value;
-    set_SDROMvals();
-}
-
-void Main_Widget::setPreamp_Gain ( int value )
-{
-    if(verbose) fprintf ( stderr, "preampGain spinbox changed to %d\n",value );
-    preampGain = value;
-    setRX_gain();
-}
-
-void Main_Widget::setAtt_Gain ( int value )
-{
-    if(verbose) fprintf ( stderr, "attGain spinbox changed to %d\n",value );
-    attGain = value;
-    setRX_gain();
-}
-
-void Main_Widget::updateSpotFreq ( double value )
-{
-    spotFreq = value;
-    setSpotToneVals ( );
-}
-
-void Main_Widget::updateSpotAmpl ( double value )
-{
-    spotAmpl = value;
-    setSpotToneVals ( );
-}
-
-void Main_Widget::setSpotToneVals ( )
-{
-
-    pCmd->sendCommand ("setSpotToneVals %f %f 5 5\n", spotAmpl, spotFreq );
-    if(verbose) fprintf ( stderr, "setSpotToneVals %f %f 5 5\n", spotAmpl, spotFreq );
-
-    if (spotTone) { // restart tone after val changes
-        pCmd->sendCommand ("setSpotTone 0\n");
-        if(verbose) fprintf ( stderr, "setSpotTone 0\n");
-        pCmd->sendCommand ("setSpotTone 1\n");
-        if(verbose) fprintf ( stderr, "setSpotTone 1\n");
-    }
-}
-
-void Main_Widget::toggle_spotTone ( int )
-{
-    spotTone = !spotTone;
-    setSpotTone ( );
-}
-
-void Main_Widget::setSpotTone ( )
-{
-    pCmd->sendCommand ("setSpotTone %d\n", spotTone);
-    if(verbose) fprintf ( stderr, "setSpotTone %d\n", spotTone);
-
-    if (spotTone) spotTone_label->setPalette( QColor( 200, 0, 0 ) );
-    else spotTone_label->setPalette( QColor( 0, 0, 0 ) );
-    spotTone_label->setAutoFillBackground( true );
-
-}
 
 void Main_Widget::setIF ( bool value )
 {
@@ -5586,16 +5258,6 @@ void Main_Widget::updateUseUSBsoftrock ( bool value )
         if(verbose) fprintf ( stderr, "useUSBsoftrock: %s\n",
                               value ? "enabled" : "disabled");
     }
-}
-
-void Main_Widget::updateCaptureAuto ( bool value )
-{
-    capture_auto = value;
-}
-
-void Main_Widget::updateCaptureAutoInterval ( int value )
-{
-    capture_interval = value;
 }
 
 void Main_Widget::updateDualConversion ( bool value )
@@ -5941,4 +5603,356 @@ void Main_Widget::rigSetPTT ( int enabled ) {
     if (transmit != enabled) {
         toggle_TX( enabled );
     }
+}
+
+
+//== no3m mods
+
+void Main_Widget::updateSpectrogramRefresh ( int value )
+{
+    spectrogramRefresh = value;
+}
+
+void Main_Widget::setSDROM_Threshold ( double value )
+{
+    if(verbose) fprintf ( stderr, "SDROM_Threshold spinbox changed to %f\n",value );
+    SDROM_Threshold = value;
+    set_SDROMvals();
+}
+
+void Main_Widget::setPreamp_Gain ( double value )
+{
+    if(verbose) fprintf ( stderr, "preampGain spinbox changed to %f\n",value );
+    preampGain = value;
+    setRX_gain();
+}
+
+void Main_Widget::setAtt_Gain ( double value )
+{
+    if(verbose) fprintf ( stderr, "attGain spinbox changed to %f\n",value );
+    attGain = value;
+    setRX_gain();
+}
+
+void Main_Widget::updateSpotFreq ( double value )
+{
+    spotFreq = value;
+    setSpotToneVals ( );
+}
+
+void Main_Widget::updateSpotAmpl ( double value )
+{
+    spotAmpl = value;
+    setSpotToneVals ( );
+}
+
+void Main_Widget::setSpotToneVals ( )
+{
+
+    pCmd->sendCommand ("setSpotToneVals %f %f 5 5\n", spotAmpl, spotFreq );
+    if(verbose) fprintf ( stderr, "setSpotToneVals %f %f 5 5\n", spotAmpl, spotFreq );
+
+    if (spotTone) { // restart tone after val changes
+        pCmd->sendCommand ("setSpotTone 0\n");
+        if(verbose) fprintf ( stderr, "setSpotTone 0\n");
+        pCmd->sendCommand ("setSpotTone 1\n");
+        if(verbose) fprintf ( stderr, "setSpotTone 1\n");
+    }
+}
+
+void Main_Widget::toggle_spotTone ( int )
+{
+    spotTone = !spotTone;
+    setSpotTone ( );
+}
+
+void Main_Widget::setSpotTone ( )
+{
+    pCmd->sendCommand ("setSpotTone %d\n", spotTone);
+    if(verbose) fprintf ( stderr, "setSpotTone %d\n", spotTone);
+
+    if (spotTone) spotTone_label->setPalette( QColor( 200, 0, 0 ) );
+    else spotTone_label->setPalette( QColor( 0, 0, 0 ) );
+    spotTone_label->setAutoFillBackground( true );
+
+}
+
+void Main_Widget::updateCaptureAuto ( bool value )
+{
+    capture_auto = value;
+}
+
+void Main_Widget::updateCaptureAutoInterval ( int value )
+{
+    capture_interval = value;
+}
+
+void Main_Widget::setSpectrumLines ( )
+{
+    if ( specLinesButton->isChecked() )
+        specLines = 1;
+    else
+        specLines = 0;
+}
+
+void Main_Widget::setSpectrumAvgLine ( )
+{
+    if ( specAvgLineButton->isChecked() )
+        specAvgLine = 1;
+    else
+        specAvgLine = 0;
+}
+
+void Main_Widget::setSpectrumPeakMarkers ( )
+{
+    if ( specPeakMarkersButton->isChecked() )
+        specPeakMarkers = 1;
+    else
+        specPeakMarkers = 0;
+}
+
+void Main_Widget::setSpectrumScrolling ( int value )
+{
+    if (spectrumScrolling != value) {
+      spectrumScrolling = value;
+      windowResize = true;
+      capture_cntr = 0;
+    }
+}
+
+void Main_Widget::setSpecTimeMarkers ( )
+{
+    if ( SpectrogramTimeMarkersButton->isChecked() )
+        specTimeMarkers = true;
+    else
+        specTimeMarkers = false;
+}
+
+void Main_Widget::setFilterLine ( )
+{
+    if ( SpectrogramFilterButton->isChecked() )
+        filterLine = 1;
+    else
+        filterLine = 0;
+}
+
+void Main_Widget::initSpectrumPalette ( )
+{
+
+    static unsigned long (*palette)[256];
+    apertureSize = 256;
+    switch(spectrumPalette) {
+    case 1: palette = &gqrxPalette; apertureAutoDelta = -12; break;
+    case 2: palette = &linradPalette; apertureAutoDelta = -4; break;
+    case 3: palette = &winradPalette; apertureAutoDelta = 0; break;
+    case 4: palette = &ghpsdrPalette; apertureAutoDelta = -2; break;
+    case 5: palette = &spectranPalette; apertureAutoDelta = -2; break;
+    case 6: palette = &spectrogramPalette; apertureAutoDelta = -2; break;
+    case 7: palette = &spectrumlabPalette; apertureAutoDelta = -14; break;
+    case 8: palette = &wsjtxPalette; apertureAutoDelta = -17; break;
+    case 9: palette = &fldigiPalette; apertureAutoDelta = -2; break;
+    case 10: palette = &digipanPalette; apertureAutoDelta = -17; break;
+    case 11: palette = &gmfskPalette; apertureAutoDelta = -2; break;
+    case 12: palette = &rockyPalette; apertureAutoDelta = -9; break;
+    case 13: palette = &hornePalette; apertureAutoDelta = -2; break;
+    case 14: palette = &lightPalette; apertureAutoDelta = -16; break;
+    case 15: palette = &darkPalette; apertureAutoDelta = -17; break;
+    case 16: palette = &specextPalette; apertureAutoDelta = -13; break;
+    case 17: palette = &negativePalette; apertureAutoDelta = 0; break;
+    case 18: palette = &stereo3dPalette; apertureAutoDelta = -2; break;
+    case 19: palette = &no3m1Palette; apertureAutoDelta = -27; break;
+    case 20: palette = &no3m1linPalette; apertureAutoDelta = -3; break;
+    case 21: palette = &no3m1negPalette; apertureAutoDelta = -20; break;
+    case 22: palette = &no3m1linnegPalette; apertureAutoDelta = -9; break;
+    case 23: palette = &linradPalette2; apertureAutoDelta = -4; break;
+    default: palette = &linradPalette; apertureAutoDelta = -4; break;
+    }
+    for(int i = 0; i < 256; i++) {
+        spec_b[i] = ((*palette)[i] >> 16) & 0x000000ff;
+        spec_g[i] = ((*palette)[i] >> 8)  & 0x000000ff;
+        spec_r[i] = ((*palette)[i])       & 0x000000ff;
+    }
+}
+
+void Main_Widget::setSpectrumPalette ( int index )
+{
+    spectrumPalette = index;
+    initSpectrumPalette();
+}
+
+void Main_Widget::autoCapture ()
+{
+    capture_cntr++;
+    if (capture_auto) {
+        //if (capture_cntr >= (capture_interval * 60)) {
+        if (capture_cntr >= (((spectrogramRefresh * FFT_TIMER) * spectrogram->height()) / 1000) ) {
+            screenshot( 1 );
+            capture_cntr = 0;
+        }
+    }
+}
+
+void Main_Widget::screenshot (int)
+{
+    QDir d;
+    if (!d.exists(capture_directory)) {
+        if (!d.mkpath(capture_directory)) {
+            printf("Cannot create Directory");
+            return;
+        }
+    }
+    QCoreApplication::processEvents();
+    QPixmap screenshot = QPixmap::grabWindow(winId());
+    QCoreApplication::processEvents();
+    if(screenshot.isNull()){
+        printf("ERROR");
+        return;
+    }
+    QString format = "png";
+    screenshot.save(capture_directory+"/sdr-shell-"+QDateTime::currentDateTimeUtc().toString(Qt::ISODate)+".png",
+                    format.toAscii());
+    QCoreApplication::processEvents();
+}
+
+void Main_Widget::toggle_CAmode (int)
+{
+    QPixmap manual_pix ( manual_xpm );
+    QPixmap auto_pix ( auto_xpm );
+    autoSpecAperture ^= 1;
+    if (autoSpecAperture) {
+        specApertureLowTmp = specApertureLow;
+        CAauto_label->setPixmap ( auto_pix );
+    } else {
+        specApertureLow = specApertureLowTmp;
+        CAauto_label->setPixmap ( manual_pix );
+    }
+    setCA_label();
+}
+
+void Main_Widget::toggle_WFMODE ( int )
+{
+    QPixmap wfmodenorm_pix ( wfnorm_xpm );
+    QPixmap wfmodeavg_pix ( wfavg_xpm );
+
+    if (waterfallMode == 0) {
+        waterfallMode = 1; //avg
+        WFMODE_label->setPixmap ( wfmodeavg_pix );
+    } else { //norm
+        waterfallMode = 0;
+        WFMODE_label->setPixmap ( wfmodenorm_pix );
+    }
+
+}
+
+void Main_Widget::toggle_SPECMODE ( int )
+{
+    QPixmap specmodenorm_pix ( norm_xpm );
+    QPixmap specmodeavg_pix ( avg_xpm );
+    QPixmap specmodepeak_pix ( peak_xpm );
+
+    if (spectrumMode == SPEC_NORM) { // switch to SPEC_AVG
+        spectrumMode = SPEC_AVG;
+        SPECMODE_label->setPixmap ( specmodeavg_pix );
+
+    } else if (spectrumMode == SPEC_AVG) { // switch SPEC_PEAK
+        spectrumMode = SPEC_PEAK;
+        SPECMODE_label->setPixmap ( specmodepeak_pix );
+
+        for (int i=0; i<DEFSPEC; i++) {
+            spectrum_peak[i] = -140;
+        }
+
+    } else { // switch to SPEC_NORM
+        spectrumMode = SPEC_NORM;
+        SPECMODE_label->setPixmap ( specmodenorm_pix );
+    }
+}
+
+void Main_Widget::toggle_SDROM ( int )
+{
+    set_SDROM ( !SDROM_state );
+}
+
+void Main_Widget::toggle_preamp ( int )
+{
+    preamp_state = !preamp_state;
+    setRX_gain ( );
+}
+
+void Main_Widget::toggle_att ( int )
+{
+    att_state = !att_state;
+    setRX_gain ( );
+}
+
+void Main_Widget::set_SDROM ( int state )
+{
+    SDROM_state = state;
+    if ( SDROM_state ) SDROM_label->setPalette( QColor( 0, 100, 200 ) );
+    else SDROM_label->setPalette( QColor( 0, 0, 0 ) );
+    SDROM_label->setAutoFillBackground( true );
+
+    pCmd->sendCommand ("setSDROM %d\n", SDROM_state );
+    if(verbose) fprintf ( stderr, "setSDROM %d\n", SDROM_state );
+}
+
+void Main_Widget::set_SDROMvals (  )
+{
+    pCmd->sendCommand ("setSDROMvals %f\n", SDROM_Threshold );
+    if(verbose) fprintf ( stderr, "setSDROMvals %f\n", SDROM_Threshold );
+}
+
+void Main_Widget::setRX_gain ( )
+{
+    double inp_gain = 0.0;
+    double outp_gain = 0.0;
+    inp_gain += hwGain;
+    if (!agcType) outp_gain += 60.0; // agc off, add 60dB
+    if (preamp_state) outp_gain += preampGain;
+    if (att_state) outp_gain += attGain;
+
+    pCmd->sendCommand ("setGain 0 0 %f\n", inp_gain );
+    if(verbose) fprintf ( stderr, "setGain 0 0 %f\n", inp_gain );
+    pCmd->sendCommand ("setGain 0 1 %f\n", outp_gain );
+    if(verbose) fprintf ( stderr, "setGain 0 1 %f\n", outp_gain );
+
+    if (att_state) att_label->setPalette( QColor( 200, 0, 0 ) );
+    else att_label->setPalette( QColor( 0, 0, 0 ) );
+    att_label->setAutoFillBackground( true );
+    if (preamp_state) preamp_label->setPalette( QColor( 200, 0, 0 ) );
+    else preamp_label->setPalette( QColor( 0, 0, 0 ) );
+    preamp_label->setAutoFillBackground( true );
+
+}
+
+void Main_Widget::updateHwGain ( double gain )
+{
+    hwGain = gain;
+    setRX_gain ( );
+}
+
+void Main_Widget::setHwGain ( )
+{
+   setRX_gain ( );
+}
+
+void Main_Widget::saveSpectrum ()
+{
+    int x, specval;
+    static int y = 0;
+
+    for (x = 0; x < DEFSPEC; x++)		// for number of fft samples per line..
+    {
+        specval = (int)(spectrum[ x ] + specCal);	//Save power for spectrum display
+        //if(specval > 119) specval = 119;
+        //if(specval < 0) specval = 0;
+        spectrum_history[y][x] = specval;
+    }
+    spectrum_head = y;
+    y = (y+1) % spectrogram->height();
+}
+
+void Main_Widget::resizeEvent( QResizeEvent *)
+{
+    windowResize = true;
 }

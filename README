@@ -20,6 +20,8 @@ Partial list:
     * Linrad style normal and reverse
     * SDR-shell style normal or reverse
 
+* direct frequency readout under spectum
+
 * added AGC off back in, also sets output gain to compensate
 
 * date and time display under logo
@@ -38,6 +40,15 @@ TODO
 
 * fix zooming
 * add user defined AGC w/ config parameters
+
+================================
+
+Compile:
+
+cd ./src
+qmake-qt4
+make
+make install
 
 ================================
 

@@ -612,8 +612,8 @@ class Main_Widget : public QWidget
         void set_ANFvals ( );
         void setNB_Threshold ( double );
         void setSDROM_Threshold ( double );
-        void setPreamp_Gain ( int );
-        void setAtt_Gain ( int );
+        void setPreamp_Gain ( double );
+        void setAtt_Gain ( double );
         void set_NBvals ( );
         void set_SDROMvals ( );
         void setRX_gain ( );
