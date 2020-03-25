@@ -3714,10 +3714,6 @@ void Main_Widget::drawSpectrogram( int y )
                 spectrum_d[x] = spectrum_d[x] / (32);
             }
 
-        QImage spectrogramLine( spectrum_width , 1, QImage::Format_RGB32 );
-        if (spectrum_width < spectrumFrame->width())
-            spectrogramLine.fill(QColor(0,0,0));
-
         //spectrum_width = int(spectrumFrame->width() * hScale); // reference
         //tf    x1 = DEFSPEC/2 - spectrogram->width()/2;
         //tf    x2 = x1 + spectrogram->width();
@@ -3728,6 +3724,11 @@ void Main_Widget::drawSpectrogram( int y )
             printf("drawSpectrogram::x1 = %d\n", x1);
             printf("drawSpectrogram::x2 = %d\n", x2);
         }
+
+#if 1
+        QImage spectrogramLine( spectrum_width , 1, QImage::Format_RGB32 );
+        if (spectrum_width < spectrumFrame->width())
+            spectrogramLine.fill(QColor(0,0,0));
 
         for ( x = 0; x < DEFSPEC; x++)		// for number of fft samples per line..
         {
@@ -3776,6 +3777,90 @@ void Main_Widget::drawSpectrogram( int y )
         p.drawImage( 0, spectrogramPos, spectrogramLine );
         p.scale(1.0 * hScale, 1.0); // reset scaling
 
+#endif
+
+#if 0
+        QImage spectrogramLine( spectrumFrame->width() , 1, QImage::Format_RGB32 );
+
+        for ( x = x1; x < x2; )		// work on only the data in our view
+        {
+
+            int bin = 0;
+            int bin_arr[5];
+
+            if ((int)hScale >= 1) { // 1:1 or zoomed out; find max bin
+               for (int i = 0; i < (int)hScale && x + i < x2; ++i) {
+                  if (waterfallMode) {
+                     if (spectrum_d[ x + i ] > bin_arr[bin]) {
+                        bin_arr[bin] = spectrum_d[ x + i ];
+                     }
+                  } else {
+                     if (spectrum[ x + i ] > bin_arr[bin]) {
+                        bin_arr[bin] = spectrum[ x + i ];
+                     }
+                  }
+               }
+               bin++;
+            }
+
+            if ((int)hScale < 1) { // zoomed in; interpolate missing bins with simple linear slope
+               float slope;
+               int points = (int) (1.0 / hScale);
+               if ( x + points < x2 ) {
+                  if (waterfallMode) {
+                     slope = ( spectrum_d[ x + points ] - spectrum_d[ x ] ) / points;
+                  } else {
+                     slope = ( spectrum[ x + points] - spectrum[ x ] ) / points;
+                  }
+               } else {
+                  slope = 0;
+               }
+               for (; bin < points && x + bin < x2; ++bin) {
+                  if (waterfallMode) {
+                     bin_arr[bin] = (int)((float)spectrum_d[ x ] + ( slope * (float)bin ));
+                  } else {
+                     bin_arr[bin] = (int)((float)spectrum[ x ] + ( slope * (float)bin ));
+                  }
+               }
+            }
+
+            for (int i = 0; i < bin; ++i) {
+                 if (waterfallMode) {
+                    pwr = (int)((bin_arr[i] - specApertureLow) * (apertureSize / pwr_range));
+                 } else {
+                    pwr = (int)((bin_arr[i] + specCal - specApertureLow) * (apertureSize / pwr_range));
+                 }
+                 if ( pwr > apertureSize - 1 ) pwr = apertureSize - 1;
+                 else if ( pwr < 0 ) pwr = 0;
+
+                 uint *p = (uint *)spectrogramLine.scanLine(0) + (x - x1 + i); // Set pixel color
+                 *p = qRgb( spec_r[pwr], spec_g[pwr], spec_b[pwr] );
+            }
+
+            if ((int)hScale > 1)
+                x += (int)hScale;
+            else
+                x++;
+        }
+
+        //////////////////////////////////////////////// Now, draw this spectrum line
+        QPainter p;
+        p.begin( this );
+        p.translate( QPoint(0, spectrogramTop));
+
+
+
+        //// NO3M
+        if (spectrumScrolling == 0) { // waterfall
+          this->scroll(0,1,QRect(0,spectrogramTop,spectrogram->width(),spectrogram->height()));
+        } else if (spectrumScrolling == 1) { // waterfall reversed
+          this->scroll(0,-1,QRect(0,spectrogramTop,spectrogram->width(),spectrogram->height()));
+        }
+
+        p.drawImage( 0, spectrogramPos, spectrogramLine );
+#endif
+
+#if 0
         if (specTimeMarkers) {
 
             int step;
@@ -3812,6 +3897,7 @@ void Main_Widget::drawSpectrogram( int y )
                 timeline = true;
             }
         }
+#endif
 
         if (spectrumScrolling == 2) { // linrad
            spectrogramPos--;
