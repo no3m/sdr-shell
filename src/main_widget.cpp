@@ -120,13 +120,21 @@ void Main_Widget::init()
 
     // -----------------------------------------------------------------------
     // Pass Band Filter Scale
-    pbscale = new PassBandScale( spectrogramFrame );
-    connect ( pbscale, SIGNAL ( set_lower_pb ( int ) ),
+    pbScale = new PassBandScale( spectrogramFrame );
+    connect ( pbScale, SIGNAL ( set_lower_pb ( int ) ),
               this, SLOT ( setLowerFilterScale ( int ) ) );
-    connect ( pbscale, SIGNAL ( set_upper_pb ( int ) ),
+    connect ( pbScale, SIGNAL ( set_upper_pb ( int ) ),
               this, SLOT ( setUpperFilterScale ( int ) ) );
-    connect ( pbscale, SIGNAL ( movement ( int ) ),
+    connect ( pbScale, SIGNAL ( movement ( int ) ),
               this, SLOT ( displayNCO ( int ) ) );
+
+    // -----------------------------------------------------------------------
+    // Frequency Scale
+    freqScale = new FrequencyScale( spectrogramFrame );
+    connect ( freqScale, SIGNAL ( zoom ( int ) ),
+              this, SLOT ( zoom_mouse ( int ) ) );
+    connect ( freqScale, SIGNAL ( movement ( int ) ),
+              this, SLOT ( f_at_mousepointer ( int ) ) );
 
     // -----------------------------------------------------------------------
     // Spectrum
@@ -167,11 +175,11 @@ void Main_Widget::init()
     QRect geometry = desktop->screenGeometry(desktop->screenNumber(this));
 
     cfgFrame = new QFrame();
-    cfgFrame->setGeometry ( 50, 50, 380, 500 );
+    cfgFrame->setGeometry ( 50, 50, 380, 600 );
     cfgFrame->setMinimumWidth ( 380 );
     cfgFrame->setMaximumWidth ( 380 );
-    cfgFrame->setMinimumHeight ( 500 );
-    cfgFrame->setMaximumHeight ( 550 );
+    cfgFrame->setMinimumHeight ( 600 );
+    cfgFrame->setMaximumHeight ( 600 );
     cfgFrame->setWindowTitle("SDR-Shell : Config ");
     cfgFrame->move(geometry.x() + geometry.width()/2 - cfgFrame->width()/2, geometry.y() + geometry.height()/2 - cfgFrame->height()/2);
 
@@ -441,6 +449,74 @@ void Main_Widget::init()
     connect ( cfgHwGain, SIGNAL ( valueChanged ( double ) ),
               this, SLOT ( updateHwGain ( double ) ) );
 
+    QGroupBox *cfgIqGainSliders = new QGroupBox ( cfgFrame2 );
+    cfgIqGainSliders->setTitle ( "RX IQ Gain Sliders (alt.)" );
+    cfgIqGainSliders->setGeometry( 5, 150, 330, 100);
+
+    QLabel *rxIqGainCourseLabel = new QLabel ( cfgIqGainSliders);
+    rxIqGainCourseLabel->setText ( "Course: ");
+    rxIqGainCourseLabel->setGeometry ( 10, 30, 70, 20 );
+    rxIqGainCourseLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+
+    rxIqGainCourseSlider = new QSlider (Qt::Horizontal, cfgIqGainSliders);
+    rxIqGainCourseSlider->setGeometry ( 80, 30, 240, 20 );
+    rxIqGainCourseSlider->setMinimum( -500 );
+    rxIqGainCourseSlider->setMaximum( 500 );
+    rxIqGainCourseSlider->setSingleStep( 10 );
+    rxIqGainCourseSlider->setTickPosition(QSlider::NoTicks );
+    rxIqGainCourseSlider->setValue ( iqGain );
+    connect ( rxIqGainCourseSlider, SIGNAL ( valueChanged ( int ) ),
+              this, SLOT ( updateIQGainSlider ( int ) ) );
+
+    QLabel *rxIqGainFineLabel = new QLabel ( cfgIqGainSliders);
+    rxIqGainFineLabel->setText ( "Fine: ");
+    rxIqGainFineLabel->setGeometry ( 10, 60, 70, 20 );
+    rxIqGainFineLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+
+    rxIqGainFineSlider = new QSlider (Qt::Horizontal, cfgIqGainSliders);
+    rxIqGainFineSlider->setGeometry ( 80, 60, 240, 20 );
+    rxIqGainFineSlider->setMinimum( -10 );
+    rxIqGainFineSlider->setMaximum( 10 );
+    rxIqGainFineSlider->setSingleStep( 1 );
+    rxIqGainFineSlider->setTickPosition(QSlider::NoTicks );
+    rxIqGainFineSlider->setValue ( 0 );
+    connect ( rxIqGainFineSlider, SIGNAL ( valueChanged ( int ) ),
+              this, SLOT ( updateIQGainSlider ( int ) ) );
+
+    QGroupBox *cfgIqPhaseSliders = new QGroupBox ( cfgFrame2 );
+    cfgIqPhaseSliders->setTitle ( "RX IQ Phase Sliders (alt.)" );
+    cfgIqPhaseSliders->setGeometry( 5, 250, 330, 100);
+
+    QLabel *rxIqPhaseCourseLabel = new QLabel ( cfgIqPhaseSliders);
+    rxIqPhaseCourseLabel->setText ( "Course: ");
+    rxIqPhaseCourseLabel->setGeometry ( 10, 30, 70, 20 );
+    rxIqPhaseCourseLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+
+    rxIqPhaseCourseSlider = new QSlider (Qt::Horizontal, cfgIqPhaseSliders);
+    rxIqPhaseCourseSlider->setGeometry ( 80, 30, 240, 20 );
+    rxIqPhaseCourseSlider->setMinimum( -400 );
+    rxIqPhaseCourseSlider->setMaximum( 400 );
+    rxIqPhaseCourseSlider->setSingleStep( 10 );
+    rxIqPhaseCourseSlider->setTickPosition(QSlider::NoTicks );
+    rxIqPhaseCourseSlider->setValue ( iqPhase );
+    connect ( rxIqPhaseCourseSlider, SIGNAL ( valueChanged ( int ) ),
+              this, SLOT ( updateIQPhaseSlider ( int ) ) );
+
+    QLabel *rxIqPhaseFineLabel = new QLabel ( cfgIqPhaseSliders);
+    rxIqPhaseFineLabel->setText ( "Fine: ");
+    rxIqPhaseFineLabel->setGeometry ( 10, 60, 70, 20 );
+    rxIqPhaseFineLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+
+    rxIqPhaseFineSlider = new QSlider (Qt::Horizontal, cfgIqPhaseSliders);
+    rxIqPhaseFineSlider->setGeometry ( 80, 60, 240, 20 );
+    rxIqPhaseFineSlider->setMinimum( -10 );
+    rxIqPhaseFineSlider->setMaximum( 10 );
+    rxIqPhaseFineSlider->setSingleStep( 1 );
+    rxIqPhaseFineSlider->setTickPosition(QSlider::NoTicks );
+    rxIqPhaseFineSlider->setValue ( 0 );
+    connect ( rxIqPhaseFineSlider, SIGNAL ( valueChanged ( int ) ),
+              this, SLOT ( updateIQPhaseSlider ( int ) ) );
+
     // Polyphase FFT
     QGroupBox *cfgPolyFFTGroup = new QGroupBox( cfgFrame3 );
     cfgPolyFFTGroup->setTitle("Polyphase FFT");
@@ -499,7 +575,7 @@ void Main_Widget::init()
     // Spectrum display
     QGroupBox *cfgSpecDisplay = new QGroupBox( cfgFrame3 );
     cfgSpecDisplay->setTitle("Spectrum Display");
-    cfgSpecDisplay->setGeometry( 5, 150, 330, 140 );
+    cfgSpecDisplay->setGeometry( 5, 150, 330, 180 );
 
     // no3m - SpecLineFill
     specLineFillButton = new QRadioButton( tr("Fill Spectrum Line"), cfgSpecDisplay);
@@ -508,6 +584,13 @@ void Main_Widget::init()
     connect( specLineFillButton, SIGNAL(clicked()),
              this, SLOT ( setLineFill () ) );
     if (specLineFill) specLineFillButton->setChecked(true);
+
+    specGradientButton = new QRadioButton( tr("Use Gradient"), cfgSpecDisplay);
+    specGradientButton->setGeometry ( 220, 20, 200, 20 );
+    specGradientButton->setAutoExclusive(false);
+    connect( specGradientButton, SIGNAL(clicked()),
+             this, SLOT ( setSpectrumGradient () ) );
+    if (spectrumGradient) specGradientButton->setChecked(true);
 
     // no3m - Spectrum Average Line
     specLinesButton = new QRadioButton( tr("Connect Spectrum Points"), cfgSpecDisplay);
@@ -568,10 +651,23 @@ void Main_Widget::init()
     connect ( cfgSpecHighInput, SIGNAL ( valueChanged ( int ) ),
               this, SLOT ( updateSpecHigh ( int ) ) );
 
+    QLabel *cfgSpecColorLabel = new QLabel ( cfgSpecDisplay );
+    cfgSpecColorLabel->setText ( "Spectrum Color: " );
+    cfgSpecColorLabel->setGeometry ( 10, 140, 160, 20 );
+    cfgSpecColorLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    cfgSpecColorButton = new QPushButton ( cfgSpecDisplay );
+    cfgSpecColorButton->setGeometry ( 180, 140, 30, 20 ); 
+    QPixmap pixmap(16, 16);
+    pixmap.fill(spectrumColor.rgba());
+    QIcon icon(pixmap);
+    cfgSpecColorButton->setIcon(icon);
+    connect ( cfgSpecColorButton, SIGNAL ( pressed() ),
+              this, SLOT ( setSpectrumColor( ) ) );
+
     // Spectrogram display
     QGroupBox *cfgSpectrogram = new QGroupBox( cfgFrame3 );
     cfgSpectrogram->setTitle("Waterfall Display");
-    cfgSpectrogram->setGeometry( 5, 290, 330, 100 );
+    cfgSpectrogram->setGeometry( 5, 330, 330, 100 );
     SpectrogramFilterButton = new QRadioButton( tr("Filter Lines"), cfgSpectrogram);
     SpectrogramFilterButton->setGeometry ( 10, 20, 140, 20 );
     SpectrogramFilterButton->setAutoExclusive(false);
@@ -616,7 +712,7 @@ void Main_Widget::init()
     // no3m
     QGroupBox *cfgColorPalette = new QGroupBox( cfgFrame3 );
     cfgColorPalette->setTitle("Color Palette");
-    cfgColorPalette->setGeometry( 5, 400, 330, 40 );
+    cfgColorPalette->setGeometry( 5, 440, 330, 40 );
     cfgPalette = new QComboBox (cfgColorPalette);
     cfgPalette->insertItem(0, "SDR-shell");
     cfgPalette->insertItem(1, "GQRX" );
@@ -1506,7 +1602,7 @@ void Main_Widget::init()
     CA_label->setGeometry (
                 CAauto_label->x() + CAauto_label->width() - 1,
                 0,
-                font1Metrics->maxWidth() * 16,
+                font1Metrics->maxWidth() * 14,
                 17 );
     CA_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 
@@ -1526,7 +1622,7 @@ void Main_Widget::init()
     AGC_label->setGeometry (
                 CA_label->x() + CA_label->width() - 1,
                 0,
-                font1Metrics->maxWidth() * 6 + 50,
+                font1Metrics->maxWidth() * 7 + 50,
                 17 );
     AGC_label->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
 
@@ -1596,7 +1692,7 @@ void Main_Widget::init()
     Zoom_in_label = new Varilabel ( Zoom_label );
     Zoom_in_label->setLabel ( 3 );
     Zoom_in_label->setPixmap ( zoom_in_pix );
-    Zoom_in_label->setGeometry( font1Metrics->maxWidth() * 5, 3, 27, 11 );
+    Zoom_in_label->setGeometry( font1Metrics->maxWidth() * 5 + 5, 3, 22, 11 );
     connect ( Zoom_in_label, SIGNAL ( mouseRelease ( int ) ),
               this, SLOT ( zoomIN ( int ) ) );
 
@@ -1604,7 +1700,7 @@ void Main_Widget::init()
     Zoom_out_label = new Varilabel ( Zoom_label );
     Zoom_out_label->setLabel ( 4 );
     Zoom_out_label->setPixmap ( zoom_out_pix );
-    Zoom_out_label->setGeometry( Zoom_in_label->x() + 27, 3, 27, 11 );
+    Zoom_out_label->setGeometry( Zoom_in_label->x() + 22, 3, 22, 11 );
     connect ( Zoom_out_label, SIGNAL ( mouseRelease ( int ) ),
               this, SLOT ( zoomOUT ( int ) ) );
 
@@ -2072,6 +2168,7 @@ void Main_Widget::paintEvent ( QPaintEvent * )
         //if(verbose) fprintf( stderr, "+");
         updateLayout();
         drawPassBandScale();
+        drawFreqScale();
         if ( SPEC_state ) {
             //drawSpectrogram();			// update the spectrogram (middle) display
             // no3m
@@ -2106,6 +2203,42 @@ void Main_Widget::updateLayout()
                 0,
                 width(),
                 TOPFRM_V );
+    ctlFrame2->setGeometry (
+                0,
+                height() - BOTFRM_V,
+                width(),
+                BOTFRM_V );
+    spectrogramFrame->setGeometry (
+                0,
+                TOPFRM_V,
+                width(),
+                //height() - 18 - TOPFRM_V );
+                //height() - ctlFrame2->height() - TOPFRM_V - 1 );
+                height() - ctlFrame2->height() - TOPFRM_V );
+    pbScale->setGeometry (
+                0,
+                //spectrogram->height(),
+                0,
+                spectrogramFrame->width(),
+                PBSFRM_V );
+    spectrumFrame->setGeometry (
+                0,
+                //spectrogramFrame->height() - 120 - 2,
+                PBSFRM_V,
+                spectrogramFrame->width(),
+                SPECFRM_V );
+    freqScale->setGeometry (
+                0,
+                SPECFRM_V + PBSFRM_V,
+                spectrogramFrame->width(),
+                20 
+                );
+    spectrogram->setGeometry (
+                0,
+                //0,
+                SPECFRM_V + PBSFRM_V +freqScale->height() + 1,
+                spectrogramFrame->width(),
+                spectrogramFrame->height() - 2 - SPECFRM_V - PBSFRM_V - freqScale->height());
     logoFrame->setGeometry (
                 ctlFrame->width()-100,
                 1,
@@ -2116,34 +2249,6 @@ void Main_Widget::updateLayout()
                 1,
                 88,
                 30 );
-    spectrogramFrame->setGeometry (
-                0,
-                TOPFRM_V,
-                width(),
-                height() - 18 - TOPFRM_V );
-    spectrogram->setGeometry (
-                0,
-                //0,
-                SPECFRM_V + PBSFRM_V,
-                spectrogramFrame->width(),
-                spectrogramFrame->height() - 2 - 120 - 15 );
-    pbscale->setGeometry (
-                0,
-                //spectrogram->height(),
-                0,
-                spectrogramFrame->width(),
-                15 );
-    spectrumFrame->setGeometry (
-                0,
-                //spectrogramFrame->height() - 120 - 2,
-                PBSFRM_V,
-                spectrogramFrame->width(),
-                120 );
-    ctlFrame2->setGeometry (
-                0,
-                height() - 17,
-                width(),
-                17 );
     CPU_label->setGeometry (
                 ctlFrame2->width() - font1Metrics->maxWidth() * 11,
                 1,
@@ -2416,6 +2521,8 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/speclines", false).toBool();
     specAvgLine = settings->value(
                 "/sdr-shell/specavgline", false).toBool();
+    spectrumColor = settings->value( "/sdr-shell/spectrumColor", QColor(Qt::yellow)).value<QColor>();
+    spectrumGradient = settings->value( "/sdr-shell/spectrumGradient", false).toBool();
     capture_directory = settings->value(
                 "/sdr-shell/capture_dir", QDir::homePath()).toString();
     capture_auto = settings->value(
@@ -2627,6 +2734,8 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/capture_dir", capture_directory );
     settings->setValue ( "/sdr-shell/capture_auto", capture_auto );
     settings->setValue ( "/sdr-shell/capture_interval", capture_interval );
+    settings->setValue ( "/sdr-shell/spectrumColor", spectrumColor );
+    settings->setValue ( "/sdr-shell/spectrumGradient", spectrumGradient );
 
     // Save window geometry
     settings->setValue ( "/sdr-shell/g_left", geometry().left() );
@@ -2864,10 +2973,14 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
         hScale=2.0;
         break;
     case '3':
-        hScale=3.0;
+        //hScale=3.0;
         break;
     case '4':
-        hScale = sample_rate / (bin_bw * (geometry().width()-20)); // spectrumFrame->width());
+        hScale = sample_rate / (bin_bw * (geometry().width())); // spectrumFrame->width());
+        if (rock_bound) {
+           rx_delta_f = 0;
+           setRxFrequency( 0 );
+        }
         break;
     case '0':
         hScale = 0.25;
@@ -2876,7 +2989,7 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
         hScale = 0.5;
         break;
     case '8':
-        hScale = 0.75;
+        //hScale = 0.75;
         break;
     case 4096:
         finish();
@@ -3143,7 +3256,7 @@ void Main_Widget::setUpperFilterScale ( int x )
 void Main_Widget::setCA_label()
 {
     char text[20];
-    snprintf ( text, 20, "CA: %4d : %4d",
+    snprintf ( text, 20, "CA: %4d:%4d",
                ( int ) specApertureLow - 140,
                ( int ) specApertureHigh - 140 );
     CA_label->setText ( text );
@@ -3433,7 +3546,6 @@ void Main_Widget::setTxGain( int inout )
     }
 }
 
-
 void Main_Widget::readMeter()
 {
     int j, k = 0, label;
@@ -3554,8 +3666,10 @@ void Main_Widget::drawSpectrogram( int y )
     int pwr;
     float pwr_range;
     bool spec_debug = false;
-    static bool timeline = true;
+    static bool timeline = false;
     int spectrum_d[DEFSPEC];
+
+    int spectrogramTop = ctlFrame->height() + pbScale->height() + spectrumFrame->height() + freqScale->height();
 
     pwr_range = specApertureHigh - specApertureLow;
     if(spec_debug)
@@ -3565,9 +3679,9 @@ void Main_Widget::drawSpectrogram( int y )
     if (windowResize) {
         QPainter p;
         p.begin( this );
-        //p.eraseRect( QRect(0,TOPFRM_V,spectrum_width,spectrogram->height()));
-        p.eraseRect( QRect(0,TOPFRM_V+SPECFRM_V+PBSFRM_V,spectrum_width,spectrogram->height()));
-        //p.eraseRect( QRect(spectrogram->rect().topLeft(),spectrogram->rect().bottomRight()));
+        p.translate( QPoint(0, spectrogramTop));
+        //p.eraseRect( QRect(0,0,spectrogram->width(),spectrogram->height()));
+        p.fillRect(QRect(0,0,spectrogram->width(),spectrogram->height()), QColor( 0, 0, 0 ) ); // faster?
         windowResize = false;
         capture_cntr = 0;
         if (spectrumScrolling == 2) {
@@ -3579,15 +3693,14 @@ void Main_Widget::drawSpectrogram( int y )
         } else {
           spectrogramPos = 0;
         }
-        //printf("spectrogramPos: %d\n", spectrogramPos);
+        p.end();
     }
 
     spectrogramRefreshCounter++;
     if (spectrogramRefreshCounter >= spectrogramRefresh) {
         spectrogramRefreshCounter = 0;
 
-        // Average the last N samples of spectrum data
-
+            // Average the last N samples of spectrum data
             memset(spectrum_d, 0, sizeof(int) * DEFSPEC);
             for (y1 = y, n=0; n < 32; n++) {
                 for ( x = 1; x < DEFSPEC; x++ ) {
@@ -3601,18 +3714,11 @@ void Main_Widget::drawSpectrogram( int y )
                 spectrum_d[x] = spectrum_d[x] / (32);
             }
 
-
-        //y1 =  spectrogram->height() + PBSFRM_V + TOPFRM_V + spectrumFrame->height();
-
-
-        //tf    QImage spectrogramLine( spectrogram->width() , 1, QImage::Format_RGB32 );
-        //NO3M
         QImage spectrogramLine( spectrum_width , 1, QImage::Format_RGB32 );
-        //QImage spectrogramLine( spectrumFrame->width() , 1, QImage::Format_RGB32 );
-        // test this - emt
         if (spectrum_width < spectrumFrame->width())
             spectrogramLine.fill(QColor(0,0,0));
 
+        //spectrum_width = int(spectrumFrame->width() * hScale); // reference
         //tf    x1 = DEFSPEC/2 - spectrogram->width()/2;
         //tf    x2 = x1 + spectrogram->width();
         x1 = DEFSPEC/2 - spectrum_width/2;
@@ -3625,7 +3731,6 @@ void Main_Widget::drawSpectrogram( int y )
 
         for ( x = 0; x < DEFSPEC; x++)		// for number of fft samples per line..
         {
-
             if ( x >= x1 && x < x2 )	// If bin is in visible range, plot it.
             {
                 // Compute the power (magnified)
@@ -3658,32 +3763,69 @@ void Main_Widget::drawSpectrogram( int y )
         //////////////////////////////////////////////// Now, draw this spectrum line
         QPainter p;
         p.begin( this );
-        p.scale((1.0 / hScale), 1.0);
-
-        //p.setPen( Qt::red );
-        //p.drawLine(0, TOPFRM_V + SPECFRM_V + PBSFRM_V + spectrogram->height(), spectrum_width, TOPFRM_V + SPECFRM_V + PBSFRM_V + spectrogram->height());
+        p.translate( QPoint(0, spectrogramTop));
 
         //// NO3M
         if (spectrumScrolling == 0) { // waterfall
-          this->scroll(0,1,QRect(0,TOPFRM_V + SPECFRM_V + PBSFRM_V,spectrum_width,spectrogram->height()));
+          this->scroll(0,1,QRect(0,spectrogramTop,spectrogram->width(),spectrogram->height()));
         } else if (spectrumScrolling == 1) { // waterfall reversed
-          this->scroll(0,-1,QRect(0,TOPFRM_V + SPECFRM_V + PBSFRM_V,spectrum_width,spectrogram->height()));
+          this->scroll(0,-1,QRect(0,spectrogramTop,spectrogram->width(),spectrogram->height()));
         }
-        p.drawImage( 0, TOPFRM_V+SPECFRM_V+PBSFRM_V + spectrogramPos, spectrogramLine );
+
+        p.scale((1.0 / hScale), 1.0);
+        p.drawImage( 0, spectrogramPos, spectrogramLine );
+        p.scale(1.0 * hScale, 1.0); // reset scaling
+
+        if (specTimeMarkers) {
+
+            int step;
+            int span = ( ( ( ( spectrogramRefresh * FFT_TIMER ) * spectrogram->height() ) / 2 ) / 1000 );
+            if (span < 10)
+              step = 5;
+            else if (span < 15)
+              step = 10;
+            else if (span < 30)
+              step = 15;
+            else if (span < 60)
+              step = 30;
+            else
+              step = 60;
+
+            QTime t;
+            t.start();
+            if (t.second() % step == 0) {
+                if (timeline == true) {
+                    QPen pen( Qt::DotLine );
+                    pen.setColor( QColor( 255, 255, 255 ) );
+                    p.setPen( pen );
+                    p.drawLine(0, spectrogramPos, spectrogram->width(), spectrogramPos);
+                    p.setPen( Qt::white );
+                    if (spectrumScrolling == 0 || spectrumScrolling == 2 || spectrumScrolling == 5)
+                      p.drawText(1, spectrogramPos + font1Metrics->ascent() + 1, QDateTime::currentDateTimeUtc().time().toString());
+                    else
+                      p.drawText(1, spectrogramPos - 1, QDateTime::currentDateTimeUtc().time().toString());
+
+                    timeline = false;
+                }
+
+            } else {
+                timeline = true;
+            }
+        }
 
         if (spectrumScrolling == 2) { // linrad
            spectrogramPos--;
            if (spectrogramPos < 0) {
-              this->scroll(0,31,QRect(0,TOPFRM_V + SPECFRM_V + PBSFRM_V,spectrum_width,spectrogram->height()));
-              p.eraseRect( QRect(0,TOPFRM_V+SPECFRM_V+PBSFRM_V,spectrum_width,31));
+              this->scroll(0,31,QRect(0,spectrogramTop,spectrogram->width(),spectrogram->height()));
+              p.fillRect( QRect(0,0,spectrogram->width(),31), QColor( 0, 0, 0 ) );
               spectrogramPos = 30;
            }
         }
         if (spectrumScrolling == 3) { // linrad reversed
            spectrogramPos++;
            if (spectrogramPos > spectrogram->height()-1) {
-              this->scroll(0,-31,QRect(0,TOPFRM_V + SPECFRM_V + PBSFRM_V,spectrum_width,spectrogram->height()));
-              p.eraseRect( QRect(0,TOPFRM_V+SPECFRM_V+PBSFRM_V + spectrogram->height() - 31,spectrum_width,31));
+              this->scroll(0,-31,QRect(0,spectrogramTop,spectrogram->width(),spectrogram->height()));
+              p.fillRect( QRect(0,spectrogram->height()-31,spectrogram->width(),31), QColor( 0, 0, 0 ) );
               spectrogramPos = spectrogram->height()-31;
            }
         }
@@ -3693,7 +3835,7 @@ void Main_Widget::drawSpectrogram( int y )
            if (spectrogramPos > spectrogram->height()-1)
               spectrogramPos = 0;
            else 
-              p.drawLine(0, TOPFRM_V + SPECFRM_V + PBSFRM_V + spectrogramPos, spectrum_width, TOPFRM_V + SPECFRM_V + PBSFRM_V + spectrogramPos);
+              p.drawLine(0, spectrogramPos, spectrogram->width(), spectrogramPos);
         }
         if (spectrumScrolling == 5) { //sdr-shell reversed
            spectrogramPos--;
@@ -3701,50 +3843,76 @@ void Main_Widget::drawSpectrogram( int y )
            if (spectrogramPos < 0)
               spectrogramPos = spectrogram->height()-1;
            else 
-              p.drawLine(0, TOPFRM_V + SPECFRM_V + PBSFRM_V + spectrogramPos, spectrum_width, TOPFRM_V + SPECFRM_V + PBSFRM_V + spectrogramPos);
-        }
-
-
-        // time markers // fix for sdr-shell and linrad styled scrolling
-        int step;
-        int span = ( ( ( ( spectrogramRefresh * FFT_TIMER ) * spectrogram->height() ) / 2 ) / 1000 );
-        if (span < 10)
-            step = 5;
-        else if (span < 15)
-            step = 10;
-        else if (span < 30)
-            step = 15;
-        else if (span < 60)
-            step = 30;
-        else
-            step = 60;
-
-        if (specTimeMarkers && spectrumScrolling == 0) {
-            QTime t;
-            t.start();
-            if (t.second() % step == 0) {
-                if (timeline == true) {
-                    QPen pen( Qt::DotLine );
-                    //QPen pen( Qt::SolidLine );
-                    pen.setColor( QColor( 255, 255, 255 ) );
-                    //pen.setColor( QColor( 0, 255, 0 ) );
-                    p.setPen( pen );
-                    //p.drawLine(0, TOPFRM_V + spectrogram->height() - 1, spectrum_width, TOPFRM_V + spectrogram->height() - 1);
-                    //p.drawText(1, TOPFRM_V + spectrogram->height() - 2, QDateTime::currentDateTimeUtc().time().toString());
-                    p.drawLine(0, TOPFRM_V + SPECFRM_V + PBSFRM_V, spectrum_width, TOPFRM_V + SPECFRM_V + PBSFRM_V);
-                    p.setPen( Qt::white );
-                    p.drawText(1, TOPFRM_V + SPECFRM_V + PBSFRM_V + font1Metrics->ascent() + 1, QDateTime::currentDateTimeUtc().time().toString());
-                    //p.drawLine(spectrogram->rect().topLeft(), spectrogram->rect().topRight());
-                    //p.drawText(spectrogram->rect().topLeft(), QDateTime::currentDateTimeUtc().time().toString());
-                    timeline = false;
-                }
-            } else {
-                timeline = true;
-            }
+              p.drawLine(0, spectrogramPos, spectrogram->width(), spectrogramPos);
         }
 
         p.end();
     }
+
+}
+
+/****************************************************************************************
+*       drawFreqScale()  ()     draws the frequency scale on screen                     *
+****************************************************************************************/
+void Main_Widget::drawFreqScale()
+{
+// no3m
+    int FreqScaleTop = ctlFrame->height() + pbScale->height() + spectrumFrame->height();
+    bool kc2scale = false;
+    int Hz_step;
+    int px_step;
+    int f_Hz;
+    char f_text[10];
+
+    sprintf( f_text, "99999");
+    if ((font1Metrics->maxWidth() * strlen( f_text )) > (2000 / bin_bw / hScale))
+       Hz_step = 5000;
+    else if ((font1Metrics->maxWidth() * strlen( f_text )) > (500 / bin_bw / hScale))
+       Hz_step = 2000;
+    else if ((font1Metrics->maxWidth() * strlen( f_text )) > (250 / bin_bw / hScale))
+       Hz_step = 1000;
+    else
+       Hz_step = 500;
+
+    px_step = (int)(Hz_step / bin_bw / hScale);
+
+    QPainter p;
+    p.begin( this );
+    p.translate( QPoint(0, FreqScaleTop));
+    p.fillRect( QRect(0, 0, spectrumFrame->width(), freqScale->height() ), QColor( 0, 0, 0 ));
+
+    int start_f = (rx_f - rx_delta_f) - (int)((bin_bw) * (spectrogram->width()/2) * hScale);
+    f_Hz = ((start_f + Hz_step - 1) / Hz_step) * Hz_step; // round up to next khz marker
+    int px =  (int) (spectrogram->width()/2) - ( ( (rx_f - rx_delta_f) - f_Hz ) / ( bin_bw * hScale ) ) + 1;
+
+    p.setPen( QColor( 255, 255, 255 ) );
+    p.setFont ( *font1 );
+
+    p.drawLine( 0, 0, spectrogram->width(), 0);
+
+    bool first = true;
+    for ( ; px < spectrogram->width(); px+=px_step, f_Hz+=Hz_step ) {
+        if (Hz_step == 500)
+          sprintf( f_text, "%.1f", (f_Hz/1000.0) );
+        else
+          sprintf( f_text, "%d", (f_Hz/1000) );
+        p.drawText( px - ((font1Metrics->maxWidth() * strlen( f_text )) / 2 ), freqScale->height() - 1, f_text );
+        p.drawLine( px, 0, px, 8);
+        if (Hz_step == 500) {
+          for (int j=px + px_step/5; j < px + px_step; j+=px_step/5) {
+             p.drawLine( j, 0, j, 4);
+             if (first)
+                p.drawLine( j - px_step, 0, j - px_step, 4);
+          }
+        } else if (Hz_step == 1000 || Hz_step == 2000) {   
+             p.drawLine( px + px_step/2, 0, px + px_step/2, 4);
+             if (first)
+                p.drawLine( px - px_step/2, 0, px - px_step/2, 4);
+        }
+        first = false;
+    }
+
+    p.end();
 }
 
 /****************************************************************************************
@@ -3752,96 +3920,62 @@ void Main_Widget::drawSpectrogram( int y )
 ****************************************************************************************/
 void Main_Widget::drawPassBandScale()
 {
-    //printf("drawPassBandScale() \n");
     char temp[20];
     int x1, x2;
+    int sx1 = 0;
+    int sx2 = 0;
 
     // x1 is the lower-BP filter location
     // x2 is the upper-BP filter location
-    x1 = (spectrogram->width() / 2 - 1) + ((int)((*filter_l / bin_bw)) / hScale);
-    x2 = (spectrogram->width() / 2 - 1) + ((int)((*filter_h / bin_bw)) / hScale);
+    if (*filter_l == 0) sx1 = -1;
+      else if (*filter_l < 0) sx1 = -2;
+    if (*filter_h == 0) sx2 = -1;
+      else if (*filter_h < 0) sx2 = -2;
+    x1 = (spectrogram->width() / 2 + sx1) + (int)(*filter_l / bin_bw / hScale);
+    x2 = (spectrogram->width() / 2 + sx2) + (int)(*filter_h / bin_bw / hScale);
     //printf("dPBS filter_l=%d, filter_h=%d, bin_bw=%f, hScale=%f \n",*filter_l, *filter_h, bin_bw,hScale);
     //printf("dPBS x1 = %d, x2 = %d\n", x1, x2);
     QPainter p;
     p.begin( this );
-
     p.setFont( *font1 );
-
-    //p.eraseRect( 0, spectrogram->height() + TOPFRM_V, pbscale->width()+1,
-    //             pbscale->height()+1 );
-    p.eraseRect( 0, TOPFRM_V, pbscale->width()+1,
-                 pbscale->height() );
-    //p.fillRect(0, spectrogram->height() + TOPFRM_V,pbscale->width()+1,
-    //           pbscale->height()+1,
-    //         QColor(100, 0, 0));
-    //           QColor( 34, 34, 34 ));
-    p.fillRect(0, TOPFRM_V,pbscale->width()+1,
-               pbscale->height(),
-    //         QColor(100, 0, 0)
-    //         QColor( 34, 34, 34 )
-               QColor( 0, 0, 0 )
-               );
-    //p.fillRect(x1, TOPFRM_V, x2 - x2, pbscale->height(), QColor( 34, 34, 34 ));
+    //p.eraseRect( 0, TOPFRM_V, pbScale->width()+1, pbScale->height() );
+    p.fillRect(QRect(0, TOPFRM_V,pbScale->width()+1, pbScale->height()), QColor( 0, 0, 0 ) ); // faster?
 
     sprintf( temp, "%5d", *filter_l );
 
-    //p.fillRect( x1 , spectrogram->height() + TOPFRM_V, x2 - x1, pbscale->height()+1,
-                //QColor( 0, 50, 0 ) );
-    //            QColor( 255, 255, 0, 60 ) );
-/*
-    p.fillRect( x1 , TOPFRM_V, x2 - x1, pbscale->height(),
-                //QColor( 0, 50, 0 ) );
-                //QColor( 255, 255, 0, 60 )
-                QColor( 53, 53, 53, 255 )
-                );
-*/
-
-    //p.setPen( Qt::red );
     p.setPen( Qt::white );
-    p.drawText( x1 -12 - font1Metrics->maxWidth() * 5,
-                font1Metrics->ascent() + TOPFRM_V, temp );
     //////////////////////////////////////////////////// Draw low-side passband arrow
-    //p.setPen( Qt::white );
     p.drawLine( x1 -10, 7 + TOPFRM_V,
-                x1 -1, 7 + TOPFRM_V); //horizontal part of arrow
+                x1 -1, 7 + TOPFRM_V);
     p.drawLine( x1 -4, 4 + TOPFRM_V,
                 x1 -1, 7 + TOPFRM_V );
     p.drawLine( x1 -4, 10 + TOPFRM_V,
                 x1 -1, 7 + TOPFRM_V  );
-// small vertical line by arrow
     p.drawLine( x1, TOPFRM_V +1,
-                x1, PBSFRM_V + TOPFRM_V -1); //vertical line
-
-    sprintf( temp, "%-5d", *filter_h );
-    //p.setPen( Qt::red );
-    p.drawText( x2 + 12, font1Metrics->ascent() + TOPFRM_V, temp );
+                x1, PBSFRM_V + TOPFRM_V -1);
+    p.drawText( x1 -12 - font1Metrics->maxWidth() * 5, font1Metrics->ascent() + TOPFRM_V, temp );
 
     /////////////////////////////////////////////////// Draw high-side passband arrow
-    p.setPen( Qt::white );
     p.drawLine( x2 + 10, 7 + TOPFRM_V,
-                x2 + 1, 7 + TOPFRM_V); //horizontal part of arrow
+                x2 + 1, 7 + TOPFRM_V);
     p.drawLine( x2 + 4, 4 + TOPFRM_V,
                 x2 + 1, 7 + TOPFRM_V );
     p.drawLine( x2 + 4, 10 + TOPFRM_V,
                 x2 + 1, 7 + TOPFRM_V );
-// small vertical line by arrow
     p.drawLine( x2, TOPFRM_V +1,
-                x2, PBSFRM_V + TOPFRM_V -1); //vertical line
+                x2, PBSFRM_V + TOPFRM_V -1); 
+    p.drawLine ( 0, PBSFRM_V + TOPFRM_V -1, pbScale->width(), PBSFRM_V + TOPFRM_V -1 );
+    sprintf( temp, "%-5d", *filter_h );
+    p.drawText( x2 + 12, font1Metrics->ascent() + TOPFRM_V, temp );
 
-    p.setPen( Qt::white );
-    //p.drawLine( 0, PBSFRM_V + TOPFRM_V -1, x1, PBSFRM_V + TOPFRM_V -1 );
-    //p.drawLine( x2, PBSFRM_V + TOPFRM_V -1, pbscale->width(), PBSFRM_V + TOPFRM_V -1 );
-    p.drawLine ( 0, PBSFRM_V + TOPFRM_V -1, pbscale->width(), PBSFRM_V + TOPFRM_V -1 );
-
-// top line on filter box
-    //p.setPen( Qt::white );
-    //p.drawLine( x1, TOPFRM_V +1, x2, TOPFRM_V +1);
-
+#if 0
+    // no3m - datetime
     p.setPen( Qt::yellow );
-    //p.drawText(pbscale->width() - font1Metrics->maxWidth() * 10 -8, font1Metrics->ascent() + TOPFRM_V, QDateTime::currentDateTimeUtc().time().toString()+"Z");
-    p.drawText(pbscale->width() - font1Metrics->maxWidth() * 25 -8, font1Metrics->ascent() + TOPFRM_V, QDateTime::currentDateTimeUtc().date().toString()+" "+QDateTime::currentDateTimeUtc().time().toString()+"Z");
+    p.drawText(pbScale->width() - font1Metrics->maxWidth() * 25 -8, font1Metrics->ascent() + TOPFRM_V, QDateTime::currentDateTimeUtc().date().toString()+" "+QDateTime::currentDateTimeUtc().time().toString()+"Z");
+#endif
 
     p.end();
+
 }
 
 /****************************************************************************************
@@ -3850,7 +3984,7 @@ void Main_Widget::drawPassBandScale()
 void Main_Widget::plotSpectrum( int y )
 {
     //printf("plotSpectrum( int y ) \n");
-    int x, y1, x1, x2, n, specShift, spectrumFrame_width_less1;
+    int x, y1, x1, x2, n, specVShift, spectrumFrame_width_less1;
     double kHz_step;
     int f;
     int f1, f2;
@@ -3862,12 +3996,9 @@ void Main_Widget::plotSpectrum( int y )
     if ((font1Metrics->maxWidth() * strlen( f_text )) > (1000 / bin_bw))
         kc2scale = true;
 
+    // ref: spectrum_width = int(spectrumFrame->width() * hScale)
     spectrumFrame_width_less1 = spectrum_width - 1;
-    specShift = specLow + 140; // -140 reference
-
-    //  Set up the dark-green BP filter swath start/stop in spectrum display
-    f1 = (spectrum_width / 2 - 1) + (int)(*filter_l / bin_bw);	// f1 is low filter
-    f2 = (spectrum_width / 2 - 1) + (int)(*filter_h / bin_bw);	// f2 is high filter
+    specVShift = specLow + 140; // -140 reference
 
     // 4096/2 - width/2
     x1 = (DEFSPEC/2 - spectrum_width / 2);
@@ -3877,7 +4008,6 @@ void Main_Widget::plotSpectrum( int y )
     //if(hScale > 2.0)
     //	kHz_step = 5000 / bin_bw;
     //else if (hScale > 1.0)
-    sprintf( f_text, "99999");
     if (hScale > 2.0 || kc2scale)
         kHz_step = 2000 / bin_bw;
     else
@@ -3901,138 +4031,31 @@ void Main_Widget::plotSpectrum( int y )
     // NO3M - disable scaling
     QPainter p;
     p.begin( this );
-    p.scale(1.0, 1.0);
+
+    //p.eraseRect( 0, TOPFRM_V + PBSFRM_V, spectrumFrame->width(), spectrumFrame->height()  ); // erase last spectrogram
+    p.fillRect( QRect(0, TOPFRM_V + PBSFRM_V, spectrumFrame->width(), spectrumFrame->height()), QColor( 0, 0, 0 ) ); // faster ??
+
     //p.scale( (1.0 / hScale), 1.0);  	// set the horizontal scaling value
+    p.scale(1.0, 1.0); // no3m
     //if(hScale > 2.0)
     //	p.setFont ( *font2 );
     //else
     p.setFont ( *font1 );
 
-    //////////////////////////////////  erase last spectrogram frame & redraw filter
-    p.eraseRect( 0, TOPFRM_V + PBSFRM_V, spectrumFrame->width(),
-                 spectrumFrame->height()  ); // erase last spectrogram
-    p.fillRect(0, TOPFRM_V + PBSFRM_V, spectrumFrame->width(),
-               //spectrumFrame->height(), QColor( 34, 34, 34 ) );
-               spectrumFrame->height(), QColor( 0, 0, 0 ) ); // no3m 202-03-07
     //////////////// next line puts in dark green area showing audio bandpass filter
-    p.fillRect( f1 , TOPFRM_V + PBSFRM_V, f2 - f1,
-                spectrumFrame->height(),
-                //QColor( 0, 50, 0 )
-                //QColor( 30, 144, 255, 50 )
-                //QColor( 255, 255, 0, 60 )
-                //QColor( 48, 48, 48, 255 ) // decent
-                //QColor( 53, 53, 53, 255 ) // last one used
-                QColor( 30, 30, 30, 255 )
-                //QColor( 0, 0, 255, 50 ) // blue
-                //QColor( 119, 136, 153, 50 ) // grey
-                //QColor( 25,25,112,100) light blue
-                );
+    int sx1 = 0;
+    int sx2 = 0;
+    // x1 is the lower-BP filter location
+    // x2 is the upper-BP filter location
+    if (*filter_l == 0) sx1 = -1;
+      else if (*filter_l < 0) sx1 = -2;
+    if (*filter_h == 0) sx2 = -1;
+      else if (*filter_h < 0) sx2 = -2;
+    f1 = (spectrogram->width() / 2 + sx1) + (int)(*filter_l / bin_bw / hScale);
+    f2 = (spectrogram->width() / 2 + sx2) + (int)(*filter_h / bin_bw / hScale);
+    p.fillRect( f1 , TOPFRM_V + PBSFRM_V, f2 - f1, spectrumFrame->height(), QColor( 30, 30, 30, 255 ) );
 
-
-    int shift = (rigGetFrequency () - ((int)(rigGetFrequency () / 1000) * 1000));
-    //////////////////// Draw the 1 kHz negative marks and the vertical lines below them.
-    if(hScale > 2.0 || kc2scale)
-        f = (rigGetFrequency () / 1000 ) -2;
-    else
-        f = (rigGetFrequency () / 1000 ) -1;
-    for ( double dx = spectrum_width / 2 - kHz_step - (shift / bin_bw);
-          dx >= 0;
-          dx = dx - kHz_step) {
-        // extended lines above spectrum area
-        //int y_top = ((int)rint(dx)-1 > f1 && (int)rint(dx)-1 < f2) ? TOPFRM_V +2 : TOPFRM_V + PBSFRM_V;
-        int y_top = TOPFRM_V + PBSFRM_V;
-        p.setPen( QColor( 100, 100, 100 ) );
-        p.drawLine( (int)rint(dx)-1,
-                    y_top,
-                    (int)rint(dx)-1,
-                    TOPFRM_V + PBSFRM_V + SPECFRM_V - font1Metrics->ascent() -3);
-
-        //sprintf( f_text, "%lf", (double)((rx_f + f) / 1000000.0) );
-        sprintf( f_text, "%d", f );
-        p.setPen( QColor( 255, 255, 255 ) );
-        if (hScale > 2.0 || kc2scale) {
-            f = f - 2;
-        } else {
-            f = f - 1;
-        }
-
-/*
-        // band limit indicator bar
-        if ( f >= 473 && f <= 478 ) {
-          p.fillRect( ((int)rint(dx)) - kHz_step ,
-                    TOPFRM_V + PBSFRM_V + SPECFRM_V - 2 , 
-                    kHz_step * 2,
-                    //spectrumFrame->height(), QColor( 34, 34, 34 ) );
-                    2 , 
-                    QColor( 230, 230, 230 ) );
-        }
-*/
-        //NO3M
-        //p.drawText( ((int)rint(dx) + 1) - (font2Metrics->maxWidth() *
-        p.setPen( QColor( 255, 255, 255 ) );
-        p.drawText( ((int)rint(dx)) - (font1Metrics->maxWidth() * strlen( f_text )) / 2 -1,
-                    TOPFRM_V + PBSFRM_V + SPECFRM_V -4, f_text );
-    }
-
-    //////////////////// Draw the 1 kHz positive marks and the vertical lines below them.
-
-    f = rigGetFrequency () / 1000;
-    for ( double dx = spectrum_width / 2  - (shift / bin_bw);
-          dx <= spectrum_width;
-          dx = dx + kHz_step) {
-        // extended lines above spectrum area
-        //int y_top = ((int)rint(dx)-1 > f1 && (int)rint(dx)-1 < f2) ? TOPFRM_V +2: TOPFRM_V + PBSFRM_V;
-        int y_top = TOPFRM_V + PBSFRM_V;
-
-        p.setPen( QColor( 100, 100, 100 ) );
-        p.drawLine( (int)rint(dx)-1,
-                    y_top,
-                    (int)rint(dx)-1,
-                    TOPFRM_V + PBSFRM_V + SPECFRM_V - font1Metrics->ascent() -3);
-        //sprintf( f_text, "%lf", (double)((rx_f + f) / 1000000.0) );
-        sprintf( f_text, "%d", f );
-        p.setPen( QColor( 255, 255, 255 ) );
-        if(hScale > 2.0 || kc2scale) {
-            f = f + 2;
-        } else {
-            f = f + 1;
-        }
-/*
-        // band limit indicator bar
-        if ( f >= 473 && f <= 478 ) {
-          p.fillRect( ((int)rint(dx)) - kHz_step ,
-                    TOPFRM_V + PBSFRM_V + SPECFRM_V - 2 , 
-                    kHz_step * 2,
-                    //spectrumFrame->height(), QColor( 34, 34, 34 ) );
-                    2 , 
-                    QColor( 230, 230, 230 ) );
-        }
-*/
-
-        //NO3M
-        //p.drawText( ((int)rint(dx) + 1) - (font2Metrics->maxWidth() *
-        p.drawText( ((int)rint(dx)) - (font1Metrics->maxWidth() * strlen( f_text )) / 2 -1,
-                   TOPFRM_V + PBSFRM_V + SPECFRM_V -4, f_text );
-    }
-
-
-
-
-
-    ///////////////////////////////////////////////////////////// Now, Draw the dB marks
-    //for ( int i = 20; i < SPECFRM_V; i += 20 ) {
-    //    p.setPen( QColor( 100, 100, 100 ) );
-    //    p.drawLine( 0, i + spectrogram->height() + PBSFRM_V + TOPFRM_V, spectrum_width,
-    //                i + spectrogram->height() + PBSFRM_V + TOPFRM_V );
-    //}
-
-    //SPECFRM_V
-    //p.drawLine( 0, (int)(specApertureLow - SPECFRM_V) * -1 + spectrogram->height() + PBSFRM_V+TOPFRM_V,
-    //            spectrum_width, (int)(specApertureLow - SPECFRM_V) *
-    //            -1 + spectrogram->height() + PBSFRM_V + TOPFRM_V );
-
-    //p.setPen( QColor( 100, 100, 100 ) );
-
+#if 1
     int ticks = spectrum_height / font1Metrics->height();
     int step = ((((specHigh - specLow) / ticks ) / 10 ) * 10 ) + 10;
 
@@ -4041,40 +4064,14 @@ void Main_Widget::plotSpectrum( int y )
             sprintf( f_text, "%4d", i);
             p.setPen( QColor( 100, 100, 100 ) );
             p.drawLine( 0, TOPFRM_V + PBSFRM_V + SPECFRM_V - (i - specLow) *vsScale,
-                        spectrum_width, TOPFRM_V + PBSFRM_V + SPECFRM_V - (i - specLow) *vsScale);
+                        spectrogram->width(), TOPFRM_V + PBSFRM_V + SPECFRM_V - (i - specLow) *vsScale);
             p.setPen( QColor( 255, 255, 255 ) );
             p.drawText( 2, TOPFRM_V + PBSFRM_V + SPECFRM_V - ((i - specLow) *vsScale) -1, f_text );
-            p.drawText( spectrum_width - font1Metrics->width(f_text) - 3, TOPFRM_V + PBSFRM_V + SPECFRM_V
+            p.drawText( spectrogram->width() - font1Metrics->width(f_text) - 3, TOPFRM_V + PBSFRM_V + SPECFRM_V
                         - ((i - specLow) *vsScale) -1, f_text );
         }
     }
-
-    //////////////////////////////////////////////////////////////// Draw the dB labels
-    //p.setPen( QColor( 255, 255, 255 ) );
-    //for (int i = specLow; i <= specHigh; i+=step) {
-    //    sprintf( f_text, "%d", i);
-    //    p.drawText( 2, spectrogram->height() + PBSFRM_V + TOPFRM_V - ((i - specHigh) *vsScale) + (font1Metrics->height()/2-2), f_text );
-    //    p.drawText( spectrum_width - font1Metrics->width(f_text) - 3, spectrogram->height() + PBSFRM_V + TOPFRM_V - ((i - specHigh) *vsScale) + (font1Metrics->height()/2-2), f_text );
-    //}
-
-    //for ( int i = 0; i < SPECFRM_V; i += 20 )
-    //{
-    //    p.setPen( QColor( 255, 255, 255 ) );
-    //    sprintf( f_text, "%d", -i - 40 );
-    //    p.drawText( 4, i + 19 + spectrogram->height() + PBSFRM_V + TOPFRM_V, f_text );
-    //    sprintf( f_text, "%4d", -i - 40 );
-    //    // NO3M
-    //    //if(hScale > 2) {
-    //    //    p.drawText( spectrum_width -
-    //    //	font2Metrics->maxWidth() * 4 - 2,
-    //    //		i + 19 + spectrogram->height() + PBSFRM_V + TOPFRM_V, f_text );
-
-    //    //} else {
-    //    p.drawText( spectrum_width -
-    //                font1Metrics->maxWidth() * 4 - 4,
-    //                i + 19 + spectrogram->height() + PBSFRM_V + TOPFRM_V, f_text );
-    //    //}
-    //}
+#endif
 
     ////////////////////////////////////////// Finally, Draw the actual Spectrum data
     // Average the last N samples of spectrum data
@@ -4094,14 +4091,10 @@ void Main_Widget::plotSpectrum( int y )
     }
 
     y1 =  spectrogram->height() + PBSFRM_V + TOPFRM_V + spectrumFrame->height();
-    //p.setPen( Qt::green );
-
 
     //spectrum averages
     int spectrum_avg = 0;
     int background_avg = 0;
-    //double sigma;
-    //int bg2;
     int spectrum_moving[DEFSPEC];
 
     // calculate spectrum and background averages
@@ -4143,19 +4136,16 @@ void Main_Widget::plotSpectrum( int y )
         setCA_label();
     }
 
+#if 1
     // draw spectrum average line
     if (specAvgLine && spectrumMode != SPEC_PEAK) {
-        //fprintf ( stderr, "bg %d\n", background_avg );
         QPen pen( Qt::DotLine );
         pen.setColor( QColor( 255, 255, 255, 255 ) );
         p.setPen( pen );
-        //p.setPen(QColor(0, 0, 255, 255));
-        //p.setPen(QColor(255, 255, 255, 255));
-        p.drawLine( 0, qBound(TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V - (background_avg - specShift) * vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V),
-                    spectrumFrame->width(), qBound(TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V - (background_avg - specShift) * vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V));
-        //p.drawLine( 0, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - (background_avg - specShift) * vsScale -1,
-        //            spectrumFrame_width_less1, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - (background_avg - specShift) * vsScale -1);
+        p.drawLine( 0, qBound(TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V - (background_avg - specVShift) * vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V),
+                    spectrumFrame->width(), qBound(TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V - (background_avg - specVShift) * vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V));
     }
+#endif
 
     // calculate moving average
     if (spectrumMode == SPEC_AVG || specPeakMarkers) {
@@ -4201,113 +4191,100 @@ void Main_Widget::plotSpectrum( int y )
     {
 
         if(specLineFill) {
-            //QLinearGradient gradient(spectrumFrame->rect().bottomLeft(), spectrumFrame->rect().topRight());
-            QLinearGradient gradient( x, 
-                                      TOPFRM_V + PBSFRM_V + SPECFRM_V - font1Metrics->ascent(), // SPECFRM_V - 1,
+            if (spectrumGradient) {
+               //QLinearGradient gradient(spectrumFrame->rect().bottomLeft(), spectrumFrame->rect().topRight());
+               QLinearGradient gradient( x, 
+                                      TOPFRM_V + PBSFRM_V + SPECFRM_V, // SPECFRM_V - 1,
                                       //TOPFRM_V + PBSFRM_V + SPECFRM_V, // SPECFRM_V - 1,
                                       x, 
                                       TOPFRM_V + PBSFRM_V + SPECFRM_V / 2 );
                                       //TOPFRM_V + PBSFRM_V + SPECFRM_V / 2);
-            if (x >= f1 && x <= f2) {
-                gradient.setColorAt(0, QColor(255, 255, 255, 50)); // 100
-                gradient.setColorAt(0.7, QColor(255, 255, 0, 180)); // 230 //yellow // no3m 202-03-07
-                //gradient.setColorAt(0.7, QColor(0, 255, 255, 230)); //cyan
-                //gradient.setColorAt(0.7, QColor(0,180,255,220)); // blue
-                //gradient.setColorAt(0.7, QColor(0,255,0,220)); // green
-            } else {
-                gradient.setColorAt(0, QColor(255, 255, 255, 50));
-                gradient.setColorAt(0.7, QColor(255, 255, 0, 180)); //yellow // no3m 202-03-07
-                //gradient.setColorAt(0.7, QColor(0, 255, 255, 180)); //cyan
-                //gradient.setColorAt(0.7, QColor(0,180,255,180)); // blue
-                //gradient.setColorAt(0.7, QColor(0,255,0,180)); // green
-            }
-            QBrush brush = QBrush(gradient);
-            p.setBrush(brush);
-            QPen pen;
-            pen.setBrush(brush);
-            p.setPen(pen);
+               spectrumColor.setAlpha(180);
+               if (x >= f1 && x <= f2) {
+                   gradient.setColorAt(0.7, spectrumColor.rgba());
+                   gradient.setColorAt(0, QColor(255, 255, 255, 50)); // 100
+               } else {
+                   gradient.setColorAt(0.7, spectrumColor.rgba());
+                   gradient.setColorAt(0, QColor(255, 255, 255, 50));
+               }
+               QBrush brush = QBrush(gradient);
+               p.setBrush(brush);
+               QPen pen;
+               pen.setBrush(brush);
+               p.setPen(pen);
 
-            //if (x >= f1 && x <= f2) { // more opaque inside filter window
-            //    //p.setPen(QColor(255, 255, 255, 200)); // white
-            //} else {
-                //p.setPen(QColor(255, 255, 255, 150)); // white
-            //}
+            } else {
+               spectrumColor.setAlpha(180);
+               p.setPen(spectrumColor.rgba());
+            }
 
             if (spectrumMode == SPEC_PEAK) {
                 p.drawLine( x, TOPFRM_V + PBSFRM_V + SPECFRM_V -1,
                             x, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                            (spectrum_peak[x + x1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
+                            (spectrum_peak[x + x1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
             } else if (spectrumMode == SPEC_AVG) {
                 p.drawLine( x, TOPFRM_V + PBSFRM_V + SPECFRM_V -1,
                             x, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                            (spectrum_moving[x + x1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
+                            (spectrum_moving[x + x1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
             } else if (specAveraging <= 1) { // normal mode
                 p.drawLine( x, TOPFRM_V + PBSFRM_V + SPECFRM_V -1,
                             x, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                            (spectrum_history[y][x + x1 + 1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
+                            (spectrum_history[y][x + x1 + 1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
             } else { // normal mode
                 p.drawLine( x, TOPFRM_V + PBSFRM_V + SPECFRM_V -1,
                             x, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                            (spectrum_data[x + x1 + 1] - specShift ) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
-
-                //p.setPen(QColor(0, 255, 255, 200));
-                //p.drawLine( x - 1, TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                //            (spectrum_data[x + x1] - specShift) *vsScale ,
-                //        x, TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                //        (spectrum_data[x + x1 + 1] - specShift) *vsScale );
+                            (spectrum_data[x + x1 + 1] - specVShift ) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
             }
 
         } //else {
 
-            p.setPen(QColor(255, 255, 0, 230)); // yellow // no3m 202-03-07
-            //p.setPen(QColor(0, 255, 255, 230)); // cyan
-            //p.setPen(QColor(0,180,255,230)); // blue
-            //p.setPen(QColor(255, 255, 255, 255)); // opaque white
-            //p.setPen(QColor(0,255,0,220)); // green
+            spectrumColor.setAlpha(180);
+            p.setPen(spectrumColor.rgba());
             if (spectrumMode == SPEC_PEAK) {
                if (specLines) {
                   p.drawLine( x - 1, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                            (spectrum_peak[x + x1 -1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1)   ,
+                            (spectrum_peak[x + x1 -1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1)   ,
                         x, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                        (spectrum_peak[x + x1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
+                        (spectrum_peak[x + x1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
                } else {
                   p.drawPoint(x, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                        (spectrum_peak[x + x1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
+                        (spectrum_peak[x + x1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
                }
             } else if (spectrumMode == SPEC_AVG){
                if (specLines) {
                   p.drawLine( x - 1, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                            (spectrum_moving[x + x1 -1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1)   ,
+                            (spectrum_moving[x + x1 -1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1)   ,
                         x, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                        (spectrum_moving[x + x1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1));
+                        (spectrum_moving[x + x1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1));
                } else {
                   p.drawPoint(x, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                        (spectrum_moving[x + x1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1));
+                        (spectrum_moving[x + x1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1));
                }
             } else if (specAveraging <= 1) { // normal mode
                if (specLines) {
                   p.drawLine( x - 1, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                            (spectrum_history[y][x + x1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) ,
+                            (spectrum_history[y][x + x1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) ,
                         x, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                        (spectrum_history[y][x + x1 +1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
+                        (spectrum_history[y][x + x1 +1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
                } else {
                   p.drawPoint(x, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                        (spectrum_history[y][x + x1 +1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
+                        (spectrum_history[y][x + x1 +1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
                }
             } else { // normal mode
                if (specLines) {
                   p.drawLine( x - 1, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                            (spectrum_data[x + x1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) ,
+                            (spectrum_data[x + x1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) ,
                         x, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                        (spectrum_data[x + x1 +1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
+                        (spectrum_data[x + x1 +1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
                } else {
                   p.drawPoint(x, qBound((x >= f1 && x <= f2) ? TOPFRM_V : TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V -
-                        (spectrum_data[x + x1 +1] - specShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
+                        (spectrum_data[x + x1 +1] - specVShift) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1) );
                }
             }
         //}
     }
 
+#if 0
     // peak markers
     if (specPeakMarkers && spectrumMode != SPEC_PEAK) {
         p.setPen(QColor(255, 0, 0, 255)); // red
@@ -4365,8 +4342,8 @@ void Main_Widget::plotSpectrum( int y )
 
                     // mark signal
                     if ((ipk - 2) > 1 && (ipk + 2) < spectrumFrame_width_less1 &&
-                         ((TOPFRM_V + PBSFRM_V + SPECFRM_V - (s - specShift) * vsScale)-2) < (TOPFRM_V + PBSFRM_V + SPECFRM_V -5) )
-                        p.drawEllipse(ipk-2, (TOPFRM_V + PBSFRM_V + SPECFRM_V - (s - specShift) * vsScale)-2, 4, 4);
+                         ((TOPFRM_V + PBSFRM_V + SPECFRM_V - (s - specVShift) * vsScale)-2) < (TOPFRM_V + PBSFRM_V + SPECFRM_V -5) )
+                        p.drawEllipse(ipk-2, (TOPFRM_V + PBSFRM_V + SPECFRM_V - (s - specVShift) * vsScale)-2, 4, 4);
 
                     // click filtering
                     if (s > background_avg + 20) {
@@ -4378,34 +4355,24 @@ void Main_Widget::plotSpectrum( int y )
             i++;
         }
     }
+#endif
 
-    // filter and center lines
-    p.setPen(QColor(255,255,255,255));
-    x1 = (spectrogram->width() / 2 - 1) + ((int)((*filter_l / bin_bw)) / hScale);
-    x2 = (spectrogram->width() / 2 - 1) + ((int)((*filter_h / bin_bw)) / hScale);
-    //p.drawLine(x1, TOPFRM_V + PBSFRM_V, x1, TOPFRM_V + PBSFRM_V + SPECFRM_V -1);
-    //p.drawLine(x2, TOPFRM_V + PBSFRM_V, x2, TOPFRM_V + PBSFRM_V + SPECFRM_V -1);
+#if 1
+    // dial freq line
     p.setPen(QColor(255,0,0,255));
     p.drawLine( spectrogram->width() / 2 - 1, TOPFRM_V + PBSFRM_V, spectrogram->width() / 2 - 1, TOPFRM_V + PBSFRM_V + SPECFRM_V -1);
+#endif
 
-
+#if 1
     ////////////////////////////////////////////////// Draw the color aperture lines
     QPen pen( Qt::DotLine );
     pen.setColor( QColor( 255, 50, 0 ) );
     p.setPen( pen );
-    //spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - (i - specLow) *vsScale
-    //p.drawLine( 0, (int)(specApertureLow - SPECFRM_V) * -1 + spectrogram->height() + PBSFRM_V+TOPFRM_V,
-    //            spectrum_width, (int)(specApertureLow - SPECFRM_V) *
-    //            -1 + spectrogram->height() + PBSFRM_V + TOPFRM_V );
-    //p.drawLine( 0, (int)(specApertureHigh - SPECFRM_V) * -1 + spectrogram->height() +PBSFRM_V+TOPFRM_V,
-    //            spectrum_width, (int)(specApertureHigh - SPECFRM_V) *
-    //           -1  + spectrogram->height() + PBSFRM_V + TOPFRM_V);
     p.drawLine( 0, qBound(TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V - ((specApertureLow-140) - specLow) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1),
-                spectrum_width, qBound(TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V - ((specApertureLow-140) - specLow) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1));
+                spectrumFrame->width(), qBound(TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V - ((specApertureLow-140) - specLow) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1));
     p.drawLine( 0, qBound(TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V - ((specApertureHigh-140) - specLow) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1),
-                spectrum_width, qBound(TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V - ((specApertureHigh-140) - specLow) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1));
-
-
+                spectrumFrame->width(), qBound(TOPFRM_V + PBSFRM_V, (int)(TOPFRM_V + PBSFRM_V + SPECFRM_V - ((specApertureHigh-140) - specLow) *vsScale), TOPFRM_V + PBSFRM_V + SPECFRM_V -1));
+#endif
 
     p.end();
 }
@@ -4505,7 +4472,9 @@ void Main_Widget::tunef ( int x )
         //			}
         //		}
     } else {
-        rx_delta_f += x;
+        // invert to match softrock tuning direction
+        rx_delta_f -= x;
+        //rx_delta_f += x;
         if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
         if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
         setRxFrequency( 0 );
@@ -4829,11 +4798,12 @@ void Main_Widget::toggle_SPLIT ( int )
 
 void Main_Widget::readMem ( MemoryCell *m )
 {
-    if(verbose) printf("readMem %d = %lld %lld\n", m->getID(), m->getFrequency(), m->getTxFrequency());
+    if(verbose) printf("readMem %d = %lld %lld || spec_width: %d\n", m->getID(), m->getFrequency(), m->getTxFrequency(), spec_width);
     setMode ( ( rmode_t ) m->getMode(), FALSE, FALSE );
     if ( rock_bound ) {
         rx_delta_f = m->getFrequency();
-        if ((rx_delta_f > spec_width) || (rx_delta_f < -spec_width)) {
+        //if ((rx_delta_f > spec_width) || (rx_delta_f < -spec_width)) {
+        if ((rx_delta_f > sample_rate/2) || (rx_delta_f < -(sample_rate/2))) {
             if(verbose) fprintf(stderr, "Error: frequency outside spectrum (%d <-> %d).  Reset it to 0\n",
                                 rx_delta_f, spec_width);
             rx_delta_f = 0;
@@ -4863,6 +4833,7 @@ void Main_Widget::readMem ( MemoryCell *m )
 
 void Main_Widget::writeMem ( MemoryCell *m )
 {
+
     if(verbose) printf("writeMem %d = (%lld - %d) %lld\n", m->getID(), rx_f, rx_delta_f,
                        rx_f - rx_delta_f);
     if (rock_bound) {
@@ -4882,7 +4853,11 @@ void Main_Widget::writeMem ( MemoryCell *m )
 void Main_Widget::displayMem ( MemoryCell *m )
 {
     char temp[32];
-    snprintf ( temp, 32, "%lf", ( double ) ( m->getFrequency() ) / 1000000.0 );
+    if (rock_bound) {
+       snprintf ( temp, 32, "%lf", ( double ) ( rx_f - m->getFrequency() ) / 1000000.0 );
+    } else {
+       snprintf ( temp, 32, "%lf", ( double ) (  m->getFrequency() ) / 1000000.0 );
+    }
     M_label->setText ( temp );
     if(verbose) printf("displayMem %d, %lld\n", m->getID(), m->getFrequency());
 }
@@ -4946,10 +4921,24 @@ void Main_Widget::updateHamlib()
     rig = ( rig_model_t ) rigString.toInt();
 }
 
+void Main_Widget::updateIQGainSlider ( int gain )
+{
+    iqGain = rxIqGainCourseSlider->value() + rxIqGainFineSlider->value();
+    cfgIQGainInput->setValue(iqGain);
+    setIQGain();
+}
+
 void Main_Widget::updateIQGain ( int gain )
 {
     iqGain = gain;
     setIQGain();
+}
+
+void Main_Widget::updateIQPhaseSlider ( int gain )
+{
+    iqPhase = rxIqPhaseCourseSlider->value() + rxIqPhaseFineSlider->value();
+    cfgIQPhaseInput->setValue(iqPhase);
+    setIQPhase();
 }
 
 void Main_Widget::updateIQPhase ( int phase )
@@ -5092,7 +5081,6 @@ void Main_Widget::setAGC ( int type )
         AGC_S_label->setPalette( off );
         AGC_M_label->setPalette( off );
         AGC_F_label->setPalette( off );
-
         break;
     case 2:
         AGC_O_label->setPalette( off ); //no3m
@@ -5127,8 +5115,8 @@ void Main_Widget::zoomIN ( int )
     else if (hScale == 2.0)
         hScale = 1.0;
     else if (hScale == 1.0)
-        hScale = 0.75;
-    else if (hScale == 0.75)
+    //    hScale = 0.75;
+    //else if (hScale == 0.75)
         hScale = 0.5;
     else if (hScale == 0.5)
         hScale = 0.25;
@@ -5137,29 +5125,31 @@ void Main_Widget::zoomIN ( int )
         if(verbose) fprintf(stderr, "Zoom in furthest\n");
     }
     else
-    {
         if(verbose) fprintf(stderr, "Zoom in from %f\n", hScale);
-    }
 }
 
 void Main_Widget::zoomOUT ( int )
 {
-    if (hScale >= 3.0)
+    if (hScale == 0.25)
+        hScale = 0.5;
+    else if (hScale == 0.5)
+    //    hScale = 0.75;
+    //else if (hScale == 0.75)
+        hScale = 1.0;
+    else if (hScale == 1.0)
+        hScale = 2.0;
+    else if (hScale == 2.0) {
+    //    hScale = 3.0;
+    //else if (hScale == 3.0)
+        hScale = sample_rate / (bin_bw * (geometry().width())); // spectrumFrame->width());
+        if (rock_bound) {
+           rx_delta_f = 0;
+           setRxFrequency( 0 );
+        }
+    } else if (hScale >= 3.0)
     {
         if(verbose) fprintf(stderr, "Zoom out furthest\n");
     }
-    else if (hScale == 3.0)
-        hScale = sample_rate / (bin_bw * (geometry().width()-20)); // spectrumFrame->width());
-    else if (hScale == 2.0)
-        hScale = 3.0;
-    else if (hScale == 1.0)
-        hScale = 2.0;
-    else if (hScale == 0.75)
-        hScale = 1.0;
-    else if (hScale == 0.5)
-        hScale = 0.75;
-    else if (hScale == 0.25)
-        hScale = 0.5;
     else
         if(verbose) fprintf(stderr, "Zoom out from %f\n", hScale);
 }
@@ -5936,6 +5926,29 @@ void Main_Widget::setHwGain ( )
    setRX_gain ( );
 }
 
+void Main_Widget::setSpectrumColor ( )
+{
+   QColor c;
+   c = QColorDialog::getColor(Qt::yellow, this);
+
+   if (c.isValid()) {
+      spectrumColor = c;
+   }
+
+   QPixmap pixmap(16, 16);
+   pixmap.fill(spectrumColor.rgba());
+   QIcon icon(pixmap);
+   cfgSpecColorButton->setIcon(icon);
+}
+
+void Main_Widget::setSpectrumGradient ( )
+{
+    if ( specGradientButton->isChecked() )
+        spectrumGradient = 1;
+    else
+        spectrumGradient = 0;
+}
+
 void Main_Widget::saveSpectrum ()
 {
     int x, specval;
@@ -5955,4 +5968,12 @@ void Main_Widget::saveSpectrum ()
 void Main_Widget::resizeEvent( QResizeEvent *)
 {
     windowResize = true;
+}
+
+void Main_Widget::zoom_mouse (int direction)
+{
+    if (direction > 0)
+       zoomIN(direction);
+    else
+       zoomOUT(direction);
 }

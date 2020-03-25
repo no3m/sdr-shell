@@ -11,24 +11,20 @@ Spectrogram::Spectrogram(QWidget *parent) : QWidget(parent)
 
 void Spectrogram::mouseReleaseEvent( QMouseEvent *e )
 {
-/*
 //printf("spectrogram mouseReleaseEvent \n");
     if ( !mouseMoving && e->button() == Qt::LeftButton )
     {
 //     printf("e->x() = %d\n", e->x());
 //     printf("e->gloabalX() = %d\n", e->globalX());     
 //     printf("e->y() = %d\n", e->y());
-//     printf("e->globalY() = %d\n", e->globalY());
-*/
+//     printf("e->globalY() = %d\n", e->globalY());     
         emit tune1( e->x() );
-/*
         }
 
     if ( !mouseMoving && e->button() == Qt::RightButton )
         emit plot( e->y() );    
 
     mouseMoving = false;
-*/
 }
 
 void Spectrogram::mouseMoveEvent( QMouseEvent *e )
@@ -81,13 +77,13 @@ void Spectrogram::wheelEvent(QWheelEvent *event)
 	ctl = 1;
 #endif
 
-//    printf("wheelEvent degrees %d steps %d orientation %c %c %c %c\n",
-//		numDegrees, numSteps, orientation, shift, ctl, alt);
+    printf("wheelEvent degrees %d steps %d orientation %c %c %c %c\n",
+		numDegrees, numSteps, orientation, shift, ctl, alt);
 
     if (event->orientation() == Qt::Horizontal) {
-        emit tune2( orient * numSteps +  10000 * shift + 100000 * alt);
+    	emit tune2( orient * -numSteps +  10000 * shift + 100000 * alt);
 	} else {
-        emit tune3( numSteps );
+    	emit tune3( -numSteps );
 	}
 }
 

@@ -9,8 +9,9 @@ Partial list:
 * Major changes to spectrum and spectrogram:
 
   > moved Spectrum above spectrogram
-  > Many color palette options (ie. WSJTX, FLDigi, GMFSK, Rocky, etc.) [main config: Spectrum]
-  > Spectrum dots, lines (connect dots), fill, peak markers, average line options [main config: Spectrum]
+  > Many spectrogram color palette options (ie. WSJTX, FLDigi, GMFSK, Rocky, etc.) [main config: Spectrum]
+  > custom color for spectrum
+  > Spectrum dots, lines (connect dots), fill w/ gradient option, peak markers, average line options [main config: Spectrum]
   > Spectrum normal, average, and peak modes [button on bottom panel = SPEC NORM, etc.]
   > Waterfall normal and moving average modes [button on bottom panel = WF NORM, etc.]
   > Waterfall time markers [main config: Spectrum]
@@ -20,17 +21,19 @@ Partial list:
     * Linrad style normal and reverse
     * SDR-shell style normal or reverse
 
-* direct frequency readout under spectum
+* direct frequency readout under spectum, mousewheel zooming
 
 * added AGC off back in, also sets output gain to compensate
-
-* date and time display under logo
 
 * added preamp and attenuator buttons (both configurable gain - right click to set) [DSP: Gain]
 
 * added noise blanker #2 (ie. SDROM) (right click NB2 to set) [DSP: NB}
 
 * added receive spot tone with user configurable parameters [main config: General]
+
+* tuning direction same for softrock vs. rockbound modes
+
+* fixed memory read/write/display issues w/ rockbound mode
 
 BUGS
 
@@ -39,7 +42,6 @@ BUGS
 TODO
 
 * fix zooming
-* add user defined AGC w/ config parameters
 
 ================================
 

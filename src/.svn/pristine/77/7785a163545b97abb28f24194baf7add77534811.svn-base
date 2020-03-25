@@ -44,14 +44,9 @@ void Spectrum::wheelEvent(QWheelEvent *event)
 	ctl = 1;
 #endif
 
-//    printf("wheelEvent degrees %d steps %d orientation %c %c %c %c\n",
-//		numDegrees, numSteps, orientation, shift, ctl, alt);
+    printf("wheelEvent degrees %d steps %d orientation %c %c %c %c\n",
+		numDegrees, numSteps, orientation, shift, ctl, alt);
 
-    if (event->orientation() == Qt::Horizontal) {
-        emit tune2( orient * numSteps +  10000 * shift + 100000 * alt);
-    } else {
-        emit tune3( numSteps );
-    }
-    //emit tune2( orient * numSteps +  10000 * shift + 100000 * alt);
+    emit tune2( orient * numSteps +  10000 * shift + 100000 * alt);
 }
 
