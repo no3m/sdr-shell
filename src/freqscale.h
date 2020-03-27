@@ -28,5 +28,7 @@ class FrequencyScale : public QWidget
 //        void tune3( int );
         void zoom( int );
         void movement( int );
+        void resetZoomEvent ( int );
+        void tune ( int );
 };
 #endif

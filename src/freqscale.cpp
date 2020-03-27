@@ -13,7 +13,10 @@ void FrequencyScale::mouseMoveEvent( QMouseEvent *e )
 
 void FrequencyScale::mousePressEvent( QMouseEvent *e )
 {
-
+    if ( e->button() == Qt::MidButton )
+        emit resetZoomEvent ( e->x() );    
+    if ( e->button() == Qt::LeftButton )
+        emit tune( e->x() );
 }
 
 void FrequencyScale::wheelEvent(QWheelEvent *event)

@@ -1,4 +1,4 @@
-Modifications to SDR-SHELL v4.25
+NO3M modifications to SDR-SHELL v4.25
 
 Partial list:
 
@@ -8,13 +8,14 @@ Partial list:
 
 * Major changes to spectrum and spectrogram:
 
+  > zooming does not changes font size, etc.
   > moved Spectrum above spectrogram
   > Many spectrogram color palette options (ie. WSJTX, FLDigi, GMFSK, Rocky, etc.) [main config: Spectrum]
   > custom color for spectrum
-  > Spectrum dots, lines (connect dots), fill w/ gradient option, peak markers, average line options [main config: Spectrum]
+  > Spectrum dots, lines (connect dots), fill w/ solid or gradient option, peak markers, average line options [main config: Spectrum]
   > Spectrum normal, average, and peak modes [button on bottom panel = SPEC NORM, etc.]
   > Waterfall normal and moving average modes [button on bottom panel = WF NORM, etc.], num samples configurable
-  > Waterfall time markers [main config: Spectrum]
+  > Waterfall time markers /w automatic period [main config: Spectrum]
   > Manual or automatic aperature settings for waterfall (ie. gain and contrast) [MAN/AUTO button bottom panel]  
   > Numerous spectrogram scrolling options [main config: Spectrum]:
     * Waterfall down / up
@@ -22,7 +23,7 @@ Partial list:
     * SDR-shell style normal or reverse
   > changed inhernet zooming methods (spectrogram: QImage scaling w/ fast transformation)
 
-* direct frequency readout under spectum, mousewheel zooming (increments by factor of +/- 0.1)
+* frequency scale under spectum, mousewheel zooming (increments by factor of +/- 0.1)
 
 * frequency at mouse location over spectrum/spectrogram is rounded to nearest step size (selected LCD readout)
 
@@ -32,7 +33,7 @@ Partial list:
 
 * added preamp and attenuator buttons (both configurable gain - right click to set) [DSP: Gain]
 
-* added noise blanker #2 (ie. SDROM) (right click NB2 to set) [DSP: NB}
+* added noise blanker #2 (ie. SDROM) (right click NB2 to set parameters) [DSP: NB}
 
 * added receive spot tone with user configurable parameters [main config: General]
 
@@ -40,13 +41,11 @@ Partial list:
 
 * fixed memory read/write/display issues w/ rockbound mode
 
+* UTC time displayed under logo
+
 BUGS
 
-* zooming broke
-
-TODO
-
-* fix zooming
+* cleanup spectrum code
 
 ================================
 
@@ -59,6 +58,11 @@ make install
 
 ================================
 
-Get dttsp / sdr-core here:
+Get Dttsp / SDR-core here:
 https://github.com/glenoverby/dttsp.git
+
+================================
+
+SDR-shell v4.25
+https://github.com/glenoverby/sdr-shell-v4.git
 

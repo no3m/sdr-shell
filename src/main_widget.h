@@ -654,6 +654,7 @@ class Main_Widget : public QWidget
 		void setSlopeTune ( bool );
 		void setCWPitch ( int );
 		void setMuteXmit ( bool );
+                void resetZoom ( int );
 
 	protected:
 		void keyPressEvent ( QKeyEvent * );
