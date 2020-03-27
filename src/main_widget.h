@@ -46,6 +46,7 @@
 #include <QDesktopWidget>
 #include <QColorDialog>
 
+#include <unistd.h>
 #include <time.h>
 #include <sys/timeb.h>
 
@@ -120,7 +121,7 @@ class Main_Widget : public QWidget
 		QFont *font;
 		QLineEdit *cfgCallInput, *cfgLOFreqInput, *cfgIFreqInput, *cfgHamlibRigInput, *cfgHamlibSpeedInput, *cfgHamlibPortInput;
 		QLineEdit *cfgTuneOffsetInput;
-        QLineEdit *captureDirectoryInput;
+	        QLineEdit *captureDirectoryInput;
 		QSpinBox *cfgIQPhaseInput, *cfgIQGainInput, *cfgUSBOffsetInput;
 		QSpinBox *cfgTxIQPhaseInput, *cfgTxIQGainInput;
                 QDoubleSpinBox *cfgHwGain;
@@ -128,31 +129,32 @@ class Main_Widget : public QWidget
 		QSpinBox *cfgTxMicGainInput, *cfgTxOutputGainInput;
 		QSpinBox *specCalSpinBox, *metrCalSpinBox, *cfgLSBOffsetInput;
 		QSpinBox *cfgSlopeLowOffsetInput, *cfgSlopeHighOffsetInput;
-        QSpinBox *NR_TapsSpinBox, *NR_DelaySpinBox;
-        QSpinBox *SpectrogramRefreshInput;
-        QSpinBox *cfgCaptureAutoSpinBox;
-        QDoubleSpinBox *NR_GainSpinBox, *NR_LeakageSpinBox; 
-        QSpinBox *ANF_TapsSpinBox, *ANF_DelaySpinBox; 
-        QDoubleSpinBox *ANF_GainSpinBox, *ANF_LeakageSpinBox; 
-        QDoubleSpinBox *NB_ThresholdSpinBox;
-        QDoubleSpinBox *SDROM_ThresholdSpinBox;
-        QDoubleSpinBox *preampGainSpinBox, *attGainSpinBox;
+        	QSpinBox *NR_TapsSpinBox, *NR_DelaySpinBox;
+	        QSpinBox *SpectrogramRefreshInput;
+        	QSpinBox *SpectrogramNumAVGInput;
+	        QSpinBox *cfgCaptureAutoSpinBox;
+        	QDoubleSpinBox *NR_GainSpinBox, *NR_LeakageSpinBox; 
+	        QSpinBox *ANF_TapsSpinBox, *ANF_DelaySpinBox; 
+        	QDoubleSpinBox *ANF_GainSpinBox, *ANF_LeakageSpinBox; 
+	        QDoubleSpinBox *NB_ThresholdSpinBox;
+        	QDoubleSpinBox *SDROM_ThresholdSpinBox;
+	        QDoubleSpinBox *preampGainSpinBox, *attGainSpinBox;
 		QSpinBox *cfgSpecAvgInput, *cfgSpecLowInput, *cfgSpecHighInput;
                 QSlider *rxIqGainCourseSlider, *rxIqGainFineSlider, *rxIqPhaseCourseSlider, *rxIqPhaseFineSlider;
 		QPixmap *rxPix, *txPix;
 		QFrame *trxFrame;
-        hamlibWrapper *ourHamlibWrapper;
+        	hamlibWrapper *ourHamlibWrapper;
 		RigCtlServer *rigCtl;
 		QMutex displayMutex, update_freqMutex;
 
-        //hamlib parameters.
+	        //hamlib parameters.
 		QString portString;
 		rig_model_t rig;
 		QString rigString;
 		int speed;
 		QString speedString;
 		bool useHamlib;
-        void initHamlib ();
+        	void initHamlib ();
 		void initRigCtl();
 		bool useSlopeTune;
 		bool muteXmit;
@@ -169,12 +171,12 @@ class Main_Widget : public QWidget
 		bool rock_bound;	// True if Crystal, False USBSoftrock
 		bool enableTransmit;
 		bool dualConversion;
-        bool capture_auto;
-        int capture_interval;
-        int capture_cntr;
+	        bool capture_auto;
+        	int capture_interval;
+	        int capture_cntr;
 		bool enableRIT;
 		bool enableSPLIT;
-        int spectrumMode, waterfallMode;
+        	int spectrumMode, spectrogramAVG;
 
 		Varilabel *TRX_label;
 		Varilabel *NR_label;
@@ -204,9 +206,9 @@ class Main_Widget : public QWidget
 		VariModelabel *FMN_label;
 		Varilabel *CFG_label;
 		Varilabel *HELP_label;
-        Varilabel *Capture_label;
-        Varilabel *SPECMODE_label, *WFMODE_label;
-        Varilabel *CAauto_label;
+	        Varilabel *Capture_label;
+        	Varilabel *SPECMODE_label, *WFMODE_label;
+	        Varilabel *CAauto_label;
 		Varilabel *AGC_O_label, *AGC_L_label, *AGC_S_label, *AGC_M_label, *AGC_F_label;
 		Varilabel *Zoom_in_label, *Zoom_out_label;
 
@@ -256,7 +258,6 @@ class Main_Widget : public QWidget
 		QLabel *af6_label;
 		QLabel *af7_label;
 		QLabel *af8_label;
-		
 		QLabel *cfgRigLabel;
 		QLabel *cfgSpeedLabel;
 		QLabel *cfgPortLabel;
@@ -288,28 +289,28 @@ class Main_Widget : public QWidget
 		QString *modeName[NUM_MODES];
 		QString stationCallsign;
 		QString stationQTH;
-        QString capture_directory;
+	        QString capture_directory;
 		//QLCDNumber *lcd;
 		LCDFreq *lcd;
 		QLabel *rit;
 		QTextEdit *textFrame;
-        QRadioButton *polyFFT_button, *preFilter_button, *postFilter_button,
+        	QRadioButton *polyFFT_button, *preFilter_button, *postFilter_button,
 			*fftWindow_0, *fftWindow_1, *fftWindow_2, *fftWindow_3, *fftWindow_4, *fftWindow_5,
 			*fftWindow_6, *fftWindow_7, *fftWindow_8, *fftWindow_9,*fftWindow_10, *fftWindow_11,
 			*fftWindow_12;
 		QRadioButton *specLineFillButton;
 		QRadioButton *specGradientButton;
-        QRadioButton *SpectrogramFilterButton;
-        QRadioButton *SpectrogramTimeMarkersButton;
-        QComboBox *cfgSpecScrolling;
-        QRadioButton *cfgPalette_1, *cfgPalette_2;
-        QComboBox *cfgPalette, *fftWindowBox;
-        QRadioButton *specAvgLineButton;
-        QRadioButton *specLinesButton;
-        QRadioButton *specPeakMarkersButton;
+	        QRadioButton *SpectrogramFilterButton;
+        	QRadioButton *SpectrogramTimeMarkersButton;
+	        QComboBox *cfgSpecScrolling;
+        	QRadioButton *cfgPalette_1, *cfgPalette_2;
+	        QComboBox *cfgPalette, *fftWindowBox;
+        	QRadioButton *specAvgLineButton;
+	        QRadioButton *specLinesButton;
+        	QRadioButton *specPeakMarkersButton;
 		QRadioButton *cfgUseUSBsoftrock;
 		QRadioButton *cfgDualConversion;
-        QRadioButton *cfgCaptureAuto;
+	        QRadioButton *cfgCaptureAuto;
 
 		QPalette p;
 
@@ -322,21 +323,21 @@ class Main_Widget : public QWidget
 		QFrame *step_1MHz_frame;
 		QFrame *step_10MHz_frame;
 		QFrame *step_100MHz_frame;
-		
+
 		unsigned long long int rx_f, rx_if;
 		unsigned long long int tx_f;
 		QString rx_f_string, rx_if_string;
 		QString tx_f_string;
 		QString	TuneOffset_string;
 		bool specLineFill;	// true=enables spectrum display line filled
-        bool specPeakMarkers;
-        bool autoSpecAperture;
-        bool specAvgLine;
-        bool specLines;
-        int spectrumScrolling;
-        bool windowResize;
-        int sample_rate;
-        bool spotTone;
+	        bool specPeakMarkers;
+        	bool autoSpecAperture;
+	        bool specAvgLine;
+        	bool specLines;
+	        int spectrumScrolling;
+        	bool windowResize;
+	        int sample_rate;
+        	bool spotTone;
 		int tuneCenter;		// where to put tune center when using usbsoftrock
 		int spec_width;		// spectrum display width
 		int rx_delta_f;		// relative to center frequeny
@@ -352,21 +353,21 @@ class Main_Widget : public QWidget
 		int FMN_filter_l, FMN_filter_h;
 		int AM_filter_l, AM_filter_h;
 		int s_dbm[34];
-        int spec_r[256], spec_g[256], spec_b[256];
+        	int spec_r[256], spec_g[256], spec_b[256];
 		rmode_t mode;
 		int iqGain, iqPhase;
 		int txIQGain, txIQPhase, txGain, micGain;
                 float hwGain;
 		int NR_Taps, NR_Delay;
-        float NR_Gain, NR_Leakage;
+	        float NR_Gain, NR_Leakage;
 		int ANF_Taps, ANF_Delay;
-        float ANF_Gain, ANF_Leakage;
+        	float ANF_Gain, ANF_Leakage;
 		float NB_Threshold;
 		float SDROM_Threshold;
                 float preampGain;
                 float attGain;
                 float spotFreq, spotAmpl;
-        int NR_state;
+	        int NR_state;
 		int ANF_state;
 		int NB_state;
 		int SDROM_state;
@@ -376,18 +377,18 @@ class Main_Widget : public QWidget
 		int filterLine;
                 int preamp_state;
                 int att_state;
-        bool specTimeMarkers;
-        bool specLinradScrolling;
+        	bool specTimeMarkers;
+	        bool specLinradScrolling;
 		int font1PointSize;
 		int font2PointSize;
 		int fontlcdPointSize;
 		int theme;
 		int map_flag;
-        int polyphaseFFT;
+        	int polyphaseFFT;
 		int fftWindow;
 		int spectrumType;
-        int spectrumPalette;
-        bool spectrumGradient;
+	        int spectrumPalette;
+        	bool spectrumGradient;
 		int agcType;
 		int transmit;
 		int band;
@@ -401,9 +402,9 @@ class Main_Widget : public QWidget
 		float spectrum[DEFSPEC];
 		float oscope[DEFSPEC];
 		float specApertureLow, specApertureHigh;
-        float specApertureLowTmp;
-        int apertureSize;
-        int apertureAutoDelta;
+	        float specApertureLowTmp;
+        	int apertureSize;
+	        int apertureAutoDelta;
 		float specCal;
 		float metrCal;
 		float hScale;
@@ -411,15 +412,16 @@ class Main_Widget : public QWidget
 		float bin_bw;
 		int specAveraging;		// number of spectrum data points to average on each display
 		int specLow, specHigh;
-        int spectrogramRefresh;
-        int spectrogramRefreshCounter;
-        int spectrogramPos;
+        	int spectrogramRefresh;
+	        int spectrogramNumAVG;
+        	int spectrogramRefreshCounter;
+	        int spectrogramPos;
 
 		int spectrum_history[SPECTRUM_HISTORY_SIZE][DEFSPEC];
-        int spectrum_peak[DEFSPEC];
+        	int spectrum_peak[DEFSPEC];
 		int spectrum_head;
 		int spectrum_width;
-        int spectrum_height;
+        	int spectrum_height;
 
 		float loadavg;
 		double my_lon, my_lat;
@@ -510,6 +512,7 @@ class Main_Widget : public QWidget
                 unsigned long long int rigGetFrequency();
                 void rigSetFrequency(unsigned long long int rigctlfreq);
                 void rigSetPTT ( int );
+                int rigGetPTT ();
 
 	public slots:
 		void finish();
@@ -541,16 +544,16 @@ class Main_Widget : public QWidget
 		void TXoff();
 		void toggle_RIT ( int );
 		void toggle_SPLIT ( int );
-        void toggle_SPECMODE ( int );
-        void toggle_WFMODE ( int );
-        void toggle_CAmode ( int );
-        void screenshot ( int );
-        void autoCapture ( );
-        void updateSpotFreq ( double );
-        void updateSpotAmpl ( double );
-        void setSpotToneVals ( );
-        void toggle_spotTone ( int );
-        void setSpotTone ( );
+	        void toggle_SPECMODE ( int );
+        	void toggle_WFMODE ( int );
+	        void toggle_CAmode ( int );
+        	void screenshot ( int );
+	        void autoCapture ( );
+        	void updateSpotFreq ( double );
+	        void updateSpotAmpl ( double );
+        	void setSpotToneVals ( );
+	        void toggle_spotTone ( int );
+        	void setSpotTone ( );
                 void setSpectrumColor();
                 void setSpectrumGradient( );
                 void updateIQGainSlider( int );
@@ -580,7 +583,7 @@ class Main_Widget : public QWidget
 		void updateUSBOffset ( int );
 		void updateLSBOffset ( int );
 		void updateSlopeHighOffset ( int offset );
-		void updateSlopeLowOffset ( int offset );	
+		void updateSlopeLowOffset ( int offset );
 		void updateHamlib();
 		void updateIQGain ( int );
 		void updateIQPhase ( int );
@@ -591,21 +594,22 @@ class Main_Widget : public QWidget
                 void updateHwGain ( double );
                 void setHwGain ( );
                 void setPolyFFT ( );
-        void setFFTWindow ( int );
-        void setSpectrumPalette ( int );
-        void initSpectrumPalette ( );
+	        void setFFTWindow ( int );
+        	void setSpectrumPalette ( int );
+	        void initSpectrumPalette ( );
 		void updateSpecAvg ( int );
 		void updateSpecLow ( int );
 		void updateSpecHigh ( int );
-        void updateSpectrogramRefresh ( int );
-        void updateCaptureDirectory ( );
+        	void updateSpectrogramRefresh ( int );
+	        void updateSpectrogramNumAVG ( int );
+        	void updateCaptureDirectory ( );
 		void setLineFill ( );
-        void setFilterLine ( );
-        void setSpectrumScrolling ( int );
-        void setSpecTimeMarkers ( );
-        void setSpectrumAvgLine ( );
-        void setSpectrumLines ( );
-        void setSpectrumPeakMarkers ( );
+	        void setFilterLine ( );
+        	void setSpectrumScrolling ( int );
+	        void setSpecTimeMarkers ( );
+        	void setSpectrumAvgLine ( );
+	        void setSpectrumLines ( );
+        	void setSpectrumPeakMarkers ( );
 		void setSpectrumType ( );
 		void setSpectrumDefaults ( );
 		void setAGC ( int );
@@ -614,34 +618,33 @@ class Main_Widget : public QWidget
                 void zoom_mouse (int);
 		void calibrateSpec ( int );
 		void calibrateMetr ( int );
-        void setNR_Taps ( int );
-        void setNR_Delay ( int );
-        void setNR_Gain ( double);
-        void setNR_Leakage ( double);
-        void set_NRvals ( );
-        void setANF_Taps ( int );
-        void setANF_Delay ( int );
-        void setANF_Gain ( double );
-        void setANF_Leakage ( double );
-        void set_ANFvals ( );
-        void setNB_Threshold ( double );
-        void setSDROM_Threshold ( double );
-        void setPreamp_Gain ( double );
-        void setAtt_Gain ( double );
-        void set_NBvals ( );
-        void set_SDROMvals ( );
-        void setRX_gain ( );
+	        void setNR_Taps ( int );
+        	void setNR_Delay ( int );
+	        void setNR_Gain ( double);
+        	void setNR_Leakage ( double);
+	        void set_NRvals ( );
+        	void setANF_Taps ( int );
+	        void setANF_Delay ( int );
+        	void setANF_Gain ( double );
+	        void setANF_Leakage ( double );
+        	void set_ANFvals ( );
+	        void setNB_Threshold ( double );
+        	void setSDROM_Threshold ( double );
+	        void setPreamp_Gain ( double );
+        	void setAtt_Gain ( double );
+	        void set_NBvals ( );
+        	void set_SDROMvals ( );
+	        void setRX_gain ( );
 		void updateUseUSBsoftrock ( bool );
 		void updateTransmit ( bool );
 		void updateDualConversion ( bool );
-        void updateCaptureAuto ( bool );
-        void updateCaptureAutoInterval ( int );
+        	void updateCaptureAuto ( bool );
+	        void updateCaptureAutoInterval ( int );
 		void updateTuneOffset ( );
 		void updateCmd (int n);
 		void resetCmd (int n);
 		void updatePTT();
 		void updateFreq();
-		
 		void set_MUTE ( int );
 		void setOurRxFrequency ( double );
 		void setIF ( bool );
@@ -655,7 +658,7 @@ class Main_Widget : public QWidget
 	protected:
 		void keyPressEvent ( QKeyEvent * );
 		void paintEvent ( QPaintEvent * );
-        void resizeEvent (QResizeEvent *);
+	        void resizeEvent (QResizeEvent *);
 		void focusInEvent ( QFocusEvent * );
 		void focusOutEvent ( QFocusEvent * );
 		void closeEvent ( QCloseEvent * );

@@ -13,15 +13,20 @@ Partial list:
   > custom color for spectrum
   > Spectrum dots, lines (connect dots), fill w/ gradient option, peak markers, average line options [main config: Spectrum]
   > Spectrum normal, average, and peak modes [button on bottom panel = SPEC NORM, etc.]
-  > Waterfall normal and moving average modes [button on bottom panel = WF NORM, etc.]
+  > Waterfall normal and moving average modes [button on bottom panel = WF NORM, etc.], num samples configurable
   > Waterfall time markers [main config: Spectrum]
   > Manual or automatic aperature settings for waterfall (ie. gain and contrast) [MAN/AUTO button bottom panel]  
   > Numerous spectrogram scrolling options [main config: Spectrum]:
     * Waterfall down / up
     * Linrad style normal and reverse
     * SDR-shell style normal or reverse
+  > changed inhernet zooming methods (spectrogram: QImage scaling w/ fast transformation)
 
-* direct frequency readout under spectum, mousewheel zooming
+* direct frequency readout under spectum, mousewheel zooming (increments by factor of +/- 0.1)
+
+* frequency at mouse location over spectrum/spectrogram is rounded to nearest step size (selected LCD readout)
+
+* spectrum/spectrogram clicking to change frequency is rounded to nearest step size (selected LCD digit)
 
 * added AGC off back in, also sets output gain to compensate
 

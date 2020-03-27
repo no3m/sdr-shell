@@ -90,6 +90,8 @@ void RigCtlSocket::readyRead() {
 	} else if (command[0] == 'T') { // set_ptt
 		int enabled = command.mid(space + 1).toInt();
 		main->rigSetPTT(enabled);
+	} else if (command[0] == 't') { // get PTT
+		out << main->rigGetPTT() << "\n";
 	} else if (command[0] == 'q') { // quit
 		conn->close();
 		return;
@@ -136,6 +138,8 @@ void RigCtlSocket::readyRead() {
 		out << "0x0\n";
 		out << "0\n";
 		output = true;
+        } else if (command == "\\chk_vfo") {
+                out << "CHKVFO 0\n";
 	} else {
 		fprintf(stderr, "rigctl: unknown command \"%s\"\n",
 		        command.constData());
