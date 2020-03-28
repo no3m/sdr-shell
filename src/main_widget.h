@@ -285,8 +285,10 @@ class Main_Widget : public QWidget
 		QFrame *map;
 		QFrame *filterFrame;
 		QColor *signalColor[34];
-		QColor spectrumColor;
-                QPushButton *cfgSpecColorButton;
+		QColor spectrumFillColor;
+		QColor spectrumLineColor;
+                QPushButton *cfgSpecFillColorButton;
+                QPushButton *cfgSpecLineColorButton;
 		QString *modeName[NUM_MODES];
 		QString stationCallsign;
 		QString stationQTH;
@@ -555,7 +557,8 @@ class Main_Widget : public QWidget
         	void setSpotToneVals ( );
 	        void toggle_spotTone ( int );
         	void setSpotTone ( );
-                void setSpectrumColor();
+                void setSpectrumFillColor();
+                void setSpectrumLineColor();
                 void setSpectrumGradient( );
                 void updateIQGainSlider( int );
                 void updateIQPhaseSlider( int );

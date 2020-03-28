@@ -657,18 +657,31 @@ void Main_Widget::init()
     connect ( cfgSpecHighInput, SIGNAL ( valueChanged ( int ) ),
               this, SLOT ( updateSpecHigh ( int ) ) );
 
-    QLabel *cfgSpecColorLabel = new QLabel ( cfgSpecDisplay );
-    cfgSpecColorLabel->setText ( "Spectrum Color: " );
-    cfgSpecColorLabel->setGeometry ( 10, 140, 160, 20 );
-    cfgSpecColorLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-    cfgSpecColorButton = new QPushButton ( cfgSpecDisplay );
-    cfgSpecColorButton->setGeometry ( 180, 140, 30, 20 ); 
-    QPixmap pixmap(16, 16);
-    pixmap.fill(spectrumColor.rgba());
-    QIcon icon(pixmap);
-    cfgSpecColorButton->setIcon(icon);
-    connect ( cfgSpecColorButton, SIGNAL ( pressed() ),
-              this, SLOT ( setSpectrumColor( ) ) );
+    QLabel *cfgSpecFillColorLabel = new QLabel ( cfgSpecDisplay );
+    cfgSpecFillColorLabel->setText ( "Fill Color: " );
+    cfgSpecFillColorLabel->setGeometry ( 10, 140, 160, 20 );
+    cfgSpecFillColorLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    cfgSpecFillColorButton = new QPushButton ( cfgSpecDisplay );
+    cfgSpecFillColorButton->setGeometry ( 180, 140, 30, 20 ); 
+    QPixmap pixmap_fill(16, 16);
+    pixmap_fill.fill(spectrumFillColor.rgba());
+    QIcon icon_fill(pixmap_fill);
+    cfgSpecFillColorButton->setIcon(icon_fill);
+    connect ( cfgSpecFillColorButton, SIGNAL ( pressed() ),
+              this, SLOT ( setSpectrumFillColor( ) ) );
+
+    QLabel *cfgSpecLineColorLabel = new QLabel ( cfgSpecDisplay );
+    cfgSpecLineColorLabel->setText ( "Dot|Line Color: " );
+    cfgSpecLineColorLabel->setGeometry ( 10, 160, 160, 20 );
+    cfgSpecLineColorLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    cfgSpecLineColorButton = new QPushButton ( cfgSpecDisplay );
+    cfgSpecLineColorButton->setGeometry ( 180, 160, 30, 20 ); 
+    QPixmap pixmap_line(16, 16);
+    pixmap_line.fill(spectrumLineColor.rgba());
+    QIcon icon_line(pixmap_line);
+    cfgSpecLineColorButton->setIcon(icon_line);
+    connect ( cfgSpecLineColorButton, SIGNAL ( pressed() ),
+              this, SLOT ( setSpectrumLineColor( ) ) );
 
     // Spectrogram display
     QGroupBox *cfgSpectrogram = new QGroupBox( cfgFrame3 );
@@ -2546,7 +2559,8 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/specavgline", false).toBool();
     spectrogramNumAVG = settings->value(
                 "/sdr-shell/spectrogramNumAVG", 10).toInt();
-    spectrumColor = settings->value( "/sdr-shell/spectrumColor", QColor(Qt::yellow)).value<QColor>();
+    spectrumFillColor = settings->value( "/sdr-shell/spectrumFillColor", QColor(Qt::yellow)).value<QColor>();
+    spectrumLineColor = settings->value( "/sdr-shell/spectrumLineColor", QColor(Qt::yellow)).value<QColor>();
     spectrumGradient = settings->value( "/sdr-shell/spectrumGradient", false).toBool();
     capture_directory = settings->value(
                 "/sdr-shell/capture_dir", QDir::homePath()).toString();
@@ -2759,7 +2773,8 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/capture_dir", capture_directory );
     settings->setValue ( "/sdr-shell/capture_auto", capture_auto );
     settings->setValue ( "/sdr-shell/capture_interval", capture_interval );
-    settings->setValue ( "/sdr-shell/spectrumColor", spectrumColor );
+    settings->setValue ( "/sdr-shell/spectrumFillColor", spectrumFillColor );
+    settings->setValue ( "/sdr-shell/spectrumLineColor", spectrumLineColor );
     settings->setValue ( "/sdr-shell/spectrumGradient", spectrumGradient );
     settings->setValue ( "/sdr-shell/spectrogramNumAVG", spectrogramNumAVG );
 
@@ -4308,11 +4323,11 @@ void Main_Widget::plotSpectrum( int y )
         if(specLineFill) {
             if (spectrumGradient) {
                QLinearGradient gradient( x, 
-                                         spectrumFrame->height(), // SPECFRM_V - 1,
+                                         spectrumFrame->height(),
                                          x,
                                          spectrumFrame->height() / 2 );
 
-               gradient.setColorAt(0.7, spectrumColor.rgba());
+               gradient.setColorAt(0.7, spectrumFillColor.rgba());
                gradient.setColorAt(0, QColor(255, 255, 255, 50));
                QBrush brush = QBrush(gradient);
                p.setBrush(brush);
@@ -4321,9 +4336,7 @@ void Main_Widget::plotSpectrum( int y )
                p.setPen(pen);
 
             } else {
-               //spectrumColor.setAlpha(180);
-               //spectrumColor.setAlpha(50);
-               p.setPen(spectrumColor.rgba());
+               p.setPen(spectrumFillColor.rgba());
             }
 
             p.drawLine( x, 
@@ -4332,8 +4345,7 @@ void Main_Widget::plotSpectrum( int y )
                         qBound(0, (int)(spectrumFrame->height() - (spectrum_display[x] - specVShift) *vsScale), spectrumFrame->height() - 1) );
          }
 
-         //spectrumColor.setAlpha(180);
-         p.setPen(spectrumColor.rgba());
+         p.setPen(spectrumLineColor.rgba());
 
          if (specLines) {
 
@@ -5989,19 +6001,34 @@ void Main_Widget::setHwGain ( )
    setRX_gain ( );
 }
 
-void Main_Widget::setSpectrumColor ( )
+void Main_Widget::setSpectrumFillColor ( )
 {
    QColor c;
    c = QColorDialog::getColor(Qt::yellow, this);
 
    if (c.isValid()) {
-      spectrumColor = c;
+      spectrumFillColor = c;
    }
 
    QPixmap pixmap(16, 16);
-   pixmap.fill(spectrumColor.rgba());
+   pixmap.fill(spectrumFillColor.rgba());
    QIcon icon(pixmap);
-   cfgSpecColorButton->setIcon(icon);
+   cfgSpecFillColorButton->setIcon(icon);
+}
+
+void Main_Widget::setSpectrumLineColor ( )
+{
+   QColor c;
+   c = QColorDialog::getColor(Qt::yellow, this);
+
+   if (c.isValid()) {
+      spectrumLineColor = c;
+   }
+
+   QPixmap pixmap(16, 16);
+   pixmap.fill(spectrumLineColor.rgba());
+   QIcon icon(pixmap);
+   cfgSpecLineColorButton->setIcon(icon);
 }
 
 void Main_Widget::setSpectrumGradient ( )
