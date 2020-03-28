@@ -30,5 +30,6 @@ class FrequencyScale : public QWidget
         void movement( int );
         void resetZoomEvent ( int );
         void tune ( int );
+        void scale ( int );
 };
 #endif

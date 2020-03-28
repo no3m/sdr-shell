@@ -17,6 +17,8 @@ void FrequencyScale::mousePressEvent( QMouseEvent *e )
         emit resetZoomEvent ( e->x() );    
     if ( e->button() == Qt::LeftButton )
         emit tune( e->x() );
+    if ( e->button() == Qt::RightButton )
+        emit scale( e->x() );
 }
 
 void FrequencyScale::wheelEvent(QWheelEvent *event)

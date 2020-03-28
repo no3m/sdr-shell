@@ -177,6 +177,7 @@ class Main_Widget : public QWidget
 		bool enableRIT;
 		bool enableSPLIT;
         	int spectrumMode, spectrogramAVG;
+                bool freqScaleABSMode;
 
 		Varilabel *TRX_label;
 		Varilabel *NR_label;
@@ -655,6 +656,7 @@ class Main_Widget : public QWidget
 		void setCWPitch ( int );
 		void setMuteXmit ( bool );
                 void resetZoom ( int );
+		void changeFreqScale ( int );
 
 	protected:
 		void keyPressEvent ( QKeyEvent * );

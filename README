@@ -21,13 +21,19 @@ Partial list:
     * Waterfall down / up
     * Linrad style normal and reverse
     * SDR-shell style normal or reverse
-  > changed inhernet zooming methods (spectrogram: QImage scaling w/ fast transformation)
+  > changed inhernet zooming rendering 
+    * spectrogram: QImage scaling w/ fast transformation
+    * spectrum: decimate w/ max (zoom > 1.0), interpolate w/ linear sloop (zoom < 1.0)
 
-* frequency scale under spectum, mousewheel zooming (increments by factor of +/- 0.1)
+* frequency scale under spectum
 
-* frequency at mouse location over spectrum/spectrogram is rounded to nearest step size (selected LCD readout)
+  > mouse scroolwheel zooming (increments by factor of +/- 0.1)
+  > middle click resets to 1:1 zoom
+  > left click / hover same as spectorgram / spectrum
 
-* spectrum/spectrogram clicking to change frequency is rounded to nearest step size (selected LCD digit)
+* frequency at mouse location over spectrum/spectrogram/frequency-scale is rounded to nearest step size (selected LCD readout)
+
+* spectrum/spectrogram/frequency-scale left click to change frequency is rounded to nearest step size (selected LCD digit)
 
 * added AGC off back in, also sets output gain to compensate
 
@@ -42,10 +48,6 @@ Partial list:
 * fixed memory read/write/display issues w/ rockbound mode
 
 * UTC time displayed under logo
-
-BUGS
-
-* cleanup spectrum code
 
 ================================
 
