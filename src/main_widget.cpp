@@ -581,7 +581,7 @@ void Main_Widget::init()
     // Spectrum display
     QGroupBox *cfgSpecDisplay = new QGroupBox( cfgFrame3 );
     cfgSpecDisplay->setTitle("Spectrum Display");
-    cfgSpecDisplay->setGeometry( 5, 150, 330, 180 );
+    cfgSpecDisplay->setGeometry( 5, 150, 330, 200 );
 
     // no3m - SpecLineFill
     specLineFillButton = new QRadioButton( tr("Fill Spectrum Line"), cfgSpecDisplay);
@@ -614,9 +614,17 @@ void Main_Widget::init()
              this, SLOT ( setSpectrumAvgLine () ) );
     if (specAvgLine) specAvgLineButton->setChecked(true);
 
+    // no3m - Spectrum Average Line
+    specAperLinesButton = new QRadioButton( tr("Aperature Lines"), cfgSpecDisplay);
+    specAperLinesButton->setGeometry ( 10, 80, 200, 20 );
+    specAperLinesButton->setAutoExclusive(false);
+    connect( specAperLinesButton, SIGNAL(clicked()),
+             this, SLOT ( setSpectrumAperLines () ) );
+    if (specAperLines) specAperLinesButton->setChecked(true);
+
     // no3m - Spectrum Peak markers
     specPeakMarkersButton = new QRadioButton( tr("Peak Markers"), cfgSpecDisplay);
-    specPeakMarkersButton->setGeometry ( 10, 80, 200, 20 );
+    specPeakMarkersButton->setGeometry ( 10, 100, 200, 20 );
     specPeakMarkersButton->setAutoExclusive(false);
     connect( specPeakMarkersButton, SIGNAL(clicked()),
              this, SLOT ( setSpectrumPeakMarkers () ) );
@@ -625,10 +633,10 @@ void Main_Widget::init()
     // Spectrum Averaging
     QLabel *cfgSpecAvgInputLabel = new QLabel ( cfgSpecDisplay );
     cfgSpecAvgInputLabel->setText ( "Averaging Samples: " );
-    cfgSpecAvgInputLabel->setGeometry ( 10, 100, 160, 20 );
+    cfgSpecAvgInputLabel->setGeometry ( 10, 120, 160, 20 );
     cfgSpecAvgInputLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     cfgSpecAvgInput = new QSpinBox ( cfgSpecDisplay );
-    cfgSpecAvgInput->setGeometry ( 180, 100, 70, 20 );
+    cfgSpecAvgInput->setGeometry ( 180, 120, 70, 20 );
     cfgSpecAvgInput->setMinimum ( 0 );
     cfgSpecAvgInput->setMaximum ( 255 );
     cfgSpecAvgInput->setValue ( specAveraging );
@@ -638,10 +646,10 @@ void Main_Widget::init()
     // Spectrum Scale
     QLabel *cfgSpecScaleLabel = new QLabel ( cfgSpecDisplay );
     cfgSpecScaleLabel->setText ( "Spectrum Scale: " );
-    cfgSpecScaleLabel->setGeometry ( 10, 120, 160, 20 );
+    cfgSpecScaleLabel->setGeometry ( 10, 140, 160, 20 );
     cfgSpecScaleLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     cfgSpecLowInput = new QSpinBox ( cfgSpecDisplay );
-    cfgSpecLowInput->setGeometry ( 180, 120, 70, 20 );
+    cfgSpecLowInput->setGeometry ( 180, 140, 70, 20 );
     cfgSpecLowInput->setMinimum ( -140 );
     cfgSpecLowInput->setMaximum ( -100 );
     cfgSpecLowInput->setSingleStep( 5 );
@@ -649,7 +657,7 @@ void Main_Widget::init()
     connect ( cfgSpecLowInput, SIGNAL ( valueChanged ( int ) ),
               this, SLOT ( updateSpecLow ( int ) ) );
     cfgSpecHighInput = new QSpinBox ( cfgSpecDisplay );
-    cfgSpecHighInput->setGeometry ( 250, 120, 70, 20 );
+    cfgSpecHighInput->setGeometry ( 250, 140, 70, 20 );
     cfgSpecHighInput->setMinimum ( -70 );
     cfgSpecHighInput->setMaximum ( 0 );
     cfgSpecHighInput->setSingleStep( 5 );
@@ -659,10 +667,10 @@ void Main_Widget::init()
 
     QLabel *cfgSpecFillColorLabel = new QLabel ( cfgSpecDisplay );
     cfgSpecFillColorLabel->setText ( "Fill Color: " );
-    cfgSpecFillColorLabel->setGeometry ( 10, 140, 160, 20 );
+    cfgSpecFillColorLabel->setGeometry ( 10, 160, 160, 20 );
     cfgSpecFillColorLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     cfgSpecFillColorButton = new QPushButton ( cfgSpecDisplay );
-    cfgSpecFillColorButton->setGeometry ( 180, 140, 30, 20 ); 
+    cfgSpecFillColorButton->setGeometry ( 180, 160, 30, 20 ); 
     QPixmap pixmap_fill(16, 16);
     pixmap_fill.fill(spectrumFillColor.rgba());
     QIcon icon_fill(pixmap_fill);
@@ -672,10 +680,10 @@ void Main_Widget::init()
 
     QLabel *cfgSpecLineColorLabel = new QLabel ( cfgSpecDisplay );
     cfgSpecLineColorLabel->setText ( "Dot|Line Color: " );
-    cfgSpecLineColorLabel->setGeometry ( 10, 160, 160, 20 );
+    cfgSpecLineColorLabel->setGeometry ( 10, 180, 160, 20 );
     cfgSpecLineColorLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     cfgSpecLineColorButton = new QPushButton ( cfgSpecDisplay );
-    cfgSpecLineColorButton->setGeometry ( 180, 160, 30, 20 ); 
+    cfgSpecLineColorButton->setGeometry ( 180, 180, 30, 20 ); 
     QPixmap pixmap_line(16, 16);
     pixmap_line.fill(spectrumLineColor.rgba());
     QIcon icon_line(pixmap_line);
@@ -686,7 +694,7 @@ void Main_Widget::init()
     // Spectrogram display
     QGroupBox *cfgSpectrogram = new QGroupBox( cfgFrame3 );
     cfgSpectrogram->setTitle("Waterfall Display");
-    cfgSpectrogram->setGeometry( 5, 330, 330, 120 );
+    cfgSpectrogram->setGeometry( 5, 350, 330, 120 );
     SpectrogramFilterButton = new QRadioButton( tr("Filter Lines"), cfgSpectrogram);
     SpectrogramFilterButton->setGeometry ( 10, 20, 140, 20 );
     SpectrogramFilterButton->setAutoExclusive(false);
@@ -743,7 +751,7 @@ void Main_Widget::init()
     // no3m
     QGroupBox *cfgColorPalette = new QGroupBox( cfgFrame3 );
     cfgColorPalette->setTitle("Color Palette");
-    cfgColorPalette->setGeometry( 5, 470, 330, 40 );
+    cfgColorPalette->setGeometry( 5, 490, 330, 40 );
     cfgPalette = new QComboBox (cfgColorPalette);
     cfgPalette->insertItem(0, "SDR-shell");
     cfgPalette->insertItem(1, "GQRX" );
@@ -2557,6 +2565,8 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/speclines", false).toBool();
     specAvgLine = settings->value(
                 "/sdr-shell/specavgline", false).toBool();
+    specAperLines = settings->value(
+                "/sdr-shell/specaperlines", true).toBool();
     spectrogramNumAVG = settings->value(
                 "/sdr-shell/spectrogramNumAVG", 10).toInt();
     spectrumFillColor = settings->value( "/sdr-shell/spectrumFillColor", QColor(Qt::yellow)).value<QColor>();
@@ -2766,6 +2776,7 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/specrefresh", spectrogramRefresh );
     settings->setValue ( "/sdr-shell/speclines", specLines );
     settings->setValue ( "/sdr-shell/specavgline", specAvgLine );
+    settings->setValue ( "/sdr-shell/specaperlines", specAperLines );
     settings->setValue ( "/sdr-shell/specpeak", specPeakMarkers );
     settings->setValue ( "/sdr-shell/spectrumScrolling", spectrumScrolling);
     settings->setValue ( "/sdr-shell/spectimemarkers", specTimeMarkers);
@@ -4363,7 +4374,7 @@ void Main_Widget::plotSpectrum( int y )
          }
     }
 
-#if 0
+#if 1
     // peak markers
     if (specPeakMarkers && spectrumMode != SPEC_PEAK) {
         p.setPen(QColor(255, 0, 0, 255)); // red
@@ -4420,6 +4431,7 @@ void Main_Widget::plotSpectrum( int y )
                     }
 
                     // mark signal
+                    ipk = int (float (ipk) / hScale); // scale
                     if ((ipk - 2) > 1 && (ipk + 2) < spectrumFrame_width_less1 &&
                          ((spectrumFrame->height() - (s - specVShift) * vsScale)-2) < (spectrumFrame->height() -5) )
                         p.drawEllipse(ipk-2, (spectrumFrame->height() - (s - specVShift) * vsScale)-2, 4, 4);
@@ -4436,22 +4448,24 @@ void Main_Widget::plotSpectrum( int y )
     }
 #endif
 
-#if 1
     // dial freq line
     p.setPen(QColor(255,0,0,255));
     p.drawLine( spectrogram->width() / 2 - 1, 0, spectrogram->width() / 2 - 1, spectrumFrame->height() -1);
-#endif
 
-#if 1
     ////////////////////////////////////////////////// Draw the color aperture lines
-    QPen pen( Qt::DotLine );
-    pen.setColor( QColor( 255, 50, 0 ) );
-    p.setPen( pen );
-    p.drawLine( 0, qBound(0, (int)(spectrumFrame->height() - ((specApertureLow-140) - specLow) *vsScale), spectrumFrame->height() -1),
-                spectrumFrame->width(), qBound(0, (int)(spectrumFrame->height() - ((specApertureLow-140) - specLow) *vsScale), spectrumFrame->height() -1));
-    p.drawLine( 0, qBound(0, (int)(spectrumFrame->height() - ((specApertureHigh-140) - specLow) *vsScale), spectrumFrame->height() -1),
-                spectrumFrame->width(), qBound(0, (int)(spectrumFrame->height() - ((specApertureHigh-140) - specLow) *vsScale), spectrumFrame->height() -1));
-#endif
+    if (specAperLines) {
+       QPen pen( Qt::DotLine );
+       pen.setColor( QColor( 255, 50, 0 ) );
+       p.setPen( pen );
+       p.drawLine( 0,
+                   qBound(0, (int)(spectrumFrame->height() - ((specApertureLow-140) - specLow) *vsScale), spectrumFrame->height() -1),
+                   spectrumFrame->width(),
+                   qBound(0, (int)(spectrumFrame->height() - ((specApertureLow-140) - specLow) *vsScale), spectrumFrame->height() -1));
+       p.drawLine( 0,
+                   qBound(0, (int)(spectrumFrame->height() - ((specApertureHigh-140) - specLow) *vsScale), spectrumFrame->height() -1),
+                   spectrumFrame->width(),
+                   qBound(0, (int)(spectrumFrame->height() - ((specApertureHigh-140) - specLow) *vsScale), spectrumFrame->height() -1));
+    }
 
     p.end();
 }
@@ -5766,6 +5780,14 @@ void Main_Widget::setSpectrumAvgLine ( )
         specAvgLine = 1;
     else
         specAvgLine = 0;
+}
+
+void Main_Widget::setSpectrumAperLines ( )
+{
+    if ( specAperLinesButton->isChecked() )
+        specAperLines = 1;
+    else
+        specAperLines = 0;
 }
 
 void Main_Widget::setSpectrumPeakMarkers ( )

@@ -309,6 +309,7 @@ class Main_Widget : public QWidget
         	QRadioButton *cfgPalette_1, *cfgPalette_2;
 	        QComboBox *cfgPalette, *fftWindowBox;
         	QRadioButton *specAvgLineButton;
+        	QRadioButton *specAperLinesButton;
 	        QRadioButton *specLinesButton;
         	QRadioButton *specPeakMarkersButton;
 		QRadioButton *cfgUseUSBsoftrock;
@@ -336,6 +337,7 @@ class Main_Widget : public QWidget
 	        bool specPeakMarkers;
         	bool autoSpecAperture;
 	        bool specAvgLine;
+	        bool specAperLines;
         	bool specLines;
 	        int spectrumScrolling;
         	bool windowResize;
@@ -612,6 +614,7 @@ class Main_Widget : public QWidget
         	void setSpectrumScrolling ( int );
 	        void setSpecTimeMarkers ( );
         	void setSpectrumAvgLine ( );
+        	void setSpectrumAperLines ( );
 	        void setSpectrumLines ( );
         	void setSpectrumPeakMarkers ( );
 		void setSpectrumType ( );

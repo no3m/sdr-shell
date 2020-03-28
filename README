@@ -1,6 +1,8 @@
 NO3M modifications to SDR-SHELL v4.25
 
-Partial list:
+Check CFG window/tabs for configuration of most added features
+
+Changes, additions, etc.:
 
 * Ability to capture / snapshot GUI automatically or on-demand, saved as PNG to configurable dirctory [main config: General]
 
@@ -11,7 +13,7 @@ Partial list:
   > zooming does not changes font size, etc.
   > moved Spectrum above spectrogram
   > Many spectrogram color palette options (ie. WSJTX, FLDigi, GMFSK, Rocky, etc.) [main config: Spectrum]
-  > custom color for spectrum
+  > custom colors for spectrum (separate dot/line and fill colors)
   > Spectrum dots, lines (connect dots), fill w/ solid or gradient option, peak markers, average line options [main config: Spectrum]
   > Spectrum normal, average, and peak modes [button on bottom panel = SPEC NORM, etc.]
   > Waterfall normal and moving average modes [button on bottom panel = WF NORM, etc.], num samples configurable
@@ -29,7 +31,8 @@ Partial list:
 
   > mouse scroolwheel zooming (increments by factor of +/- 0.1)
   > middle click resets to 1:1 zoom
-  > left click / hover same as spectorgram / spectrum
+  > left click / hover same as spectrogram / spectrum (ie. tune / show freq)
+  > right click to toggle between absolute (ie. 7040...7050) and relative (-1000...-500) scales (relative like original SDR-shell)
 
 * frequency at mouse location over spectrum/spectrogram/frequency-scale is rounded to nearest step size (selected LCD readout)
 
@@ -65,6 +68,6 @@ https://github.com/glenoverby/dttsp.git
 
 ================================
 
-SDR-shell v4.25
+SDR-shell v4.25 (original source)
 https://github.com/glenoverby/sdr-shell-v4.git
 
