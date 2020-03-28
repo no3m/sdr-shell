@@ -4232,19 +4232,22 @@ void Main_Widget::plotSpectrum( int y )
         }
     }
 
+    //spectrum_width = int(spectrumFrame->width() * hScale); // here for reference
     /////////////////////////////////////////////////// map scaled spectrum
-    for ( x = 0 ; x < spectrum_width ; ) {
+    // process extra samples to avoid junk data at end of scaled spectrum due to float division casted to int
+    for ( x = 0 ; x < spectrum_width + 5 ; ) { 
 
         int sx = int (float (x) / hScale); // current scaled point
+        if (sx > spectrumFrame->width()) break;
         //if ( sx > spectrumFrame->width() - 1) break;
         int sx_next = int (float (x + 1) / hScale); // next scaled point
 
         // find next data point that scales to a new pixel
         int x_next = x + 1; // scale <= 1.0
-        if (hScale > 1.0) {
+        if (hScale > 1.01) {
            int si;
            for (int i = 1; i < 5; ++i) {
-              if (x + i < spectrum_width) {
+              if (x + i < DEFSPEC) {
                 si = int ( float (x + i) / hScale);
                 if ( si > sx ) {
                    x_next = x + i;
@@ -4256,7 +4259,7 @@ void Main_Widget::plotSpectrum( int y )
 
         // find slope between current and next scaled point // might be outside of spectrum_width
         float slope = 0.0;
-        if (hScale < 1.0) {
+        if (hScale < 0.99) {
            if (spectrumMode == SPEC_PEAK)
               slope = float ( spectrum_peak[ x_next + x1 ] - spectrum_peak[ x + x1 ] ) / float ( sx_next - sx );
            else if (spectrumMode == SPEC_AVG)
@@ -4282,8 +4285,8 @@ void Main_Widget::plotSpectrum( int y )
            spectrum_display[sx] = max;
         }
 
-        if (hScale < 1.0) { // zoomed in; interpolate missing bins with simple linear slope
-            for (int i = 0; i < sx_next - sx && sx + i < spectrumFrame->width() - 1 ; ++i) {
+        if (hScale < 0.99) { // zoomed in; interpolate missing bins with simple linear slope
+            for (int i = 0; i < sx_next - sx && sx + i < spectrumFrame->width() ; ++i) {
                if (spectrumMode == SPEC_PEAK) {
                   spectrum_display[sx+i] = int ( float (spectrum_peak[ x + x1]) + ( slope * float (i) ) );
                } else if (spectrumMode == SPEC_AVG) {
