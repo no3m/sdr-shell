@@ -14,7 +14,8 @@ Changes, additions, etc.:
   > moved Spectrum above spectrogram
   > Many spectrogram color palette options (ie. WSJTX, FLDigi, GMFSK, Rocky, etc.) [main config: Spectrum]
   > custom colors for spectrum (separate dot/line and fill colors)
-  > Spectrum dots, lines (connect dots), fill w/ solid or gradient option, peak markers, average line options [main config: Spectrum]
+  > Spectrum dots, lines (connect dots), fill w/ solid or gradient option [main config: Spectrum]
+  > Spectrum peak markers, average line, toggle on/off paerature lines [main config: Spectrum]
   > Spectrum normal, average, and peak modes [button on bottom panel = SPEC NORM, etc.]
   > Waterfall normal and moving average modes [button on bottom panel = WF NORM, etc.], num samples configurable
   > Waterfall time markers /w automatic period [main config: Spectrum]
