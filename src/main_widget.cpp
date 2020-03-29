@@ -3985,9 +3985,9 @@ void Main_Widget::drawFreqScale() // ok
              }
           }
           px = int ( (float (spectrogram->width()) / 2.0) + ( float (f) / ( bin_bw * hScale ) ) - 1.0 );
-          if (px >= 0 && px < spectrumFrame->width()) {
+          if (px >= 0 && px < spectrumFrame->width() && f > 0) {
              if ( f % label == 0) {
-                sprintf( f_text, "%d", f * -1 );
+                sprintf( f_text, "+%d", f );
                 p.drawText( px - ((font1Metrics->maxWidth() * (strlen( f_text ) + ((f==0) ? 0 :1) )) / 2 ), freqScale->height() - 1, f_text );
                 p.drawLine( px, 0, px, 8);
              } else if ( f % 1000 == 0) {
