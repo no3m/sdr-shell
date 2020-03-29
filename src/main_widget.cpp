@@ -3812,8 +3812,8 @@ void Main_Widget::drawSpectrogram( int y ) //ok
           this->scroll(0,-1,QRect(0,spectrogramTop,spectrumFrame->width(),spectrogram->height()));
         }
 
-        p.drawImage( 0, spectrogramPos, spectrogramLine.scaled(spectrumFrame->width(), 1, Qt::IgnoreAspectRatio, Qt::FastTransformation) );
-        //p.drawImage( 0, spectrogramPos, spectrogramLine.scaled(spectrogram->width(), 1, Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+        //p.drawImage( 0, spectrogramPos, spectrogramLine.scaled(spectrumFrame->width(), 1, Qt::IgnoreAspectRatio, Qt::FastTransformation) );
+        p.drawImage( 0, spectrogramPos, spectrogramLine.scaled(spectrogram->width(), 1, Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
 
         if ( filterLine ) {
            int sx1 = 0;
