@@ -21,6 +21,7 @@ Main_Widget::Main_Widget()
 {
     char *ep;
     sample_rate = 0; //Set Default Values//
+    def_spec = 4096;
     rxCMDPort=19001;
     txCMDPort=19005;
     meterPort=19003;
@@ -34,6 +35,11 @@ Main_Widget::Main_Widget()
         sample_rate = atoi ( ep );
         if(verbose) fprintf ( stderr, "sample_rate = %d\n", sample_rate );
         //tuneCenter = -sample_rate / 4; // no3m - set in loadSettings()
+    }
+    if ( ( ep = getenv ( "SDR_DEFSPEC" ) ) )
+    {
+        def_spec = atoi ( ep );
+        if(verbose) fprintf ( stderr, "def_spec = %d\n", def_spec );
     }
 }
 void Main_Widget::init()
@@ -64,7 +70,7 @@ void Main_Widget::init()
                           "bash$ export SDR_DEFRATE=48000\n" );
         exit ( 1 );
     }
-    bin_bw = (float)sample_rate / (float)DEFSPEC;
+    bin_bw = (float)sample_rate / (float)def_spec;
     setupSDR();
 
     version.sprintf("%5.2f", VERSION);
@@ -2112,7 +2118,7 @@ void Main_Widget::set_MeterPort( int port )
 void Main_Widget::set_SampleRate( int rate)
 {
     sample_rate = rate;
-    //if(verbose) fprintf(stderr, "Set the sample rate to %d",sample_rate);
+    if(verbose) fprintf ( stderr, "sample_rate = %d\n", sample_rate );
 }
 
 void Main_Widget::set_Host( char *ip )
@@ -2384,7 +2390,7 @@ void Main_Widget::setupSDR()
     }
 
     // spectrum scaling
-    spec_width = DEFSPEC;
+    spec_width = def_spec;
 }
 
 void Main_Widget::loadSettings()
@@ -3655,30 +3661,30 @@ void Main_Widget::readSpectrum()
 {
     int j, k, l, m, n;
     int label, stamp;
-    float raw_spectrum[DEFSPEC];
+    float raw_spectrum[def_spec];
     float a;
 
     //fprintf( stderr, ".");
     updated++;
     pCmd->sendCommand ("reqSpectrum %d\n", getpid() );
 
-    if (spec_width == DEFSPEC) {
-        pSpectrum->fetch (&stamp, &label, spectrum, DEFSPEC);
+    if (spec_width == def_spec) {
+        pSpectrum->fetch (&stamp, &label, spectrum, def_spec);
     } else {
-        pSpectrum->fetch (&stamp, &label, raw_spectrum, DEFSPEC);
+        pSpectrum->fetch (&stamp, &label, raw_spectrum, def_spec);
 
         // spectrum from dttsp is centered at Osc.
         // if Osc != 0, then some bins on one end are wrapped data.  Zero them.
         // this is only a visible problem when scaling the data...
 #if 0
         if (rx_delta_f < 0) {
-            float bin_bw = sample_rate/(float)DEFSPEC;
+            float bin_bw = sample_rate/(float)def_spec;
             a = abs(rx_delta_f) / bin_bw;
-            j = DEFSPEC - (int)a;
+            j = def_spec - (int)a;
             if (once)
                 printf("Osc=%d bins=%.1f j=%d\n",
                        rx_delta_f, a, j);
-            for(; j < DEFSPEC; j++) {
+            for(; j < def_spec; j++) {
                 raw_spectrum[j] = 0;
             }
         }
@@ -3689,8 +3695,8 @@ void Main_Widget::readSpectrum()
         // use the max value of N samples
         // j = raw sample index
         // k = downsampled index
-        n = DEFSPEC / spec_width;
-        for (j = k = 0; j < DEFSPEC; j += n, k++) {
+        n = def_spec / spec_width;
+        for (j = k = 0; j < def_spec; j += n, k++) {
             a = raw_spectrum[j];
 
             for (l = j+1, m=1; m < n; l++, m++) {
@@ -3701,7 +3707,7 @@ void Main_Widget::readSpectrum()
 
             spectrum[k] = a;
         }
-        for ( ; k < DEFSPEC; k++) {
+        for ( ; k < def_spec; k++) {
             spectrum[k] = 0;
         }
         // if the dttsp Osc frequency is not zero, one end or the other has
@@ -3721,7 +3727,7 @@ void Main_Widget::drawSpectrogram( int y ) //ok
     float pwr_range;
     bool spec_debug = false;
     static bool timeline = false;
-    int spectrum_d[DEFSPEC];
+    int spectrum_d[def_spec];
 
     int spectrogramTop = ctlFrame->height() + pbScale->height() + spectrumFrame->height() + freqScale->height();
 
@@ -3756,24 +3762,24 @@ void Main_Widget::drawSpectrogram( int y ) //ok
 
         if (spectrogramAVG) {
             // Average the last N samples of spectrum data
-            memset(spectrum_d, 0, sizeof(int) * DEFSPEC);
+            memset(spectrum_d, 0, sizeof(int) * def_spec);
             for (y1 = y, n=0; n < spectrogramNumAVG; n++) {
-                for ( x = 1; x < DEFSPEC; x++ ) {
+                for ( x = 1; x < def_spec; x++ ) {
                     spectrum_d[x] += spectrum_history[y1][x];
                 }
                 y1--;
                 if (y1 < 0)
                     y1 = spectrogram->height() - 1;
             }
-            for ( x = 1; x < DEFSPEC; x++ ) {
+            for ( x = 1; x < def_spec; x++ ) {
                 spectrum_d[x] = spectrum_d[x] / (spectrogramNumAVG);
             }
         }
 
         //spectrum_width = int(spectrumFrame->width() * hScale); // reference
-        //tf    x1 = DEFSPEC/2 - spectrogram->width()/2;
+        //tf    x1 = def_spec/2 - spectrogram->width()/2;
         //tf    x2 = x1 + spectrogram->width();
-        x1 = DEFSPEC/2 - spectrum_width/2;
+        x1 = def_spec/2 - spectrum_width/2;
         x2 = x1 + spectrum_width;
         if(spec_debug)
         {
@@ -3929,7 +3935,10 @@ void Main_Widget::drawFreqScale() // ok
     p.setPen( QColor( 255, 255, 255 ) );
 
     sprintf( f_text, "99999");
-    if ((font1Metrics->maxWidth() * strlen( f_text )) > (1000 / bin_bw / hScale)) {
+    if ((font1Metrics->maxWidth() * strlen( f_text )) > (2000 / bin_bw / hScale)) {
+       tick = 1000;
+       label = 10000;
+    } else if ((font1Metrics->maxWidth() * strlen( f_text )) > (1000 / bin_bw / hScale)) {
        tick = 500;
        label = 5000;
     } else if ((font1Metrics->maxWidth() * strlen( f_text )) > (500 / bin_bw / hScale)) {
@@ -3957,6 +3966,10 @@ void Main_Widget::drawFreqScale() // ok
                 sprintf( f_text, "%d", (f/1000) );
              p.drawText( px - ((font1Metrics->maxWidth() * strlen( f_text )) / 2 ), freqScale->height() - 1, f_text );
              p.drawLine( px, 0, px, 8);
+          } else if (f % 5000 == 0 && tick == 1000) {
+             p.drawLine( px, 0, px, 6);
+          } else if (f % 1000 == 0 && tick == 1000) {
+             p.drawLine( px, 0, px, 4);
           } else if ( f % 1000 == 0) {
              p.drawLine( px, 0, px, 8);
           } else if ( f % 500 == 0) {
@@ -3976,6 +3989,10 @@ void Main_Widget::drawFreqScale() // ok
                 sprintf( f_text, "%d", f * -1 );
                 p.drawText( px - ((font1Metrics->maxWidth() * (strlen( f_text ) + ((f==0)? 0 : 1) )) / 2 ), freqScale->height() - 1, f_text );
                 p.drawLine( px, 0, px, 8);
+             } else if (f % 5000 == 0 && tick == 1000) {
+                p.drawLine( px, 0, px, 6);
+             } else if (f % 1000 == 0 && tick == 1000) {
+                p.drawLine( px, 0, px, 4);
              } else if ( f % 1000 == 0) {
                 p.drawLine( px, 0, px, 8);
              } else if ( f % 500 == 0) {
@@ -3990,6 +4007,10 @@ void Main_Widget::drawFreqScale() // ok
                 sprintf( f_text, "+%d", f );
                 p.drawText( px - ((font1Metrics->maxWidth() * (strlen( f_text ) + ((f==0) ? 0 :1) )) / 2 ), freqScale->height() - 1, f_text );
                 p.drawLine( px, 0, px, 8);
+             } else if (f % 5000 == 0 && tick == 1000) {
+                p.drawLine( px, 0, px, 6);
+             } else if (f % 1000 == 0 && tick == 1000) {
+                p.drawLine( px, 0, px, 4);
              } else if ( f % 1000 == 0) {
                 p.drawLine( px, 0, px, 8);
              } else if ( f % 500 == 0) {
@@ -4081,7 +4102,7 @@ void Main_Widget::plotSpectrum( int y )
     int f1, f2;
     char f_text[10];
     bool debug = false;
-    int spectrum_data[DEFSPEC];
+    int spectrum_data[def_spec];
     int spectrum_display[spectrumFrame->width()];
 
     // ref: spectrum_width = int(spectrumFrame->width() * hScale)
@@ -4090,7 +4111,7 @@ void Main_Widget::plotSpectrum( int y )
 
     // 4096/2 - width/2
     //spectrum_width = int(spectrumFrame->width() * hScale); // reference
-    x1 = (DEFSPEC/2 - spectrum_width / 2);
+    x1 = (def_spec/2 - spectrum_width / 2);
     x2 = x1 + spectrum_width;
 
     if(debug)
@@ -4160,16 +4181,16 @@ void Main_Widget::plotSpectrum( int y )
 
     // Average the last N samples of spectrum data
     if (specAveraging > 1) {
-        memset(spectrum_data, 0, sizeof(int) * DEFSPEC);
+        memset(spectrum_data, 0, sizeof(int) * def_spec);
         for (y1 = y, n=0; n < specAveraging; n++) {
-            for ( x = 1; x < DEFSPEC; x++ ) {
+            for ( x = 1; x < def_spec; x++ ) {
                 spectrum_data[x] += spectrum_history[y1][x];
             }
             y1--;
             if (y1 < 0)
                 y1 = spectrogram->height() - 1;
         }
-        for ( x = 1; x < DEFSPEC; x++ ) {
+        for ( x = 1; x < def_spec; x++ ) {
             spectrum_data[x] = spectrum_data[x] / specAveraging;
         }
     }
@@ -4179,22 +4200,22 @@ void Main_Widget::plotSpectrum( int y )
     //spectrum averages
     int spectrum_avg = 0;
     int background_avg = 0;
-    int spectrum_moving[DEFSPEC];
+    int spectrum_moving[def_spec];
 
     // calculate spectrum and background averages
     if (specAvgLine || specPeakMarkers || autoSpecAperture) {
-        for (int i=0; i < DEFSPEC; i++){
+        for (int i=0; i < def_spec; i++){
             if (specAveraging <= 1) {
                 spectrum_avg += spectrum_history[y][i];
             } else {
                 spectrum_avg += spectrum_data[i];
             }
         }
-        spectrum_avg /= DEFSPEC;
+        spectrum_avg /= def_spec;
 
         // remove signals
         int n = 0;
-        for (int i=0; i < DEFSPEC; i++){
+        for (int i=0; i < def_spec; i++){
             int spec_tmp;
 
             if (specAveraging <= 1)
@@ -4235,18 +4256,18 @@ void Main_Widget::plotSpectrum( int y )
         if (specAveraging <= 1) {
             spectrum_moving[0] = (spectrum_history[y][0] + spectrum_history[y][1]) / 2;
             spectrum_moving[1] = (spectrum_history[y][0] + spectrum_history[y][1] + spectrum_history[y][2]) / 3;
-            spectrum_moving[DEFSPEC-1] = (spectrum_history[y][DEFSPEC-1] + spectrum_history[y][DEFSPEC-2]) / 2;
-            spectrum_moving[DEFSPEC-2] = (spectrum_history[y][DEFSPEC-1] + spectrum_history[y][DEFSPEC-2] + spectrum_history[y][DEFSPEC-3]) / 3;
-            for (int i=2; i < DEFSPEC-2; i++){
+            spectrum_moving[def_spec-1] = (spectrum_history[y][def_spec-1] + spectrum_history[y][def_spec-2]) / 2;
+            spectrum_moving[def_spec-2] = (spectrum_history[y][def_spec-1] + spectrum_history[y][def_spec-2] + spectrum_history[y][def_spec-3]) / 3;
+            for (int i=2; i < def_spec-2; i++){
                 spectrum_moving[i] = (spectrum_history[y][i] + spectrum_history[y][i+1] + spectrum_history[y][i-1] +
                         spectrum_history[y][i+2] + spectrum_history[y][i-2]) / 5;
             }
         } else {
             spectrum_moving[0] = (spectrum_data[0] + spectrum_data[1]) / 2;
             spectrum_moving[1] = (spectrum_data[0] + spectrum_data[1] + spectrum_data[2]) / 3;
-            spectrum_moving[DEFSPEC-1] = (spectrum_data[DEFSPEC-1] + spectrum_data[DEFSPEC-2]) / 2;
-            spectrum_moving[DEFSPEC-2] = (spectrum_data[DEFSPEC-1] + spectrum_data[DEFSPEC-2]+ spectrum_data[DEFSPEC-3]) / 3;
-            for (int i=2; i < DEFSPEC-2; i++){
+            spectrum_moving[def_spec-1] = (spectrum_data[def_spec-1] + spectrum_data[def_spec-2]) / 2;
+            spectrum_moving[def_spec-2] = (spectrum_data[def_spec-1] + spectrum_data[def_spec-2]+ spectrum_data[def_spec-3]) / 3;
+            for (int i=2; i < def_spec-2; i++){
                 spectrum_moving[i] = (spectrum_data[i] + spectrum_data[i+1] + spectrum_data[i-1] +
                         spectrum_data[i+2] + spectrum_data[i-2]) / 5;
             }
@@ -4255,7 +4276,7 @@ void Main_Widget::plotSpectrum( int y )
 
     // store new peaks
     if (spectrumMode == SPEC_PEAK) {
-        for (int i=0; i<DEFSPEC; i++) {
+        for (int i=0; i<def_spec; i++) {
             if (specAveraging <= 1) {
                 if (spectrum_history[y][i] > spectrum_peak[i]) {
                     spectrum_peak[i] = spectrum_history[y][i];
@@ -4283,7 +4304,7 @@ void Main_Widget::plotSpectrum( int y )
         if (hScale > 1.01) {
            int si;
            for (int i = 1; i < 5; ++i) {
-              if (x + i < DEFSPEC) {
+              if (x + i < def_spec) {
                 si = int ( float (x + i) / hScale);
                 if ( si > sx ) {
                    x_next = x + i;
@@ -5955,7 +5976,7 @@ void Main_Widget::toggle_SPECMODE ( int )
         spectrumMode = SPEC_PEAK;
         SPECMODE_label->setPixmap ( specmodepeak_pix );
 
-        for (int i=0; i<DEFSPEC; i++) {
+        for (int i=0; i<def_spec; i++) {
             spectrum_peak[i] = -140;
         }
 
@@ -6076,7 +6097,7 @@ void Main_Widget::saveSpectrum ()
     int x, specval;
     static int y = 0;
 
-    for (x = 0; x < DEFSPEC; x++)		// for number of fft samples per line..
+    for (x = 0; x < def_spec; x++)		// for number of fft samples per line..
     {
         specval = (int)(spectrum[ x ] + specCal);	//Save power for spectrum display
         //if(specval > 119) specval = 119;
@@ -6108,4 +6129,10 @@ void Main_Widget::resetZoom ( int )
 void Main_Widget::changeFreqScale ( int )
 {
    freqScaleABSMode = !freqScaleABSMode;
+}
+
+void Main_Widget::set_SpectrumSize( int size)
+{
+    def_spec = size;
+    if(verbose) fprintf ( stderr, "def_spec = %d\n", def_spec );
 }

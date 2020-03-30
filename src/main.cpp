@@ -18,7 +18,8 @@ int main (int argc, char **argv)
         {"spectrum-port", required_argument, 0, 's'},
         {"meter-port", required_argument, 0, 'm'},
         {"tx-command-port", required_argument, 0, 't'},
-        {"sample_rate", required_argument, 0, 'f'},
+        {"sample-rate", required_argument, 0, 'f'},
+        {"spectrum-size", required_argument, 0, 'z'},
         {"host", required_argument, 0, 'h'},
         {"usbsoftrock-port", required_argument, 0, 'u'},
         {"conf-file", required_argument, 0, 'l'},
@@ -36,7 +37,7 @@ int main (int argc, char **argv)
     // The function getopt_long stores the option index here.
     int option_index = 0;
 
-    while ( (c = getopt_long ( argc, argv, "v?h:r:s:m:t:f:h:u:l:",
+    while ( (c = getopt_long ( argc, argv, "v?h:r:s:m:t:f:z:h:u:l:",
                                long_options, &option_index )) != -1 )
     {
         switch ( c )
@@ -47,6 +48,9 @@ int main (int argc, char **argv)
                 break;
         case 'f':
             w->set_SampleRate(atoi(optarg));
+            break;
+        case 'z':
+            w->set_SpectrumSize(atoi(optarg));
             break;
         case 'h':
             w->set_Host(optarg);
@@ -80,6 +84,7 @@ int main (int argc, char **argv)
                         "Options are: \n"
                         "-v or --verbose for verbose output\n"
                         "-f or --sample-rate=<samplerate>\n"
+                        "-z or --spectrum-size=<spectrumsize>\n"
                         "-r or --rx-command-port=<portnum> \n"
                         "   Use port <portnum> as a conduit for update commands\n"
                         "   Default is 19001\n"

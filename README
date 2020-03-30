@@ -53,6 +53,10 @@ Changes, additions, etc.:
 
 * UTC time displayed under logo
 
+* added --spectrum-size=<size> command line or SDR_DEFSPEC env variable option:
+   > valid settings are 4096 (default) or 8192 depending on DEFSPEC in sdr-core
+   > no need to set if using default 4096
+
 ================================
 
 Compile:

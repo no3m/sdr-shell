@@ -67,7 +67,7 @@
 #include "cmath"
 
 // DttSP constants
-#define DEFSPEC (4096)
+#define MAX_DEFSPEC (8192)
 #define MAXRX (4)
 #define RXMETERPTS (5)
 #define TXMETERPTS (9)
@@ -342,6 +342,7 @@ class Main_Widget : public QWidget
 	        int spectrumScrolling;
         	bool windowResize;
 	        int sample_rate;
+	        int def_spec;
         	bool spotTone;
 		int tuneCenter;		// where to put tune center when using usbsoftrock
 		int spec_width;		// spectrum display width
@@ -404,8 +405,8 @@ class Main_Widget : public QWidget
 
 		int once;
 
-		float spectrum[DEFSPEC];
-		float oscope[DEFSPEC];
+		float spectrum[MAX_DEFSPEC];
+		float oscope[MAX_DEFSPEC];
 		float specApertureLow, specApertureHigh;
 	        float specApertureLowTmp;
         	int apertureSize;
@@ -422,8 +423,8 @@ class Main_Widget : public QWidget
         	int spectrogramRefreshCounter;
 	        int spectrogramPos;
 
-		int spectrum_history[SPECTRUM_HISTORY_SIZE][DEFSPEC];
-        	int spectrum_peak[DEFSPEC];
+		int spectrum_history[SPECTRUM_HISTORY_SIZE][MAX_DEFSPEC];
+        	int spectrum_peak[MAX_DEFSPEC];
 		int spectrum_head;
 		int spectrum_width;
         	int spectrum_height;
@@ -508,6 +509,7 @@ class Main_Widget : public QWidget
                 void set_SpectrumPort( int );
                 void set_MeterPort( int );
                 void set_SampleRate( int );
+                void set_SpectrumSize( int );
                 void set_Host( char * );
                 void set_Verbose( bool );
                 void set_InitFile(char *);
