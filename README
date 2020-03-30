@@ -25,8 +25,8 @@ Changes, additions, etc.:
     * Linrad style normal and reverse
     * SDR-shell style normal or reverse
   > changed inhernet zooming rendering 
-    * spectrogram: QImage scaling w/ fast transformation
-    * spectrum: decimate w/ max (zoom > 1.0), interpolate w/ linear sloop (zoom < 1.0)
+    * spectrogram: QImage scaling w/ smooth transformation (bilinear)
+    * spectrum: decimate w/ max (zoom > 1.0), interpolate w/ linear slope (zoom < 1.0)
 
 * frequency scale under spectum
 

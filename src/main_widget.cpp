@@ -4132,19 +4132,29 @@ void Main_Widget::plotSpectrum( int y )
     p.fillRect( f1 , 0, f2 - f1, spectrumFrame->height(), QColor( 30, 30, 30, 255 ) );
 
     //////////////// dB labels and lines
-    int ticks = spectrum_height / font1Metrics->height();
-    int step = ((((specHigh - specLow) / ticks ) / 10 ) * 10 ) + 10;
+    //int ticks = spectrum_height / font1Metrics->height();
+    //int step = ((((specHigh - specLow) / ticks ) / 10 ) * 10 ) + 10;
+    int step;
+    if (spectrum_height / (specHigh - specLow) > 1)
+       step = 5;
+    else
+       step = 10;
 
-    for (int i = specLow; i <= specHigh + step; i+=step) {
-            p.setPen( QColor( 60, 60, 60 ) );
+    for (int i = (specLow / 10 ) * 10; i <= specHigh + step*2; i+=step) {
+         if (i%(step*2) == 0) {
+            p.setPen( QColor( 80, 80, 80 ) );
             p.drawLine( 0, spectrumFrame->height() - (i - specLow) *vsScale,
                         spectrogram->width(), spectrumFrame->height() - (i - specLow) *vsScale);
-       if (i > specLow) {
+
             sprintf( f_text, "%4d", i);
             p.setPen( QColor( 255, 255, 255 ) );
             p.drawText( 2, spectrumFrame->height() - ((i - specLow) *vsScale) - 4 + font1Metrics->height()/2, f_text );
             p.drawText( spectrogram->width() - font1Metrics->width(f_text) - 3, spectrumFrame->height()
                         - ((i - specLow) *vsScale) - 4 + font1Metrics->height()/2, f_text );
+        } else {
+            p.setPen( QColor( 50, 50, 50 ) );
+            p.drawLine( 0, spectrumFrame->height() - (i - specLow) *vsScale,
+                        spectrogram->width(), spectrumFrame->height() - (i - specLow) *vsScale);
         }
     }
 
