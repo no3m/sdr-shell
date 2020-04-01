@@ -1,28 +1,38 @@
-#ifndef SDXCVR_SPECTRUM_H
-#define SDXCVR_SPECTRUM_H
+#ifndef SDXCVR_FREQSCALE_H
+#define SDXCVR_FREQSCALE_H
 
 #include <qwidget.h>
 #include <QMouseEvent>
+#include <QApplication>
 
 class Spectrum : public QWidget
 {
     Q_OBJECT
-    
+
     public:
-//        Spectrum(QWidget *parent = 0, const char *name = 0, WFlags f = 0 );
         Spectrum(QWidget *parent = 0);
+
     private:
-        int mouseMoving;
+        int x0;
+        int x_last;
+        int button_pressed;
 
     protected:
-        void mouseReleaseEvent( QMouseEvent * );
+        void mousePressEvent( QMouseEvent * );
         void mouseMoveEvent( QMouseEvent * );
-	void wheelEvent(QWheelEvent *event);
+        void wheelEvent(QWheelEvent *event);
+        void mouseReleaseEvent( QMouseEvent * );
 
     signals:
-		void movement( int );
-		void tune( int );
-       	void tune2( int );
-       	void tune3( int );
+        void pan ( int );
+        void movement ( int );
+        void resetZoom ( int );
+        void scale ( int );
+        void tune ( int );
+        void zoom ( int );
+        void tunewheel ( int );
+        void centerPB ( int );
+        void resetPan ( int );
+        void dummy ( int );
 };
 #endif

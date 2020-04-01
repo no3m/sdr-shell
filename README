@@ -27,13 +27,20 @@ Changes, additions, etc.:
   > changed inhernet zooming rendering 
     * spectrogram: QImage scaling w/ smooth transformation (bilinear)
     * spectrum: decimate w/ max (zoom > 1.0), interpolate w/ linear slope (zoom < 1.0)
+  > click "CA" label (footer) to quick toggle aperature lines on/off
 
 * frequency scale under spectum
 
-  > mouse scroolwheel zooming (increments by factor of +/- 0.1)
+  > mouse scroolwheel + Cntrl key zooming (increments by factor of +/- 0.1).  Also works w/ "Zoom + -" label in footer
   > middle click resets to 1:1 zoom
-  > left click / hover same as spectrogram / spectrum (ie. tune / show freq)
+  > left click (tune), hover (show freq), and scroolwheel (tune) same as spectrogram / spectrum
   > right click to toggle between absolute (ie. 7040...7050) and relative (-1000...-500) scales (relative like original SDR-shell)
+  > purple band indicator inlay behind scale ticks
+
+* panning from one edge to other of spectrum at any zoom level (except full zoom out)
+  > left click and drag spectrum or freq scale
+  > left click + cntrl centers panning on filter passband
+  > middle click + cntrl resets panning (centers on dial freq)
 
 * frequency at mouse location over spectrum/spectrogram/frequency-scale is rounded to nearest step size (selected LCD readout)
 

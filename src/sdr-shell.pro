@@ -13,11 +13,9 @@ QT += network
 
 # Input
 HEADERS += main_widget.h \
-    spectrogram.h \
     varilabel.h \
     memorycell.h \
     pbscale.h \
-    freqscale.h \
     spectrum.h \
     text.h \
     hamlibwrapper.h \
@@ -30,14 +28,12 @@ HEADERS += main_widget.h \
 
 SOURCES += main.cpp \
     main_widget.cpp \
-    spectrogram.cpp \
     varilabel.cpp \
     memorycell.cpp \
     spectrum.cpp \
     hamlibwrapper.cpp \
     rigctl.cpp \
     pbscale.cpp \
-    freqscale.cpp \
     dttsp.cpp \
     lcdfreq.cpp \
     command.cpp \

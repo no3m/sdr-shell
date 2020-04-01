@@ -50,12 +50,10 @@
 #include <time.h>
 #include <sys/timeb.h>
 
-#include "spectrogram.h"
 #include "spectrum.h"
 #include "varilabel.h"
 #include "memorycell.h"
 #include "pbscale.h"
-#include "freqscale.h"
 #include "hamlibwrapper.h"
 #include "rigctl.h"
 #include "dttsp.h"
@@ -133,9 +131,9 @@ class Main_Widget : public QWidget
 	        QSpinBox *SpectrogramRefreshInput;
         	QSpinBox *SpectrogramNumAVGInput;
 	        QSpinBox *cfgCaptureAutoSpinBox;
-        	QDoubleSpinBox *NR_GainSpinBox, *NR_LeakageSpinBox; 
-	        QSpinBox *ANF_TapsSpinBox, *ANF_DelaySpinBox; 
-        	QDoubleSpinBox *ANF_GainSpinBox, *ANF_LeakageSpinBox; 
+        	QDoubleSpinBox *NR_GainSpinBox, *NR_LeakageSpinBox;
+	        QSpinBox *ANF_TapsSpinBox, *ANF_DelaySpinBox;
+        	QDoubleSpinBox *ANF_GainSpinBox, *ANF_LeakageSpinBox;
 	        QDoubleSpinBox *NB_ThresholdSpinBox;
         	QDoubleSpinBox *SDROM_ThresholdSpinBox;
 	        QDoubleSpinBox *preampGainSpinBox, *attGainSpinBox;
@@ -216,7 +214,7 @@ class Main_Widget : public QWidget
 		Freqlabel *THOUSANDS_label, *HUNDREDS_label, *TENS_label, *UNITS_label;
 
 		PassBandScale *pbScale;
-		FrequencyScale *freqScale;
+		Spectrum *freqScale;
 
 		QFont *font1;
 		QFont *font2;
@@ -263,7 +261,7 @@ class Main_Widget : public QWidget
 		QLabel *cfgSpeedLabel;
 		QLabel *cfgPortLabel;
 
-		Spectrogram *spectrogram;
+		Spectrum *spectrogram;
 		Spectrum *spectrumFrame;
 		QFrame *spectrogramFrame;
 		QFrame *spectrumScale;
@@ -422,6 +420,7 @@ class Main_Widget : public QWidget
 	        int spectrogramNumAVG;
         	int spectrogramRefreshCounter;
 	        int spectrogramPos;
+                int specOffset;
 
 		int spectrum_history[SPECTRUM_HISTORY_SIZE][MAX_DEFSPEC];
         	int spectrum_peak[MAX_DEFSPEC];
@@ -444,7 +443,7 @@ class Main_Widget : public QWidget
 
 		enum kb_state { RX_F, TX_F, FILTER_L, FILTER_H };
 		enum modes
-		{ LSB, USB, DSB, CWL, CWU, FMN, AM, DIGU, SPEC, DIGL, SAM, DRM }; 
+		{ LSB, USB, DSB, CWL, CWU, FMN, AM, DIGU, SPEC, DIGL, SAM, DRM };
 		enum spec_type { SEMI_RAW, PRE_FILT, POST_FILT };
 		enum radio_state { RX, TX };
 
@@ -617,6 +616,7 @@ class Main_Widget : public QWidget
 	        void setSpecTimeMarkers ( );
         	void setSpectrumAvgLine ( );
         	void setSpectrumAperLines ( );
+        	void toggleSpectrumAperLines ( int );
 	        void setSpectrumLines ( );
         	void setSpectrumPeakMarkers ( );
 		void setSpectrumType ( );
@@ -665,6 +665,9 @@ class Main_Widget : public QWidget
 		void setMuteXmit ( bool );
                 void resetZoom ( int );
 		void changeFreqScale ( int );
+                void setSpecOffset ( int );
+                void centerFilter ( int );
+                void resetSpecOffset ( int );
 
 	protected:
 		void keyPressEvent ( QKeyEvent * );
@@ -673,7 +676,7 @@ class Main_Widget : public QWidget
 		void focusInEvent ( QFocusEvent * );
 		void focusOutEvent ( QFocusEvent * );
 		void closeEvent ( QCloseEvent * );
-		
+
 	signals:
 		void changeRigMode (rmode_t, pbwidth_t );
 		void changeSlopeTune ( bool );

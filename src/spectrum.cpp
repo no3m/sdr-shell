@@ -1,57 +1,59 @@
-#include <cstdio>
 #include "spectrum.h"
 
-//Spectrum::Spectrum( QWidget *parent, const char *name, WFlags f ) 
-//	: QWidget( parent, name, f )
-Spectrum::Spectrum( QWidget *parent) 
-	: QWidget( parent)
+Spectrum::Spectrum(QWidget *parent) : QWidget(parent) 
 {
 	setMouseTracking( true );
-        mouseMoving = 0;
-}
-
-void Spectrum::mouseReleaseEvent( QMouseEvent *e )
-{
-	emit tune( e->x() );
+        x0 = 0;
+        x_last = 0;
+        button_pressed = Qt::NoButton;
 }
 
 void Spectrum::mouseMoveEvent( QMouseEvent *e )
 {
-	emit movement( e->x() );
+    if (button_pressed == Qt::LeftButton) {
+       emit pan( x_last - e->x() );
+    }
+    x_last = e->x();
+
+    emit movement( e->x() );
+}
+
+void Spectrum::mousePressEvent( QMouseEvent *e )
+{
+    button_pressed = e->button();
+    x0 = e->x();
+}
+
+void Spectrum::mouseReleaseEvent( QMouseEvent *e )
+{
+
+    if (QApplication::keyboardModifiers().testFlag(Qt::ControlModifier) == true) {
+       if ( e->button() == Qt::MidButton )
+          emit resetPan ( e->x() );
+       if ( e->button() == Qt::RightButton )
+          emit dummy ( e->x() );
+       if ( e->button() == Qt::LeftButton && e->x() == x0)
+          emit centerPB ( e->x() );
+    } else {
+       if ( e->button() == Qt::MidButton )
+          emit resetZoom ( e->x() );
+       if ( e->button() == Qt::RightButton )
+          emit scale ( e->x() );
+       if ( e->button() == Qt::LeftButton && e->x() == x0)
+          emit tune ( e->x() );
+    }
+
+    button_pressed = Qt::NoButton;
 }
 
 void Spectrum::wheelEvent(QWheelEvent *event)
 {
     int numDegrees = event->delta() / 8;
     int numSteps = numDegrees / 15;
-    char orientation = '?';
-    int orient = 0, shift = 0, ctl = 0, alt = 0;
 
-    if (event->orientation() == Qt::Horizontal) {
-	orientation = 'h';
-	orient = 100;
-    } else {
-	orientation = 'v';
-	orient = 1000;
-    }
-
-#if 0
-   if (event->state() & Qt::ShiftButton)
-	shift = 1;
-   if (event->state() & Qt::AltButton)
-	alt = 1;
-   if (event->state() & Qt::ControlButton)
-	ctl = 1;
-#endif
-
-//    printf("wheelEvent degrees %d steps %d orientation %c %c %c %c\n",
-//		numDegrees, numSteps, orientation, shift, ctl, alt);
-
-    if (event->orientation() == Qt::Horizontal) {
-        emit tune2( orient * numSteps +  10000 * shift + 100000 * alt);
-    } else {
-        emit tune3( numSteps );
-    }
-    //emit tune2( orient * numSteps +  10000 * shift + 100000 * alt);
+    if (QApplication::keyboardModifiers().testFlag(Qt::ControlModifier) == true)
+       emit zoom( numSteps );
+    else
+       emit tunewheel( numSteps );
 }
 
