@@ -14,7 +14,7 @@
 #include "dttsp.h"
 
 static int old_PTT = 1;		// start with checking PTT, and do a reset to Rx
-int CW_tone = 700;		// default CW tone 700 Hz
+//int CW_tone = 700;		// default CW tone 700 Hz
 
 Main_Widget::Main_Widget()
     : QWidget()
@@ -1647,7 +1647,7 @@ void Main_Widget::init()
     // Spectrogram auto aperature
 
     QPixmap manual_pix ( manual_xpm );
-    QPixmap auto_pix ( auto_xpm );
+    //QPixmap auto_pix ( auto_xpm );
     CAauto_label = new Varilabel ( ctlFrame2 );
     CAauto_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
     CAauto_label->setPalette( QColor( 100, 0, 0 ) );
@@ -1656,7 +1656,7 @@ void Main_Widget::init()
     CAauto_label->setPixmap ( manual_pix );
     CAauto_label->setGeometry (
                 M_label->x() + M_label->width() + 1,
-                0, 35, 17 );
+                0, 45, 17 );
     connect ( CAauto_label, SIGNAL ( mouseRelease ( int ) ), this, SLOT ( toggle_CAmode ( int ) ) );
 
     // -----------------------------------------------------------------------
@@ -2053,7 +2053,8 @@ void Main_Widget::init()
     }
     initRigCtl();
     setMode(mode, FALSE, TRUE);
-    //specAveraging = 1; // no3m - saved in config
+    //setRxFrequency( 1 );
+  //specAveraging = 1; // no3m - saved in config
     //specLow = -140; // no3m - saved in config
     //specHigh = -40; // no3m - saved in config
     cfgTransmit->setChecked ( enableTransmit );
@@ -2614,10 +2615,12 @@ void Main_Widget::loadSettings()
     capture_interval = settings->value(
                 "/sdr-shell/capture_interval", 1 ).toInt();
     specApertureLowTmp = specApertureLow;
+    specApertureHighTmp = specApertureHigh;
     apertureSize = DEFAPERTURE_SIZE;
     apertureAutoDelta = 0;
     spectrumPalette = settings->value(
                 "/sdr-shell/specpalette", 0 ).toInt();
+    CW_tone = settings->value("/sdr-shell/CW_tone", 700 ).toInt();
     windowResize = false;
     // << no3m
 
@@ -2759,8 +2762,9 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/cwPitch", cwPitch );
     settings->setValue ( "/sdr-shell/rx_delta_f", rx_delta_f );
     // no3m
-    if (autoSpecAperture) {
+    if (autoSpecAperture > 0) {
         specApertureLow = specApertureLowTmp;
+        specApertureHigh = specApertureHighTmp;
     }
     settings->setValue ( "/sdr-shell/specApertureLow", specApertureLow );
     settings->setValue ( "/sdr-shell/specApertureHigh", specApertureHigh );
@@ -2823,6 +2827,7 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/spectrumLineColor", spectrumLineColor );
     settings->setValue ( "/sdr-shell/spectrumGradient", spectrumGradient );
     settings->setValue ( "/sdr-shell/spectrogramNumAVG", spectrogramNumAVG );
+    settings->setValue ( "/sdr-shell/CW_tone", CW_tone );
 
     // Save window geometry
     settings->setValue ( "/sdr-shell/g_left", geometry().left() );
@@ -3098,6 +3103,46 @@ void Main_Widget::process_key ( int key )
 
     switch ( key )
     {
+    case 44: // ,
+        CW_tone -= 10;
+        if (mode == RIG_MODE_CW) {
+           tunef(10);
+           setFilter_l ( -1 );
+           setFilter_h ( -1 );
+           CWL_filter_l += 10;
+           CWL_filter_h += 10;
+        } else if (mode == RIG_MODE_CWR) {
+           tunef(-10);
+           setFilter_l ( 1 );
+           setFilter_h ( 1 );
+           CWU_filter_l -= 10;
+           CWU_filter_h -= 10;
+        }
+        //if ( rock_bound )
+        //   setRxFrequency(0);
+        //else
+        //   setRxFrequency(1);
+        break;
+    case 46: // .
+        CW_tone += 10;
+        if (mode == RIG_MODE_CW) {
+           tunef(-10);
+           setFilter_l ( 1 );
+           setFilter_h ( 1 );
+           CWL_filter_l -= 10;
+           CWL_filter_h -= 10;
+        } else if (mode == RIG_MODE_CWR) {
+           tunef(10);
+           setFilter_l ( -1 );
+           setFilter_h ( -1 );
+           CWU_filter_l += 10;
+           CWU_filter_h += 10;
+        }
+        //if ( rock_bound )
+        //   setRxFrequency(0);
+        //else
+        //   setRxFrequency(1);
+        break;
     case 85: // U
         setFilter_l ( -1 );
         break;
@@ -3231,11 +3276,24 @@ void Main_Widget::setRxFrequency( int synth )
     if ( !useIF )
     {
 #ifndef FREQ_POLL
+        int cw_offset;
+        switch ( mode ) {
+           case RIG_MODE_CW:
+              cw_offset = CW_tone;
+              break;
+           case RIG_MODE_CWR:
+              //cw_offset = *filter_l + ( *filter_h - *filter_l ) / 2;
+              cw_offset = -CW_tone;
+              break;
+           default:
+              cw_offset = 0;
+              break;
+        }
         snprintf ( text, 32, "......%11.6lf",
-                   ( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
+                   ( double ) ( rx_f - rx_delta_f + cw_offset) / 1000000.0 );
         fprintf ( stderr, "Set the frequency (!IF): %lld - %d = %11.6lf '%s'\n",
                   rx_f, rx_delta_f,
-                  ( rx_f - rx_delta_f) / 1000000.0, text);
+                  ( rx_f - rx_delta_f ) / 1000000.0, text);
         displayMutex.lock();
         lcd->display ( text );
         displayMutex.unlock();
@@ -3446,6 +3504,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
         return;
     }
 
+    rmode_t prev_mode = mode;
     mode = m;
 
     QColor c_off ( 0, 0, 0 );
@@ -3530,6 +3589,9 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
         CWL_label->setAutoFillBackground(true);
         if ( !displayOnly && useHamlib )
             emit changeRigMode ( RIG_MODE_CWR, 500 );
+        if (prev_mode == RIG_MODE_CW) {
+           tunef(CW_tone*2);
+        }
         break;
     case RIG_MODE_CW:
         modeStr = "CW";
@@ -3542,6 +3604,9 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
         CWU_label->setAutoFillBackground(true);
         if ( !displayOnly && useHamlib )
             emit changeRigMode ( RIG_MODE_CW, 500 );
+        if (prev_mode == RIG_MODE_CWR) {
+           tunef(-CW_tone*2);
+        }
         break;
     case RIG_MODE_SAM:
         modeStr = "SAM";
@@ -3583,8 +3648,10 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
         system(qPrintable(cmd));
     }
     setFilter();
-    if ( useIF ) setDefaultRxFrequency();
-    else setRxFrequency( 1 );
+    if (mode != RIG_MODE_CW && mode != RIG_MODE_CWR) {
+      if ( useIF ) setDefaultRxFrequency();
+      else setRxFrequency( 1 );
+    }
 }
 
 
@@ -3847,7 +3914,7 @@ void Main_Widget::drawSpectrogram( int y ) //ok
           this->scroll(0,-1,QRect(0,spectrogramTop,spectrumFrame->width(),spectrogram->height()));
         }
 
-        //p.drawImage( 0, spectrogramPos, spectrogramLine.scaled(spectrumFrame->width(), 1, Qt::IgnoreAspectRatio, Qt::FastTransformation) );
+        //p.drawImage( 0, spectrogramPos, spectrogramLine.scaled(spectrogram->width(), 1, Qt::IgnoreAspectRatio, Qt::FastTransformation) );
         p.drawImage( 0, spectrogramPos, spectrogramLine.scaled(spectrogram->width(), 1, Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
 
         if ( filterLine ) {
@@ -4144,6 +4211,10 @@ void Main_Widget::drawPassBandScale()
     p.drawText(pbScale->width() - font1Metrics->maxWidth() * 10 - 8, font1Metrics->ascent(), QDateTime::currentDateTimeUtc().time().toString()+"Z");
 #endif
 
+    if ( mode == RIG_MODE_CW || mode == RIG_MODE_CWR ) {
+       p.drawText(5, font1Metrics->ascent(), "BFO:" + QString::number(CW_tone));
+    }
+
     p.end();
 
 }
@@ -4262,18 +4333,18 @@ void Main_Widget::plotSpectrum( int y )
     int spectrum_moving[def_spec];
 
     // calculate spectrum and background averages
-    if (specAvgLine || specPeakMarkers || autoSpecAperture) {
-#if 1
-            // only average samples within visible spectrum +/- a few bins
+    if (specAvgLine || specPeakMarkers || autoSpecAperture > 0) {
+#if 0
+            // only average samples within visible spectrum
             // average a lot of samples to smooth out jitter
             int k = 0;
-            for (y1 = y, n=0; n < 300 && n < spectrogram->height(); n++) {
-                for ( x = x1 - 10; x < x2 + 10; x++ ) {
+            for (y1 = y, n=0; n < 200 && n < spectrogram->height(); n++) {
+                for ( x = x1; x < x2; x++ ) {
                     spectrum_avg += spectrum_history[y1][x];
                 }
-                spectrum_avg /= (x2 - x1) + 20;
+                spectrum_avg /= (x2 - x1);
                 if (n == 0) spectrum_avg0 = spectrum_avg;
-                for ( x = x1 - 10; x < x2 + 10; x++ ) {
+                for ( x = x1; x < x2; x++ ) {
                    // remove signals
                    if (spectrum_history[y1][x] < spectrum_avg + 4) {
                       background_avg += spectrum_history[y1][x];
@@ -4291,7 +4362,7 @@ void Main_Widget::plotSpectrum( int y )
                background_avg = spectrum_avg0;
             }
 #endif
-#if 0
+#if 1
         // old routine, bounces a lot!
         for (int i=0; i < def_spec; i++){
             if (specAveraging <= 1) {
@@ -4326,15 +4397,17 @@ void Main_Widget::plotSpectrum( int y )
     }
 
     // auto-aperature
-    if (autoSpecAperture) {
+    if (autoSpecAperture > 0) {
         specApertureLow = background_avg + apertureAutoDelta;
         if (spectrogramAVG) {
            int adj = log (spectrogramNumAVG) * 5;
            if (adj > 30) adj = 30;
-           specApertureHigh = specApertureLow + 60 - adj;
-        } else
-           specApertureHigh = specApertureLow + 60;
-
+           if (autoSpecAperture == 2)
+             specApertureHigh = specApertureLow + 60 - adj;
+        } else {
+           if (autoSpecAperture == 2)
+             specApertureHigh = specApertureLow + 60;
+        }
         setCA_label();
     }
 
@@ -4380,18 +4453,17 @@ void Main_Widget::plotSpectrum( int y )
     //spectrum_width = int(spectrumFrame->width() * hScale); // here for reference
     /////////////////////////////////////////////////// map scaled spectrum
     // process extra samples to avoid junk data at end of scaled spectrum due to float division casted to int
-    for ( x = 0 ; x < spectrum_width + 5 ; ) { 
+    for ( x = 0 ; x < spectrum_width + 1 ; ) { 
 
         int sx = int (float (x) / hScale); // current scaled point
         if (sx > spectrumFrame->width()) break;
         //if ( sx > spectrumFrame->width() - 1) break;
         int sx_next = int (float (x + 1) / hScale); // next scaled point
-
         // find next data point that scales to a new pixel
         int x_next = x + 1; // scale <= 1.0
         if (hScale > 1.01) {
            int si;
-           for (int i = 1; i < 5; ++i) {
+           for (int i = 1; i < int (hScale)+2; ++i) {
               if (x + i < def_spec) {
                 si = int ( float (x + i) / hScale);
                 if ( si > sx ) {
@@ -4469,28 +4541,28 @@ void Main_Widget::plotSpectrum( int y )
                p.setPen(spectrumFillColor.rgba());
             }
 
-            p.drawLine( x, 
+            p.drawLine( x,
                         spectrumFrame->height() - 1,
-                        x, 
+                        x,
                         qBound(0, (int)(spectrumFrame->height() - (spectrum_display[x] - specVShift) *vsScale), spectrumFrame->height() - 1) );
-         }
+        }
 
-         p.setPen(spectrumLineColor.rgba());
+        p.setPen(spectrumLineColor.rgba());
 
-         if (specLines) {
-
-            p.drawLine( x, 
-                        qBound( 0, int ( spectrumFrame->height() - ( ( spectrum_display[x] - specVShift ) *vsScale ) ), spectrumFrame->height() - 1 ),
-                        x+1,
-                        qBound( 0, int ( spectrumFrame->height() - ( ( spectrum_display[x+1] - specVShift ) *vsScale ) ), spectrumFrame->height() - 1 )
+        if (specLines) {
+            // connect last and current points to avoid fill overwrite
+            p.drawLine( x-1,
+                        qBound( 0, int ( spectrumFrame->height() - ( ( spectrum_display[x-1] - specVShift ) *vsScale ) ), spectrumFrame->height() - 1 ),
+                        x,
+                        qBound( 0, int ( spectrumFrame->height() - ( ( spectrum_display[x] - specVShift ) *vsScale ) ), spectrumFrame->height() - 1 )
                       );
 
-         } else {
+        } else {
 
-            p.drawPoint( x, 
+            p.drawPoint( x,
                          qBound(0, int ( spectrumFrame->height() - ( ( spectrum_display[x] - specVShift ) *vsScale ) ), spectrumFrame->height() - 1) );
 
-         }
+        }
     }
 
 #if 1
@@ -4591,11 +4663,38 @@ void Main_Widget::plotSpectrum( int y )
     }
 
     //////////////////// dial freq line
-    p.setPen(QColor(255,0,0,255));
-    p.drawLine( (spectrogram->width() / 2) - specOffset - 1, 
-                0, 
-                (spectrogram->width() / 2) - specOffset - 1, 
+    if (mode == RIG_MODE_CW || mode == RIG_MODE_CWR) {
+      //p.setPen(QColor(255,255,0,255));
+      QPen pen ( Qt::DotLine );
+      pen.setColor( QColor( 255, 255, 0 ) );
+      p.setPen( pen );
+    } else
+      p.setPen(QColor(255,0,0,255));
+
+    p.drawLine( (spectrogram->width() / 2) - specOffset - 1,
+                0,
+                (spectrogram->width() / 2) - specOffset - 1,
                 spectrumFrame->height() -1);
+
+    if (mode == RIG_MODE_CW || mode == RIG_MODE_CWR) {
+      p.setPen(QColor(255,0,0,255));
+      int sx1 = 0;
+      int sx2 = 0;
+      int offset;
+      if (mode == RIG_MODE_CW)
+         offset = CW_tone;
+      else
+         offset = -CW_tone;
+
+      if (offset >= 0) sx1 = -1;
+      else if (offset < 0) sx1 = -2;
+
+      int cw_marker = (spectrogram->width() / 2 + sx1 - specOffset) + (int)(offset / bin_bw / hScale);
+      p.drawLine( cw_marker,
+                  0,
+                  cw_marker,
+                  spectrumFrame->height() -1);
+    }
 
     p.end();
 }
@@ -4603,8 +4702,10 @@ void Main_Widget::plotSpectrum( int y )
 
 void Main_Widget::spectrogramClicked ( int x )
 {
-    int f;
+    int f, f_old;
     int step = pow ( 10, tuneStep );
+
+unsigned long long int rx_f_tmp = rx_f;
 
     int f_limit = sample_rate/2 - 2000;
     if ( !useIF )  // Disable changing frequency for IF mode.  Use arrows for IF shift.
@@ -4617,13 +4718,20 @@ void Main_Widget::spectrogramClicked ( int x )
         //f = (rx_f - rx_delta_f) - rounded;
 
         f = (rx_f - rx_delta_f) - ( round ( (float)( (rx_f - rx_delta_f) - (int)(bin_bw * (spectrogram->width() / 2 - x - specOffset) * hScale) ) / (float)step ) * step );
+        f_old = (rx_f - rx_delta_f) - ( round ( (float)( (rx_f - rx_delta_f) - (int)(bin_bw * (spectrogram->width() / 2 - specOffset) * hScale) ) / (float)step ) * step );
 
         if(verbose) fprintf(stderr, "spectrogramClicked: x = %d f = %d rx_f = %lld freq = %.6lf\n", x, f, rx_f,
                             (double)( (rx_f - rx_delta_f) - f ) / 1000000.0);
 
         if ( rock_bound )
         {
-            rx_delta_f = rx_delta_f + f + *filter_l + ( *filter_h - *filter_l ) / 2 ;
+            if (mode == RIG_MODE_CW)
+               rx_delta_f = rx_delta_f + f + CW_tone;
+            else if (mode == RIG_MODE_CWR)
+               rx_delta_f = rx_delta_f + f - CW_tone;
+            else
+               rx_delta_f = rx_delta_f + f + *filter_l + ( *filter_h - *filter_l ) / 2 ;
+
             if ( rx_delta_f >  f_limit ) {
                 rx_delta_f =  f_limit;
             } else if ( rx_delta_f < -f_limit ) {
@@ -4636,11 +4744,30 @@ void Main_Widget::spectrogramClicked ( int x )
             rx_delta_f =  tuneCenter;	//Make it not tuned to the center
             rx_f += rx_delta_f;
 
-            rx_f = rx_f - f - *filter_l - ( *filter_h - *filter_l ) / 2;
+            if (mode == RIG_MODE_CW)
+               rx_f = rx_f - f - CW_tone;
+            else if (mode == RIG_MODE_CWR)
+               rx_f = rx_f - f + CW_tone;
+            else
+               rx_f = rx_f - f - *filter_l - ( *filter_h - *filter_l ) / 2;
             setRxFrequency( 1 );
         }
     }
+printf("rx_f_tmp: %lu, rx_f: %lu, bin_bw: %f, hScale: %f, specOffset: %d\n", rx_f_tmp, rx_f, bin_bw, hScale, specOffset);
+printf("rx_f_tmp - rx_f: %d\n", int (rx_f_tmp - rx_f));
+printf("bin_bw/hScale: %d\n", int(int(rx_f_tmp - rx_f)/bin_bw/hScale));
+printf("delta: %d\n", specOffset + int(int(rx_f_tmp - rx_f)/bin_bw/hScale));
+    //setSpecOffset(specOffset + int(int(rx_f_tmp - rx_f)/bin_bw/hScale));
+    setSpecOffset(int(int(rx_f_tmp - rx_f)/bin_bw/hScale));
     f_at_mousepointer(x);
+//specOffset: -170
+//Set the frequency (!IF): 250000 - -14000 =    0.264000 '......   0.264000'
+//rx_f_tmp: 249500, rx_f: 250000, bin_bw: 5.859375, hScale: 1.000000, specOffset: -170
+//rx_f_tmp - rx_f: -500
+//bin_bw/hScale: -85
+//delta: -255
+//specOffset: -256
+
 }
 
 void Main_Widget::f_at_mousepointer ( int x )
@@ -4689,6 +4816,7 @@ void Main_Widget::tune ( int x )
 void Main_Widget::tunef ( int x )
 {
     int f_limit = sample_rate/2 - 2000;
+unsigned long long int rx_f_tmp = rx_f;
 
     // use usbsoftrock if the tuning step is large enough
     if (!rock_bound ) {
@@ -4718,6 +4846,7 @@ void Main_Widget::tunef ( int x )
         if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
         setRxFrequency( 0 );
     }
+    setSpecOffset(int(int(rx_f_tmp - rx_f)/bin_bw/hScale));
 }
 void Main_Widget::tunewheel ( int steps )
 {
@@ -5349,24 +5478,34 @@ void Main_Widget::setAGC ( int type )
 
 void Main_Widget::zoomIN ( int )
 {
+   float hScale_old = hScale;
    if (hScale > 0.3) {
-       hScale -= 0.1;
+      if (hScale > 3.0)
+         hScale -= 0.2;
+      if (hScale < 0.6)
+         hScale -= 0.05;
+      else
+         hScale -= 0.1;
    }
    spectrum_width = int(spectrumFrame->width() * hScale);
-   setSpecOffset(0);
 
-//   printf("hscale: %f\n", hScale);
+   int delta = int ( (hScale_old / hScale * float (specOffset)) - float (specOffset) );
+   setSpecOffset( delta );
 }
 
 void Main_Widget::zoomOUT ( int )
 {
-    if (hScale < sample_rate / (bin_bw * (geometry().width()) ) - 0.1 ) {
-        hScale += 0.1;
-    }
-    spectrum_width = int(spectrumFrame->width() * hScale);
-    setSpecOffset(0);
+   float hScale_old = hScale;
+   if (hScale < sample_rate / (bin_bw * (geometry().width()) ) - 0.1 ) {
+      if (hScale < 3.0)
+         hScale += 0.1;
+      else
+         hScale += 0.2;
+   }
+   spectrum_width = int(spectrumFrame->width() * hScale);
 
-//    printf("hscale: %f\n", hScale);
+   int delta = int ( (hScale_old / hScale * float (specOffset)) - float (specOffset) );
+   setSpecOffset( delta );
 }
 
 void Main_Widget::calibrateSpec ( int value )
@@ -5521,7 +5660,7 @@ void Main_Widget::updateFreq(void)
     if (!update_freqMutex.tryLock()) return;	// cannot lock, give up till next tick
 
     if (!rock_bound && !transmit){			// only update Freq duing Rx
-        if (pUSBCmd->sendCommand("get freq\n") != 0) return;
+        if (pUSBCmd->sendCommand("getfreq\n") != 0) return;
         freq = pUSBCmd->getParam();		// freq in Mhz
 
         if (freq != 0) {
@@ -5580,7 +5719,7 @@ void Main_Widget::updatePTT(void)
 
         if(verbose) fprintf(stderr, "PTT changed to state (%d) \n", PTT);
         if (PTT) {
-            if (pUSBCmd->sendCommand("get tone\n") == 0) CW_tone = pUSBCmd->getParam();
+            if (pUSBCmd->sendCommand("gettone\n") == 0) CW_tone = pUSBCmd->getParam();
 
             update_freqMutex.lock();
 
@@ -5976,7 +6115,7 @@ void Main_Widget::initSpectrumPalette ( )
     apertureSize = 256;
     switch(spectrumPalette) {
     case 1: palette = &gqrxPalette; apertureAutoDelta = -12; break;
-    case 2: palette = &linradPalette; apertureAutoDelta = -2; break;
+    case 2: palette = &linradPalette; apertureAutoDelta = -4; break;
     case 3: palette = &winradPalette; apertureAutoDelta = 0; break;
     case 4: palette = &ghpsdrPalette; apertureAutoDelta = -2; break;
     case 5: palette = &spectranPalette; apertureAutoDelta = -2; break;
@@ -5997,8 +6136,8 @@ void Main_Widget::initSpectrumPalette ( )
     case 20: palette = &no3m1linPalette; apertureAutoDelta = -3; break;
     case 21: palette = &no3m1negPalette; apertureAutoDelta = -20; break;
     case 22: palette = &no3m1linnegPalette; apertureAutoDelta = -9; break;
-    case 23: palette = &linradPalette2; apertureAutoDelta = -2; break;
-    default: palette = &linradPalette; apertureAutoDelta = -2; break;
+    case 23: palette = &linradPalette2; apertureAutoDelta = -4; break;
+    default: palette = &linradPalette; apertureAutoDelta = -4; break;
     }
     for(int i = 0; i < 256; i++) {
         spec_b[i] = ((*palette)[i] >> 16) & 0x000000ff;
@@ -6051,12 +6190,25 @@ void Main_Widget::toggle_CAmode (int)
 {
     QPixmap manual_pix ( manual_xpm );
     QPixmap auto_pix ( auto_xpm );
-    autoSpecAperture ^= 1;
-    if (autoSpecAperture) {
+    QPixmap autoa_pix ( autoa_xpm );
+    QPixmap autob_pix ( autob_xpm );
+    //autoSpecAperture ^= 1;
+
+    autoSpecAperture += 1;
+    if (autoSpecAperture > 2)
+       autoSpecAperture = 0;
+
+    if (autoSpecAperture == 1) {
         specApertureLowTmp = specApertureLow;
-        CAauto_label->setPixmap ( auto_pix );
+        specApertureHighTmp = specApertureHigh;
+        CAauto_label->setPixmap ( autoa_pix );
+    } else if (autoSpecAperture == 2) {
+        specApertureLowTmp = specApertureLow;
+        specApertureHighTmp = specApertureHigh;
+        CAauto_label->setPixmap ( autob_pix );
     } else {
         specApertureLow = specApertureLowTmp;
+        specApertureHigh = specApertureHighTmp;
         CAauto_label->setPixmap ( manual_pix );
     }
     setCA_label();
@@ -6238,7 +6390,11 @@ void Main_Widget::zoom_mouse (int direction)
 
 void Main_Widget::resetZoom ( int )
 {
+    float hScale_old = hScale;
     hScale = 1.0;
+
+   int delta = int ( (hScale_old / hScale * float (specOffset)) - float (specOffset) );
+   setSpecOffset( delta );
 }
 
 void Main_Widget::changeFreqScale ( int )
@@ -6258,6 +6414,7 @@ void Main_Widget::setSpecOffset ( int delta )
    else
       specOffset += delta;
 
+printf("specOffset: %d\n", specOffset);
    //printf ("specOffset_tmp: %d, specOffset: %d, spectrum_width: %d, hScale: %f\n", specOffset_tmp, specOffset, spectrum_width, hScale);
 }
 
@@ -6269,19 +6426,14 @@ void Main_Widget::set_SpectrumSize( int size)
 
 void Main_Widget::centerFilter ( int )
 {
-   int specOffset_tmp =  int ( float ( (*filter_h - *filter_l) / 2 + *filter_l ) / bin_bw / hScale);
-   int x1 = def_spec/2 - spectrum_width/2 + specOffset_tmp * hScale;
-   int x2 = x1 + spectrum_width;
-   if ( x1 < 0 )
-      specOffset = (spectrum_width/2 - def_spec/2) / hScale;
-   else if ( x2 > def_spec )
-      specOffset = (def_spec/2 - spectrum_width/2) / hScale;
-   else
-      specOffset = specOffset_tmp;
+   int specOffset_tmp =  int ( ( ( float (*filter_h - *filter_l) / 2.0 ) + float (*filter_l) ) / bin_bw / hScale);
+
+   setSpecOffset( specOffset_tmp - specOffset );
 }
 
 void Main_Widget::resetSpecOffset ( int )
 {
-   specOffset = 0;
+   setSpecOffset( 0 - specOffset );
+   //specOffset = 0;
 }
 

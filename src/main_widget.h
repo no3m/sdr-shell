@@ -176,6 +176,7 @@ class Main_Widget : public QWidget
 		bool enableSPLIT;
         	int spectrumMode, spectrogramAVG;
                 bool freqScaleABSMode;
+                int CW_tone;
 
 		Varilabel *TRX_label;
 		Varilabel *NR_label;
@@ -333,7 +334,7 @@ class Main_Widget : public QWidget
 		QString	TuneOffset_string;
 		bool specLineFill;	// true=enables spectrum display line filled
 	        bool specPeakMarkers;
-        	bool autoSpecAperture;
+        	int autoSpecAperture;
 	        bool specAvgLine;
 	        bool specAperLines;
         	bool specLines;
@@ -407,6 +408,7 @@ class Main_Widget : public QWidget
 		float oscope[MAX_DEFSPEC];
 		float specApertureLow, specApertureHigh;
 	        float specApertureLowTmp;
+	        float specApertureHighTmp;
         	int apertureSize;
 	        int apertureAutoDelta;
 		float specCal;
