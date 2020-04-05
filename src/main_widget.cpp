@@ -4165,8 +4165,21 @@ void Main_Widget::drawFreqScale() // ok
 
        // probably a better way to do this... redundant code = blah!
        f = 0;
+       int cw_offset;
+       switch ( mode ) {
+           case RIG_MODE_CW:
+              cw_offset = CW_tone;
+              break;
+           case RIG_MODE_CWR:
+              //cw_offset = *filter_l + ( *filter_h - *filter_l ) / 2;
+              cw_offset = -CW_tone;
+              break;
+           default:
+              cw_offset = 0;
+              break; 
+       }
        for ( ; f < sample_rate/2; f += tick) {
-          px = int ( (float (spectrogram->width()) / 2.0 - float (specOffset)) - ( float (f) / ( bin_bw * hScale ) ) - 1.0 );
+          px = int ( (float (spectrogram->width()) / 2.0 - float (specOffset)) - ( float ((f) - cw_offset) / ( bin_bw * hScale ) ) - 1.0 );
           if (px >= 0 && px < spectrumFrame->width()) {
              if ( f % label == 0) {
                 sprintf( f_text, "%d", f * -1 );
@@ -4184,7 +4197,7 @@ void Main_Widget::drawFreqScale() // ok
                 p.drawLine( px, 0, px, 4);
              }
           }
-          px = int ( (float (spectrogram->width()) / 2.0 - float (specOffset)) + ( float (f) / ( bin_bw * hScale ) ) - 1.0 );
+          px = int ( (float (spectrogram->width()) / 2.0 - float (specOffset)) + ( float ((f) + cw_offset) / ( bin_bw * hScale ) ) - 1.0 );
           if (px >= 0 && px < spectrumFrame->width() && f > 0) {
              if ( f % label == 0) {
                 sprintf( f_text, "+%d", f );
@@ -4769,6 +4782,7 @@ void Main_Widget::spectrogramClicked ( int x )
     int step = pow ( 10, tuneStep );
 
 unsigned long long int rx_f_tmp = rx_f;
+int rx_delta_f_tmp = rx_delta_f;
 
     int f_limit = sample_rate/2 - 2000;
     if ( !useIF )  // Disable changing frequency for IF mode.  Use arrows for IF shift.
@@ -4823,7 +4837,11 @@ printf("delta: %d\n", specOffset + int(int(rx_f_tmp - rx_f)/bin_bw/hScale));
     //setSpecOffset(specOffset + int(int(rx_f_tmp - rx_f)/bin_bw/hScale));
 #if SPEC_SHIFT
 #else
-    setSpecOffset(int(int(rx_f_tmp - rx_f)/bin_bw/hScale));
+    if (rock_bound) {
+      setSpecOffset(int(int(rx_delta_f - rx_delta_f_tmp)/bin_bw/hScale));
+    } else {
+      setSpecOffset(int(int(rx_f_tmp - rx_f)/bin_bw/hScale));
+    }
 #endif
     f_at_mousepointer(x);
 //specOffset: -170
@@ -4886,7 +4904,7 @@ void Main_Widget::tunef ( int x )
 {
     int f_limit = sample_rate/2 - 2000;
 unsigned long long int rx_f_tmp = rx_f;
-
+int rx_delta_f_tmp = rx_delta_f;
     // use usbsoftrock if the tuning step is large enough
     if (!rock_bound ) {
         //		if ( x > 500 || x < -500 ) {
@@ -4917,7 +4935,11 @@ unsigned long long int rx_f_tmp = rx_f;
     }
 #if SPEC_SHIFT
 #else
-    setSpecOffset(int(int(rx_f_tmp - rx_f)/bin_bw/hScale));
+    if (rock_bound) {
+      setSpecOffset(int(int(rx_delta_f - rx_delta_f_tmp)/bin_bw/hScale));
+    } else {
+      setSpecOffset(int(int(rx_f_tmp - rx_f)/bin_bw/hScale));
+    }
 #endif
 }
 void Main_Widget::tunewheel ( int steps )
