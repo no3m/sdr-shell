@@ -93,6 +93,8 @@ only the upper half of the spectrum in order to omit the 1/f noise near DC */
 #define FFT_TIMER 20
 #define DEFAPERTURE_SIZE 256
 
+#define SPEC_SHIFT 0
+
 const int FREQUENCY_UPDATE = 2;
 const int OFFSET = 10000;
 
