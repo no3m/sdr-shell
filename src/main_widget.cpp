@@ -3104,44 +3104,52 @@ void Main_Widget::process_key ( int key )
     switch ( key )
     {
     case 44: // ,
-        CW_tone -= 10;
-        if (mode == RIG_MODE_CW) {
-           tunef(10);
-           setFilter_l ( -1 );
-           setFilter_h ( -1 );
-           CWL_filter_l += 10;
-           CWL_filter_h += 10;
-        } else if (mode == RIG_MODE_CWR) {
-           tunef(-10);
-           setFilter_l ( 1 );
-           setFilter_h ( 1 );
-           CWU_filter_l -= 10;
-           CWU_filter_h -= 10;
+        if (CW_tone > 200) {
+          CW_tone -= 10;
+          if (mode == RIG_MODE_CW) {
+            tunef(10);
+            setFilter_l ( -1 );
+            setFilter_h ( -1 );
+            CWL_filter_l += 10;
+            CWL_filter_h += 10;
+          } else if (mode == RIG_MODE_CWR) {
+            tunef(-10);
+            setFilter_l ( 1 );
+            setFilter_h ( 1 );
+            CWU_filter_l -= 10;
+            CWU_filter_h -= 10;
+         }
+          //if ( rock_bound )
+          //   setRxFrequency(0);
+          //else
+          //   setRxFrequency(1);
         }
-        //if ( rock_bound )
-        //   setRxFrequency(0);
-        //else
-        //   setRxFrequency(1);
         break;
     case 46: // .
-        CW_tone += 10;
-        if (mode == RIG_MODE_CW) {
-           tunef(-10);
-           setFilter_l ( 1 );
-           setFilter_h ( 1 );
-           CWL_filter_l -= 10;
-           CWL_filter_h -= 10;
-        } else if (mode == RIG_MODE_CWR) {
-           tunef(10);
-           setFilter_l ( -1 );
-           setFilter_h ( -1 );
-           CWU_filter_l += 10;
-           CWU_filter_h += 10;
+        if (CW_tone < 1000) {
+          CW_tone += 10;
+          if (CW_tone > 2000) {
+            CW_tone = 2000;
+            break;
+          }
+          if (mode == RIG_MODE_CW) {
+            tunef(-10);
+            setFilter_l ( 1 );
+            setFilter_h ( 1 );
+            CWL_filter_l -= 10;
+            CWL_filter_h -= 10;
+          } else if (mode == RIG_MODE_CWR) {
+            tunef(10);
+            setFilter_l ( -1 );
+            setFilter_h ( -1 );
+            CWU_filter_l += 10;
+            CWU_filter_h += 10;
+          }
+          //if ( rock_bound )
+          //   setRxFrequency(0);
+          //else
+          //   setRxFrequency(1);
         }
-        //if ( rock_bound )
-        //   setRxFrequency(0);
-        //else
-        //   setRxFrequency(1);
         break;
     case 85: // U
         setFilter_l ( -1 );
