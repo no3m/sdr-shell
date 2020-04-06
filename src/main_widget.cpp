@@ -2061,6 +2061,7 @@ void Main_Widget::init()
     setSpotTone ( );
     setRX_gain ( );
 
+    updateLayout();
     centerFilter(0);
 
     // timers
@@ -3941,11 +3942,7 @@ void Main_Widget::drawSpectrogram( int y ) //ok
             }
         }
 
-#if SPEC_SHIFT
         x1 = def_spec/2 - spectrum_width/2 + specOffset * hScale;
-#else
-        x1 = def_spec/2 - spectrum_width/2 + specOffset * hScale;
-#endif
         x2 = x1 + spectrum_width;
         if(spec_debug)
         {
@@ -4362,11 +4359,7 @@ void Main_Widget::plotSpectrum( int y )
     spectrumFrame_width_less1 = spectrum_width - 1;
     specVShift = specLow + 140; // -140 reference
 
-#if SPEC_SHIFT
     x1 = (def_spec/2 - spectrum_width / 2) + specOffset * hScale;
-#else
-    x1 = (def_spec/2 - spectrum_width / 2) + specOffset * hScale;
-#endif
     x2 = x1 + spectrum_width;
 
     if(debug)
@@ -6602,25 +6595,15 @@ void Main_Widget::changeFreqScale ( int )
 
 void Main_Widget::setSpecOffset ( int delta )
 {
+   int spectrum_width = int(spectrumFrame->width() * hScale);
    int specOffset_tmp = specOffset + delta;
-#if SPEC_SHIFT
+
    int x1 = def_spec/2 - spectrum_width/2 + specOffset_tmp * hScale;
-#else
-   int x1 = def_spec/2 - spectrum_width/2 + specOffset_tmp * hScale;
-#endif
    int x2 = x1 + spectrum_width;
    if ( x1 < 0 )
-#if SPEC_SHIFT
       specOffset = (spectrum_width/2 - def_spec/2) / hScale;
-#else
-      specOffset = (spectrum_width/2 - def_spec/2) / hScale;
-#endif
    else if ( x2 > def_spec )
-#if SPEC_SHIFT
       specOffset = (def_spec/2 - spectrum_width/2) / hScale;
-#else
-      specOffset = (def_spec/2 - spectrum_width/2) / hScale;
-#endif
    else
       specOffset += delta;
 
@@ -6649,10 +6632,10 @@ void Main_Widget::resetSpecOffset ( int )
               //cw_offset = *filter_l + ( *filter_h - *filter_l ) / 2;
               cw_offset = -CW_tone;
               break;
-           default: 
+           default:
               cw_offset = 0;
               break;
-        }  
+        }
 
    int specOffset_tmp = (-rx_delta_f + cw_offset) / bin_bw / hScale;
    setSpecOffset ( specOffset_tmp - specOffset);
