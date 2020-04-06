@@ -90,10 +90,10 @@ only the upper half of the spectrum in order to omit the 1/f noise near DC */
 #define SPEC_AVG 1
 #define SPEC_PEAK 2
 
-#define FFT_TIMER 20
+#define FFT_TIMER 50
 #define DEFAPERTURE_SIZE 256
 
-#define SPEC_SHIFT 0
+#define SPEC_SHIFT 1
 
 const int FREQUENCY_UPDATE = 2;
 const int OFFSET = 10000;
@@ -348,6 +348,8 @@ class Main_Widget : public QWidget
 		int tuneCenter;		// where to put tune center when using usbsoftrock
 		int spec_width;		// spectrum display width
 		int rx_delta_f;		// relative to center frequeny
+		int rx_delta_f_cur;
+                int delay;
 		int tx_delta_f;		// relative to center frequeny
 		int tuneStep;
 		int *filter_l, *filter_h, filter_w;
@@ -523,6 +525,7 @@ class Main_Widget : public QWidget
                 void rigSetFrequency(unsigned long long int rigctlfreq);
                 void rigSetPTT ( int );
                 int rigGetPTT ();
+		void tunef ( int, bool);
 
 	public slots:
 		void finish();
@@ -531,7 +534,7 @@ class Main_Widget : public QWidget
 		void spectrogramClicked ( int );
 		void plotSpectrum ( int );
 		void tune ( int );
-		void tunef ( int );
+		void tuneff ( int );
 		void tunewheel ( int );
 		void processorLoad();
 
