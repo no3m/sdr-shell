@@ -3268,9 +3268,9 @@ void Main_Widget::setRxFrequency( int synth )
         }
         snprintf ( text, 32, "......%11.6lf",
                    ( double ) ( rx_f - rx_delta_f + cw_offset) / 1000000.0 );
-        fprintf ( stderr, "Set the frequency (!IF): %lld - %d = %11.6lf '%s'\n",
-                  rx_f, rx_delta_f,
-                  ( rx_f - rx_delta_f ) / 1000000.0, text);
+//        fprintf ( stderr, "Set the frequency (!IF): %lld - %d = %11.6lf '%s'\n",
+//                  rx_f, rx_delta_f,
+//                  ( rx_f - rx_delta_f ) / 1000000.0, text);
         displayMutex.lock();
         lcd->display ( text );
         displayMutex.unlock();

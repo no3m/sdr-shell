@@ -70,7 +70,7 @@ void LCDFreq::wheelEvent(QWheelEvent *event)
 		orient = 1;
     }
 	d = digit((int)event->x());
-	printf("wheel turn steps %d orientation %d digit %d %f\n", numSteps, orient, d, pow(10, d));
+//	printf("wheel turn steps %d orientation %d digit %d %f\n", numSteps, orient, d, pow(10, d));
 	emit tune3 ( numSteps * (int)pow(10, d));
 }
 
