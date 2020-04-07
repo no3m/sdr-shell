@@ -4142,19 +4142,26 @@ void Main_Widget::drawFreqScale() // ok
           { 24890000, 24990000},	{ 28000000, 29700000},		{ 50000000, 54000000},
        };
 
-#if SPEC_SHIFT
-       int start_f = rx_f - int ((bin_bw) * (spectrogram->width()/2 - specOffset) * hScale); // hz freq
-#else
-       int start_f = (rx_f - rx_delta_f) - (int)((bin_bw) * (spectrogram->width()/2 - specOffset) * hScale); // hz freq
-#endif
-       f = ((start_f + tick - 1) / tick) * tick; // round up to next khz marker
+       int wspr_limits[12][2]
+       {
+          { 137400, 137600},		{ 475600, 475800},		{ 1838000, 1838200},
+          { 3594000, 3594200},		{ 7040000, 7040200},		{ 10140100, 10140300},
+          { 14097000, 14097200},	{ 18106000, 18106200 },		{ 21096000, 21096200},
+          { 24926000, 24926200},	{ 28126000, 29126200},		{ 50294400, 50294600},
+       };
+
+       int jtmode_limits[12][2]
+       {
+          { 136600, 137400},		{ 474800, 475600},		{ 1840000, 1843000},
+          { 3573000, 3576000},		{ 7074000, 7077000},		{ 10136000, 10139000},
+          { 14074000, 14077000},	{ 18100000, 18103000},		{ 21074000, 21077000},
+          { 24915000, 24918000},	{ 28074000, 28077000},		{ 50313000, 50316000},
+       };
 
        int band_l, band_h;
-       bool inband = false;
-       for ( ; px < spectrumFrame->width(); f += tick) {
+       bool marked = false;
           // band indicator
-          for (int i = 0; i < 12 && !inband; i++) {
-             if (f >= band_limits[i][0] && f <= band_limits[i][1] && !inband) {
+          for (int i = 0; i < 12 && !marked; i++) {
 #if SPEC_SHIFT
                 band_l = int ( ((float)spectrogram->width()/2.0 - float (specOffset)) - ( ( (float)rx_f - float (band_limits[i][0]) ) / ( bin_bw * hScale ) ) - 1.0 );
                 band_h = int ( ((float)spectrogram->width()/2.0 - float (specOffset)) - ( ( (float)rx_f - float (band_limits[i][1]) ) / ( bin_bw * hScale ) ) - 1.0 );
@@ -4162,7 +4169,10 @@ void Main_Widget::drawFreqScale() // ok
                 band_l = int ( ((float)spectrogram->width()/2.0 - float (specOffset)) - ( ( (float)rx_f - (float)rx_delta_f - float (band_limits[i][0]) ) / ( bin_bw * hScale ) ) - 1.0 );
                 band_h = int ( ((float)spectrogram->width()/2.0 - float (specOffset)) - ( ( (float)rx_f - (float)rx_delta_f - float (band_limits[i][1]) ) / ( bin_bw * hScale ) ) - 1.0 );
 #endif
-                inband = true;
+             if ( (band_l > 0 && band_l < spectrumFrame->width()) || (band_h > 0 && band_h < spectrumFrame->width()) 
+                  || band_l < 0 && band_h > spectrumFrame->width()
+                ) {
+                marked = true;
                 p.fillRect( QRect( qBound(0, band_l, spectrumFrame->width()),
                                    0,
                                    qBound(0, band_h, spectrumFrame->width()) - qBound(0, band_l, spectrumFrame->width()),
@@ -4173,6 +4183,53 @@ void Main_Widget::drawFreqScale() // ok
                           );
              }
           }
+
+    //////// wspr and digi segments
+       marked = false;
+       //int band_l, band_h;
+          for (int i = 0; i < 12 && !marked; i++) {
+             band_l = int ( ((float)spectrogram->width()/2.0 - float (specOffset)) - ( ( (float)rx_f - float (wspr_limits[i][0]) ) / ( bin_bw * hScale ) ) - 1.0 );
+             band_h = int ( ((float)spectrogram->width()/2.0 - float (specOffset)) - ( ( (float)rx_f - float (wspr_limits[i][1]) ) / ( bin_bw * hScale ) ) - 1.0 );
+             if ( (band_l > 0 && band_l < spectrumFrame->width()) || (band_h > 0 && band_h < spectrumFrame->width()) 
+                  || band_l < 0 && band_h > spectrumFrame->width()
+                ) {
+                marked = true;
+                p.fillRect( QRect( qBound(0, band_l, spectrumFrame->width()),
+                                   0,
+                                   qBound(0, band_h, spectrumFrame->width()) - qBound(0, band_l, spectrumFrame->width()),
+                                   4
+                                 ),
+                            QColor (0, 100, 0 ) // green
+                          );
+             }
+          }
+       marked = false;
+       //int band_l, band_h;
+          for (int i = 0; i < 12 && !marked; i++) {
+             band_l = int ( ((float)spectrogram->width()/2.0 - float (specOffset)) - ( ( (float)rx_f - float (jtmode_limits[i][0]) ) / ( bin_bw * hScale ) ) - 1.0 );
+             band_h = int ( ((float)spectrogram->width()/2.0 - float (specOffset)) - ( ( (float)rx_f - float (jtmode_limits[i][1]) ) / ( bin_bw * hScale ) ) - 1.0 );
+             if ( (band_l > 0 && band_l < spectrumFrame->width()) || (band_h > 0 && band_h < spectrumFrame->width())
+                  || band_l < 0 && band_h > spectrumFrame->width()
+                ) {
+                marked = true;
+                p.fillRect( QRect( qBound(0, band_l, spectrumFrame->width()),
+                                   0,
+                                   qBound(0, band_h, spectrumFrame->width()) - qBound(0, band_l, spectrumFrame->width()),
+                                   4
+                                 ),
+                            QColor (220, 73, 0 ) // org
+                          );
+             }
+          }
+
+#if SPEC_SHIFT
+       int start_f = rx_f - int ((bin_bw) * (spectrogram->width()/2 - specOffset) * hScale); // hz freq
+#else
+       int start_f = (rx_f - rx_delta_f) - (int)((bin_bw) * (spectrogram->width()/2 - specOffset) * hScale); // hz freq
+#endif
+       f = ((start_f + tick - 1) / tick) * tick; // round up to next khz marker
+
+       for ( ; px < spectrumFrame->width(); f += tick) {
 
           p.setPen( QColor( 255, 255, 255 ) );
 
@@ -4418,7 +4475,7 @@ void Main_Widget::plotSpectrum( int y )
 #endif
     p.fillRect( f1 , 0, f2 - f1, spectrumFrame->height(), QColor( 30, 30, 30, 255 ) );
 
-    //////////////// dB labels and lines
+    //////////////// dB lines
     int step;
     if (spectrum_height / (specHigh - specLow) > 1)
        step = 5;
@@ -4426,22 +4483,17 @@ void Main_Widget::plotSpectrum( int y )
        step = 10;
 
     for (int i = (specLow / 10 ) * 10; i <= specHigh + step*2; i+=step) {
-         if (i%(step*2) == 0) {
+        if (i%(step*2) == 0) {
             p.setPen( QColor( 80, 80, 80 ) );
             p.drawLine( 0, spectrumFrame->height() - (i - specLow) *vsScale,
                         spectrogram->width(), spectrumFrame->height() - (i - specLow) *vsScale);
-
-            sprintf( f_text, "%4d", i);
-            p.setPen( QColor( 255, 255, 255 ) );
-            p.drawText( 2, spectrumFrame->height() - ((i - specLow) *vsScale) - 4 + font1Metrics->height()/2, f_text );
-            p.drawText( spectrogram->width() - font1Metrics->width(f_text) - 3, spectrumFrame->height()
-                        - ((i - specLow) *vsScale) - 4 + font1Metrics->height()/2, f_text );
         } else {
             p.setPen( QColor( 50, 50, 50 ) );
             p.drawLine( 0, spectrumFrame->height() - (i - specLow) *vsScale,
                         spectrogram->width(), spectrumFrame->height() - (i - specLow) *vsScale);
         }
     }
+    ///////////// draw dB labels on top later
 
     // Average the last N samples of spectrum data
     if (specAveraging > 1) {
@@ -4838,6 +4890,17 @@ void Main_Widget::plotSpectrum( int y )
                   0,
                   cw_marker,
                   spectrumFrame->height() -1);
+    }
+
+    //////////////////////// dB labels
+    for (int i = (specLow / 10 ) * 10; i <= specHigh + step*2; i+=step) {
+         if (i%(step*2) == 0) {
+            sprintf( f_text, "%4d", i);
+            p.setPen( QColor( 255, 255, 255 ) );
+            p.drawText( 2, spectrumFrame->height() - ((i - specLow) *vsScale) - 4 + font1Metrics->height()/2, f_text );
+            p.drawText( spectrogram->width() - font1Metrics->width(f_text) - 3, spectrumFrame->height()
+                        - ((i - specLow) *vsScale) - 4 + font1Metrics->height()/2, f_text );
+         }
     }
 
     p.end();
