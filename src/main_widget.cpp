@@ -45,14 +45,14 @@ void Main_Widget::init()
     QString version;
     setFocusPolicy ( Qt::TabFocus );
     setMinimumWidth ( 1060 ); // no3m
-    setMinimumHeight ( 400 ); // no3m
+    setMinimumHeight ( 350 ); // no3m
 
     //setAttribute( Qt::WA_OpaquePaintEvent, true);
     setAttribute( Qt::WA_NoSystemBackground, true);
     setPalette(QPalette(QColor(0, 0, 0)));
     setAutoFillBackground(true);
-    setMinimumWidth( 1060 ); // no3m
-    setMinimumHeight( 400 ); // no3m
+    //setMinimumWidth( 1060 ); // no3m
+    //setMinimumHeight( 400 ); // no3m
     initConstants();
     slopeTuneOffset = 0;
 
@@ -2238,13 +2238,12 @@ void Main_Widget::paintEvent ( QPaintEvent * )
             QPen pen( Qt::DashLine );
             pen.setColor( QColor( 255, 0, 0 ) );
             p.setPen( pen );
-            p.drawLine(0, TOPFRM_V + SPECFRM_V + PBSFRM_V, spectrum_width, TOPFRM_V + SPECFRM_V + PBSFRM_V);
+            p.drawLine(0, TOPFRM_V + spectrumFrame->height() + pbScale->height(), spectrum_width, TOPFRM_V + spectrumFrame->height() + pbScale->height());
 #endif
         }
 
         drawPassBandScale();
         drawFreqScale();
-
 
     } else {
         //if(verbose) fprintf( stderr, "-");
@@ -2256,6 +2255,9 @@ void Main_Widget::updateLayout()
 {
 
 // no3m - misc layout changes
+
+    spectrum_height = spectrumFrameHeight - 20;
+    updateSpecHigh(specHigh);
 
     ctlFrame->setGeometry (
                 0,
@@ -2271,33 +2273,28 @@ void Main_Widget::updateLayout()
                 0,
                 TOPFRM_V,
                 width(),
-                //height() - 18 - TOPFRM_V );
-                //height() - ctlFrame2->height() - TOPFRM_V - 1 );
                 height() - ctlFrame2->height() - TOPFRM_V );
     pbScale->setGeometry (
                 0,
-                //spectrogram->height(),
                 0,
                 spectrogramFrame->width(),
                 PBSFRM_V );
     spectrumFrame->setGeometry (
                 0,
-                //spectrogramFrame->height() - 120 - 2,
-                PBSFRM_V,
+                pbScale->height(),
                 spectrogramFrame->width(),
-                SPECFRM_V );
+                spectrumFrameHeight );
     freqScale->setGeometry (
                 0,
-                SPECFRM_V + PBSFRM_V,
+                spectrumFrame->height() + pbScale->height(),
                 spectrogramFrame->width(),
-                20 
+                22
                 );
     spectrogram->setGeometry (
                 0,
-                //0,
-                SPECFRM_V + PBSFRM_V +freqScale->height() + 1,
+                spectrumFrame->height() + pbScale->height() + freqScale->height() + 1,
                 spectrogramFrame->width(),
-                spectrogramFrame->height() - 2 - SPECFRM_V - PBSFRM_V - freqScale->height());
+                spectrogramFrame->height() - 2 - spectrumFrame->height() - pbScale->height() - freqScale->height());
     logoFrame->setGeometry (
                 ctlFrame->width()-100,
                 1,
@@ -2553,6 +2550,12 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/speclow", -140 ).toInt();
     specHigh = settings->value(
                 "/sdr-shell/spechigh", -40 ).toInt();
+    spectrumFrameHeight = settings->value(
+                "/sdr-shell/spectrumFrameHeight", 120 ).toInt();
+
+    updateSpecHigh(specHigh);
+
+#if 0
     float a;
     if (specHigh <= specLow)
         specHigh = specLow + 1;
@@ -2563,8 +2566,10 @@ void Main_Widget::loadSettings()
     //    a = 100;
     //vsScale = 100 / a;
     a = specHigh - specLow;
-    spectrum_height = SPECFRM_V - 20;
+    //spectrum_height = SPECFRM_V - 20;
+    spectrum_height = spectrumFrameHeight - 20;
     vsScale = (spectrum_height / a);
+#endif
 
     tuneCenter = rx_delta_f;
 
@@ -2806,6 +2811,7 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/spectrumLineColor", spectrumLineColor );
     settings->setValue ( "/sdr-shell/spectrumGradient", spectrumGradient );
     settings->setValue ( "/sdr-shell/spectrogramNumAVG", spectrogramNumAVG );
+    settings->setValue ( "/sdr-shell/spectrumFrameHeight", spectrumFrameHeight );
     settings->setValue ( "/sdr-shell/CW_tone", CW_tone );
 
     // Save window geometry
@@ -3082,6 +3088,14 @@ void Main_Widget::process_key ( int key )
 
     switch ( key )
     {
+    case 78: // n
+        spectrumFrameHeight -= 1;
+        repaint();
+        break;
+    case 77: // m
+        spectrumFrameHeight += 1;
+        repaint();
+        break;
     case 44: // ,
         if (CW_tone > 200) {
           CW_tone -= 10;
@@ -4172,7 +4186,7 @@ void Main_Widget::drawFreqScale() // ok
                 sprintf( f_text, "%.1f", (f/1000.0) );
              else
                 sprintf( f_text, "%d", (f/1000) );
-             p.drawText( px - ((font1Metrics->maxWidth() * strlen( f_text )) / 2 ), freqScale->height() - 1, f_text );
+             p.drawText( px - ((font1Metrics->maxWidth() * strlen( f_text )) / 2 ), freqScale->height() - 3, f_text );
              p.drawLine( px, 0, px, 8);
           } else if (f % 5000 == 0 && tick == 1000) {
              p.drawLine( px, 0, px, 6);
@@ -4213,7 +4227,7 @@ void Main_Widget::drawFreqScale() // ok
           if (px >= 0 && px < spectrumFrame->width()) {
              if ( f % label == 0) {
                 sprintf( f_text, "%d", f * -1 );
-                p.drawText( px - ((font1Metrics->maxWidth() * (strlen( f_text ) + ((f==0)? 0 : 1) )) / 2 ), freqScale->height() - 1, f_text );
+                p.drawText( px - ((font1Metrics->maxWidth() * (strlen( f_text ) + ((f==0)? 0 : 1) )) / 2 ), freqScale->height() - 3, f_text );
                 p.drawLine( px, 0, px, 8);
              } else if (f % 5000 == 0 && tick == 1000) {
                 p.drawLine( px, 0, px, 6);
@@ -4235,7 +4249,7 @@ void Main_Widget::drawFreqScale() // ok
           if (px >= 0 && px < spectrumFrame->width() && f > 0) {
              if ( f % label == 0) {
                 sprintf( f_text, "+%d", f );
-                p.drawText( px - ((font1Metrics->maxWidth() * (strlen( f_text ) + ((f==0) ? 0 :1) )) / 2 ), freqScale->height() - 1, f_text );
+                p.drawText( px - ((font1Metrics->maxWidth() * (strlen( f_text ) + ((f==0) ? 0 :1) )) / 2 ), freqScale->height() - 3, f_text );
                 p.drawLine( px, 0, px, 8);
              } else if (f % 5000 == 0 && tick == 1000) {
                 p.drawLine( px, 0, px, 6);
@@ -4573,7 +4587,7 @@ void Main_Widget::plotSpectrum( int y )
 
     /////////////////////////////////////////////////// map scaled spectrum
     // process extra samples to avoid junk data at end of scaled spectrum due to float division casted to int
-    for ( x = 0 ; x < spectrum_width + 1 ; ) { 
+    for ( x = 0 ; x < spectrum_width + 1 ; ) {
 
         int sx = int (float (x) / hScale); // current scaled point
         if (sx > spectrumFrame->width()) break;
@@ -5607,6 +5621,7 @@ void Main_Widget::updateSpecHigh ( int value )
     // vsScale = 100 / a;
     // no3m
     a = specHigh - specLow;
+    spectrum_height = spectrumFrameHeight - 20;
     vsScale = (spectrum_height / a);
     if(verbose) fprintf(stderr, "vsScale = (%d to %d) %f %f\n", specLow, specHigh, a, vsScale);
 }

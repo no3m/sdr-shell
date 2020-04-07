@@ -179,6 +179,7 @@ class Main_Widget : public QWidget
         	int spectrumMode, spectrogramAVG;
                 bool freqScaleABSMode;
                 int CW_tone;
+                int spectrumFrameHeight;
 
 		Varilabel *TRX_label;
 		Varilabel *NR_label;
