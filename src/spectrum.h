@@ -31,6 +31,9 @@ class Spectrum : public QWidget
         void tune ( int );
         void zoom ( int );
         void tunewheel ( int );
+        void filter ( int );
+        void pbt ( int );
+        void resetpbt ( int );
         void centerPB ( int );
         void resetPan ( int );
         void dummy ( int );

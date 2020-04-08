@@ -116,6 +116,12 @@ void Main_Widget::init()
     //          this, SLOT ( setSpecOffset ( int ) ) );
     connect ( spectrogram, SIGNAL ( tunewheel ( int ) ),
               this, SLOT ( tunewheel ( int ) ) );
+    connect ( spectrogram, SIGNAL ( filter ( int ) ),
+              this, SLOT ( adjustSymmetricFilter ( int ) ) );
+    connect ( spectrogram, SIGNAL ( pbt ( int ) ),
+              this, SLOT ( adjustPassbandTuning ( int ) ) );
+    connect ( spectrogram, SIGNAL ( resetpbt ( int ) ),
+              this, SLOT ( resetPassbandTuning ( int ) ) );
     connect ( spectrogram, SIGNAL ( centerPB ( int ) ),
               this, SLOT ( centerFilter ( int ) ) );
     connect ( spectrogram, SIGNAL ( resetPan ( int ) ),
@@ -148,6 +154,12 @@ void Main_Widget::init()
               this, SLOT ( setSpecOffset ( int ) ) );
     connect ( freqScale, SIGNAL ( tunewheel ( int ) ),
               this, SLOT ( tunewheel ( int ) ) );
+    connect ( freqScale, SIGNAL ( filter ( int ) ),
+              this, SLOT ( adjustSymmetricFilter ( int ) ) );
+    connect ( freqScale, SIGNAL ( pbt ( int ) ),
+              this, SLOT ( adjustPassbandTuning ( int ) ) );
+    connect ( freqScale, SIGNAL ( resetpbt ( int ) ),
+              this, SLOT ( resetPassbandTuning ( int ) ) );
     connect ( freqScale, SIGNAL ( centerPB ( int ) ),
               this, SLOT ( centerFilter ( int ) ) );
     connect ( freqScale, SIGNAL ( resetPan ( int ) ),
@@ -170,6 +182,12 @@ void Main_Widget::init()
               this, SLOT ( setSpecOffset ( int ) ) );
     connect ( spectrumFrame, SIGNAL ( tunewheel ( int ) ),
               this, SLOT ( tunewheel ( int ) ) );
+    connect ( spectrumFrame, SIGNAL ( filter ( int ) ),
+              this, SLOT ( adjustSymmetricFilter ( int ) ) );
+    connect ( spectrumFrame, SIGNAL ( pbt ( int ) ),
+              this, SLOT ( adjustPassbandTuning ( int ) ) );
+    connect ( spectrumFrame, SIGNAL ( resetpbt ( int ) ),
+              this, SLOT ( resetPassbandTuning ( int ) ) );
     connect ( spectrumFrame, SIGNAL ( centerPB ( int ) ),
               this, SLOT ( centerFilter ( int ) ) );
     connect ( spectrumFrame, SIGNAL ( resetPan ( int ) ),
@@ -268,7 +286,7 @@ void Main_Widget::init()
 
     QRadioButton *cfgUseUSBsoftrock = new QRadioButton ( cfgUSBBox );
     cfgUseUSBsoftrock->setText ( "Use usbsoftrock via UDP" );
-    cfgUseUSBsoftrock->setGeometry ( 25, 18, 200, 20 );
+    cfgUseUSBsoftrock->setGeometry ( 10, 18, 200, 20 );
     cfgUseUSBsoftrock->setAutoExclusive(false);
     connect ( cfgUseUSBsoftrock, SIGNAL ( toggled ( bool ) ),
               this, SLOT ( updateUseUSBsoftrock ( bool ) ) );
@@ -278,7 +296,7 @@ void Main_Widget::init()
     // USBSoftrock 5/4 tuning for dual-conversion
     cfgDualConversion = new QRadioButton ( cfgUSBBox );
     cfgDualConversion->setText ( "5/4 Tuning" );
-    cfgDualConversion->setGeometry ( 25, 36, 200, 20 );
+    cfgDualConversion->setGeometry ( 10, 36, 200, 20 );
     cfgDualConversion->setAutoExclusive(false);
     connect ( cfgDualConversion, SIGNAL ( toggled ( bool ) ),
               this, SLOT ( updateDualConversion ( bool ) ) );
@@ -287,14 +305,14 @@ void Main_Widget::init()
 
     // USB-tune offset
     cfgTuneOffsetInput = new QLineEdit ( cfgUSBBox );
-    cfgTuneOffsetInput->setGeometry( 25, 60, 120, 20 );
+    cfgTuneOffsetInput->setGeometry( 10, 60, 120, 20 );
     TuneOffset_string.sprintf("%d", tuneCenter);
     cfgTuneOffsetInput->setText ( TuneOffset_string );
     cfgTuneOffsetInput->setEnabled(true);
 
     updateTuneOffsetButton = new QPushButton( cfgUSBBox );
     updateTuneOffsetButton->setText ( "Update" );
-    updateTuneOffsetButton->setGeometry( 150, 60, 70, 20 );
+    updateTuneOffsetButton->setGeometry( 135, 60, 70, 20 );
     updateTuneOffsetButton->setEnabled(true);
     connect ( updateTuneOffsetButton, SIGNAL ( pressed() ),
               this, SLOT ( updateTuneOffset() ) );
@@ -384,6 +402,27 @@ void Main_Widget::init()
     cfgSpotAmplInput->setValue ( spotAmpl );
     connect ( cfgSpotAmplInput, SIGNAL ( valueChanged ( double ) ),
               this, SLOT (  updateSpotAmpl ( double ) ) );
+
+    QGroupBox *cfgFreqScale = new QGroupBox ( cfgFrame1 );
+    cfgFreqScale->setTitle ( "Frequency Scale" );
+    cfgFreqScale->setGeometry( 5, 450, 330, 60 );
+    cfgFreqScaleBandButton = new QRadioButton ( cfgFreqScale );
+    cfgFreqScaleBandButton->setText ( "Mark Band Segments" );
+    cfgFreqScaleBandButton->setGeometry ( 10, 20, 200, 20 );
+    cfgFreqScaleBandButton->setAutoExclusive(false);
+    connect ( cfgFreqScaleBandButton, SIGNAL ( toggled ( bool ) ),
+              this, SLOT ( toggleFreqScaleBandMarkers ( bool ) ) );
+    if( freqScaleBandMarkers )
+        cfgFreqScaleBandButton->setChecked (true);
+    cfgFreqScaleDigiButton = new QRadioButton ( cfgFreqScale );
+    cfgFreqScaleDigiButton->setText ( "Mark DIGI/WSPR Segments" );
+    cfgFreqScaleDigiButton->setGeometry ( 10, 40, 200, 20 );
+    cfgFreqScaleDigiButton->setAutoExclusive(false);
+    connect ( cfgFreqScaleDigiButton, SIGNAL ( toggled ( bool ) ),
+              this, SLOT ( toggleFreqScaleDigiMarkers ( bool ) ) );
+    if( freqScaleDigiMarkers )
+        cfgFreqScaleDigiButton->setChecked (true);
+
 
     // IQ Phase Calibration
     QGroupBox *cfgIQCal = new QGroupBox ( cfgFrame2 );
@@ -601,31 +640,40 @@ void Main_Widget::init()
     cfgSpecDisplay->setGeometry( 5, 150, 330, 200 );
 
     // no3m - SpecLineFill
-    specLineFillButton = new QRadioButton( tr("Fill Spectrum Line"), cfgSpecDisplay);
-    specLineFillButton->setGeometry ( 10, 20, 200, 20 );
+    specLineFillButton = new QRadioButton( tr("Fill Line"), cfgSpecDisplay);
+    specLineFillButton->setGeometry ( 10, 20, 150, 20 );
     specLineFillButton->setAutoExclusive(false);
     connect( specLineFillButton, SIGNAL(clicked()),
              this, SLOT ( setLineFill () ) );
     if (specLineFill) specLineFillButton->setChecked(true);
 
     specGradientButton = new QRadioButton( tr("Use Gradient"), cfgSpecDisplay);
-    specGradientButton->setGeometry ( 220, 20, 200, 20 );
+    specGradientButton->setGeometry ( 170, 20, 150, 20 );
     specGradientButton->setAutoExclusive(false);
     connect( specGradientButton, SIGNAL(clicked()),
              this, SLOT ( setSpectrumGradient () ) );
     if (spectrumGradient) specGradientButton->setChecked(true);
 
     // no3m - Spectrum Average Line
-    specLinesButton = new QRadioButton( tr("Connect Spectrum Points"), cfgSpecDisplay);
-    specLinesButton->setGeometry ( 10, 40, 200, 20 );
+    specLinesButton = new QRadioButton( tr("Connect Points"), cfgSpecDisplay);
+    specLinesButton->setGeometry ( 10, 40, 150, 20 );
     specLinesButton->setAutoExclusive(false);
     connect( specLinesButton, SIGNAL(clicked()),
              this, SLOT ( setSpectrumLines () ) );
     if (specLines) specLinesButton->setChecked(true);
 
+    // no3m - Spectrum Peak markers
+    specPeakMarkersButton = new QRadioButton( tr("Peak Markers"), cfgSpecDisplay);
+    //specPeakMarkersButton->setGeometry ( 10, 100, 200, 20 );
+    specPeakMarkersButton->setGeometry ( 170, 40, 150, 20 );
+    specPeakMarkersButton->setAutoExclusive(false);
+    connect( specPeakMarkersButton, SIGNAL(clicked()),
+             this, SLOT ( setSpectrumPeakMarkers () ) );
+    if (specPeakMarkers) specPeakMarkersButton->setChecked(true);
+
     // no3m - Spectrum Average Line
-    specAvgLineButton = new QRadioButton( tr("Spectrum Average Line"), cfgSpecDisplay);
-    specAvgLineButton->setGeometry ( 10, 60, 200, 20 );
+    specAvgLineButton = new QRadioButton( tr("Average Line"), cfgSpecDisplay);
+    specAvgLineButton->setGeometry ( 10, 60, 150, 20 );
     specAvgLineButton->setAutoExclusive(false);
     connect( specAvgLineButton, SIGNAL(clicked()),
              this, SLOT ( setSpectrumAvgLine () ) );
@@ -633,19 +681,31 @@ void Main_Widget::init()
 
     // no3m - Spectrum Average Line
     specAperLinesButton = new QRadioButton( tr("Aperature Lines"), cfgSpecDisplay);
-    specAperLinesButton->setGeometry ( 10, 80, 200, 20 );
+    specAperLinesButton->setGeometry ( 170, 60, 150, 20 );
     specAperLinesButton->setAutoExclusive(false);
     connect( specAperLinesButton, SIGNAL(clicked()),
              this, SLOT ( setSpectrumAperLines () ) );
     if (specAperLines) specAperLinesButton->setChecked(true);
 
-    // no3m - Spectrum Peak markers
-    specPeakMarkersButton = new QRadioButton( tr("Peak Markers"), cfgSpecDisplay);
-    specPeakMarkersButton->setGeometry ( 10, 100, 200, 20 );
-    specPeakMarkersButton->setAutoExclusive(false);
-    connect( specPeakMarkersButton, SIGNAL(clicked()),
-             this, SLOT ( setSpectrumPeakMarkers () ) );
-    if (specPeakMarkers) specPeakMarkersButton->setChecked(true);
+    spectrumOnTopButton = new QRadioButton( tr("Spectrum above waterfall"), cfgSpecDisplay);
+    //spectrumOnTopButton->setGeometry ( 220, 40, 200, 20 );
+    spectrumOnTopButton->setGeometry ( 10, 80, 200, 20 );
+    spectrumOnTopButton->setAutoExclusive(false);
+    connect( spectrumOnTopButton, SIGNAL(clicked()),
+             this, SLOT ( setSpectrumOnTop () ) );
+    if (spectrumOnTop) spectrumOnTopButton->setChecked(true);
+
+    QLabel *cfgSpecTimerLabel = new QLabel ( cfgSpecDisplay );
+    cfgSpecTimerLabel->setText ( "Frames per sec.: " );
+    cfgSpecTimerLabel->setGeometry ( 10, 100, 160, 20 );
+    cfgSpecTimerLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    cfgSpecTimerInput = new QSpinBox ( cfgSpecDisplay );
+    cfgSpecTimerInput->setGeometry ( 180, 100, 70, 20 );
+    cfgSpecTimerInput->setMinimum ( 10 );
+    cfgSpecTimerInput->setMaximum ( 50 );
+    cfgSpecTimerInput->setValue ( 1000 / specTimer );
+    connect ( cfgSpecTimerInput, SIGNAL ( valueChanged ( int ) ),
+              this, SLOT ( updateSpecTimer ( int ) ) );
 
     // Spectrum Averaging
     QLabel *cfgSpecAvgInputLabel = new QLabel ( cfgSpecDisplay );
@@ -711,15 +771,15 @@ void Main_Widget::init()
     // Spectrogram display
     QGroupBox *cfgSpectrogram = new QGroupBox( cfgFrame3 );
     cfgSpectrogram->setTitle("Waterfall Display");
-    cfgSpectrogram->setGeometry( 5, 350, 330, 120 );
+    cfgSpectrogram->setGeometry( 5, 360, 330, 120 );
     SpectrogramFilterButton = new QRadioButton( tr("Filter Lines"), cfgSpectrogram);
-    SpectrogramFilterButton->setGeometry ( 10, 20, 140, 20 );
+    SpectrogramFilterButton->setGeometry ( 10, 20, 150, 20 );
     SpectrogramFilterButton->setAutoExclusive(false);
     connect( SpectrogramFilterButton, SIGNAL(clicked()),
              this, SLOT ( setFilterLine () ) );
     if (filterLine) SpectrogramFilterButton->setChecked(true);
     SpectrogramTimeMarkersButton = new QRadioButton( tr("Time Markers"), cfgSpectrogram);
-    SpectrogramTimeMarkersButton->setGeometry ( 10, 40, 140, 20 );
+    SpectrogramTimeMarkersButton->setGeometry ( 170, 20, 150, 20 );
     SpectrogramTimeMarkersButton->setAutoExclusive(false);
     connect( SpectrogramTimeMarkersButton, SIGNAL(clicked()),
              this, SLOT ( setSpecTimeMarkers () ) );
@@ -768,7 +828,7 @@ void Main_Widget::init()
     // no3m
     QGroupBox *cfgColorPalette = new QGroupBox( cfgFrame3 );
     cfgColorPalette->setTitle("Color Palette");
-    cfgColorPalette->setGeometry( 5, 490, 330, 40 );
+    cfgColorPalette->setGeometry( 5, 500, 330, 40 );
     cfgPalette = new QComboBox (cfgColorPalette);
     cfgPalette->insertItem(0, "SDR-shell");
     cfgPalette->insertItem(1, "GQRX" );
@@ -805,7 +865,7 @@ void Main_Widget::init()
 
     QRadioButton *cfgIFAligned = new QRadioButton ( cfgIfBox );
     cfgIFAligned->setText ( "Use IF Mode" );
-    cfgIFAligned->setGeometry ( 5, 5, 340, 45 );
+    cfgIFAligned->setGeometry ( 5, 15, 340, 45 );
     cfgDualConversion->setAutoExclusive(false);
     connect ( cfgIFAligned, SIGNAL ( toggled ( bool ) ),
               this, SLOT ( setIF ( bool ) ) );
@@ -828,7 +888,7 @@ void Main_Widget::init()
 
     QGroupBox *cfgSlopeTuneBox = new QGroupBox ( cfgFrame6 );
     cfgSlopeTuneBox->setTitle ( "Slope Tuning Offsets (Hz)" );
-    cfgSlopeTuneBox->setGeometry ( 5, 195, 340, 150 );
+    cfgSlopeTuneBox->setGeometry ( 5, 210, 340, 150 );
 
     QLabel *cfgSlopeLowOffsetLabel = new QLabel ( cfgSlopeTuneBox );
     cfgSlopeLowOffsetLabel->setText ( "Low Offset" );
@@ -845,11 +905,11 @@ void Main_Widget::init()
 
     QLabel *cfgSlopeHighOffsetLabel = new QLabel ( cfgSlopeTuneBox );
     cfgSlopeHighOffsetLabel->setText ( "High Offset" );
-    cfgSlopeHighOffsetLabel->setGeometry ( 10, 58, 120, 20 );
+    cfgSlopeHighOffsetLabel->setGeometry ( 10, 55, 120, 20 );
     cfgSlopeHighOffsetLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
 
     cfgSlopeHighOffsetInput = new QSpinBox ( cfgSlopeTuneBox );
-    cfgSlopeHighOffsetInput->setGeometry ( 180, 58, 70, 20 );
+    cfgSlopeHighOffsetInput->setGeometry ( 180, 55, 70, 20 );
     cfgSlopeHighOffsetInput->setMinimum ( 0 );
     cfgSlopeHighOffsetInput->setMaximum ( 9999 );
     cfgSlopeHighOffsetInput->setValue ( slopeHighOffset );
@@ -2073,9 +2133,11 @@ void Main_Widget::init()
     connect ( meterTimer, SIGNAL ( timeout() ), this, SLOT ( readMeter() ) );
     meterTimer->start( 100 );
 
-    QTimer *fftTimer = new QTimer ( this );
+    //QTimer *fftTimer = new QTimer ( this );
+    fftTimer = new QTimer ( this );
     connect ( fftTimer, SIGNAL ( timeout() ), this, SLOT ( readSpectrum() ) );
-    fftTimer->start( FFT_TIMER );
+    //fftTimer->start( specTimerFFT_TIMER );
+    fftTimer->start( specTimer );
 
     // no3m
     QTimer *captureTimer = new QTimer ( this );
@@ -2274,27 +2336,51 @@ void Main_Widget::updateLayout()
                 TOPFRM_V,
                 width(),
                 height() - ctlFrame2->height() - TOPFRM_V );
-    pbScale->setGeometry (
+    if (spectrumOnTop) {
+       pbScale->setGeometry (
                 0,
                 0,
                 spectrogramFrame->width(),
                 PBSFRM_V );
-    spectrumFrame->setGeometry (
+       spectrumFrame->setGeometry (
                 0,
                 pbScale->height(),
                 spectrogramFrame->width(),
                 spectrumFrameHeight );
-    freqScale->setGeometry (
+       freqScale->setGeometry (
                 0,
                 spectrumFrame->height() + pbScale->height(),
                 spectrogramFrame->width(),
                 22
                 );
-    spectrogram->setGeometry (
+       spectrogram->setGeometry (
                 0,
                 spectrumFrame->height() + pbScale->height() + freqScale->height() + 1,
                 spectrogramFrame->width(),
                 spectrogramFrame->height() - 2 - spectrumFrame->height() - pbScale->height() - freqScale->height());
+    } else {
+       freqScale->setGeometry (
+                0,
+                spectrogramFrame->height() - 22,
+                spectrogramFrame->width(),
+                22
+                );
+       spectrumFrame->setGeometry (
+                0,
+                spectrogramFrame->height() - freqScale->height() - spectrumFrameHeight,
+                spectrogramFrame->width(),
+                spectrumFrameHeight );
+       pbScale->setGeometry (
+                0,
+                spectrogramFrame->height() - freqScale->height() - spectrumFrame->height() - PBSFRM_V,
+                spectrogramFrame->width(),
+                PBSFRM_V );
+       spectrogram->setGeometry (
+                0,
+                1,
+                spectrogramFrame->width(),
+                spectrogramFrame->height() - 2 - spectrumFrame->height() - pbScale->height() - freqScale->height());
+    }
     logoFrame->setGeometry (
                 ctlFrame->width()-100,
                 1,
@@ -2524,6 +2610,8 @@ void Main_Widget::loadSettings()
     //		"/sdr-shell/hScale", 3 ).toInt();
     specLineFill = settings->value(
                 "/sdr-shell/specfill", false ).toBool();
+    specTimer = settings->value(
+                "/sdr-shell/specTimer", 50 ).toInt();
 
     // no3m >>
     hwGain = settings->value (
@@ -2543,7 +2631,7 @@ void Main_Widget::loadSettings()
     spotAmpl = settings->value (
                 "/sdr-shell/spotAmpl", -10 ).toDouble();
     spotFreq = settings->value (
-                "/sdr-shell/spotFreq", 500 ).toDouble();
+                "/sdr-shell/spotFreq", 700 ).toDouble();
     specAveraging = settings->value(
                 "/sdr-shell/specavg", 0 ).toInt();
     specLow = settings->value(
@@ -2552,6 +2640,12 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/spechigh", -40 ).toInt();
     spectrumFrameHeight = settings->value(
                 "/sdr-shell/spectrumFrameHeight", 120 ).toInt();
+    spectrumOnTop = settings->value(
+                "/sdr-shell/spectrumOnTop", false ).toBool();
+    freqScaleBandMarkers = settings->value(
+                "/sdr-shell/freqScaleBandMarkers", false ).toBool();
+    freqScaleDigiMarkers = settings->value(
+                "/sdr-shell/freqScaleDigiMarkers", false ).toBool();
 
     updateSpecHigh(specHigh);
 
@@ -2578,11 +2672,11 @@ void Main_Widget::loadSettings()
     specPeakMarkers = settings->value(
                 "/sdr-shell/specpeak", false).toBool();
     spectrumScrolling = settings->value(
-                "/sdr-shell/spectrumScrolling", 0).toInt();
+                "/sdr-shell/spectrumScrolling", 4).toInt();
     specTimeMarkers = settings->value(
                 "/sdr-shell/spectimemarkers", false).toBool();
     specLines = settings->value(
-                "/sdr-shell/speclines", false).toBool();
+                "/sdr-shell/speclines", true).toBool();
     specAvgLine = settings->value(
                 "/sdr-shell/specavgline", false).toBool();
     specAperLines = settings->value(
@@ -2812,6 +2906,10 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/spectrumGradient", spectrumGradient );
     settings->setValue ( "/sdr-shell/spectrogramNumAVG", spectrogramNumAVG );
     settings->setValue ( "/sdr-shell/spectrumFrameHeight", spectrumFrameHeight );
+    settings->setValue ( "/sdr-shell/spectrumOnTop", spectrumOnTop );
+    settings->setValue ( "/sdr-shell/specTimer", specTimer );
+    settings->setValue ( "/sdr-shell/freqScaleBandMarkers", freqScaleBandMarkers );
+    settings->setValue ( "/sdr-shell/freqScaleDigiMarkers", freqScaleDigiMarkers );
     settings->setValue ( "/sdr-shell/CW_tone", CW_tone );
 
     // Save window geometry
@@ -3090,52 +3188,54 @@ void Main_Widget::process_key ( int key )
     {
     case 78: // n
         spectrumFrameHeight -= 1;
-        repaint();
+        windowResize = true;
+        //repaint();
         break;
     case 77: // m
         spectrumFrameHeight += 1;
-        repaint();
+        windowResize = true;
+        //repaint();
         break;
     case 44: // ,
-        if (CW_tone > 200) {
-          CW_tone -= 10;
-          if (mode == RIG_MODE_CW) {
-            tunef(10, true);
-            setFilter_l ( -1 );
-            setFilter_h ( -1 );
-            CWL_filter_l += 10;
-            CWL_filter_h += 10;
-          } else if (mode == RIG_MODE_CWR) {
-            tunef(-10, true);
-            setFilter_l ( 1 );
-            setFilter_h ( 1 );
-            CWU_filter_l -= 10;
-            CWU_filter_h -= 10;
-         }
-        }
-        break;
+       if (mode == RIG_MODE_CW || mode == RIG_MODE_CWR) {
+          if (CW_tone > 200) {
+             CW_tone -= 10;
+             if (mode == RIG_MODE_CW) {
+                tunef(10, true);
+                setFilter_l ( -1 );
+                setFilter_h ( -1 );
+                CWL_filter_l = -*filter_h; // reset reverse mode filters
+                CWL_filter_h = -*filter_l;
+             } else if (mode == RIG_MODE_CWR) {
+                tunef(-10, true);
+                setFilter_l ( 1 );
+                setFilter_h ( 1 );
+                CWU_filter_l = -*filter_h; // reset reverse mode filters
+                CWU_filter_h = -*filter_l;
+             }
+          }
+       }
+       break;
     case 46: // .
-        if (CW_tone < 1000) {
-          CW_tone += 10;
-          if (CW_tone > 2000) {
-            CW_tone = 2000;
-            break;
+       if (mode == RIG_MODE_CW || mode == RIG_MODE_CWR) {
+          if (CW_tone < 1000) {
+             CW_tone += 10;
+             if (mode == RIG_MODE_CW) {
+                tunef(-10, true);
+                setFilter_l ( 1 );
+                setFilter_h ( 1 );
+                CWL_filter_l = -*filter_h; // reset reverse mode filters
+                CWL_filter_h = -*filter_l;
+             } else if (mode == RIG_MODE_CWR) {
+                tunef(10, true);
+                setFilter_l ( -1 );
+                setFilter_h ( -1 );
+                CWU_filter_l = -*filter_h; // reset reverse mode filters
+                CWU_filter_h = -*filter_l;
+             }
           }
-          if (mode == RIG_MODE_CW) {
-            tunef(-10, true);
-            setFilter_l ( 1 );
-            setFilter_h ( 1 );
-            CWL_filter_l -= 10;
-            CWL_filter_h -= 10;
-          } else if (mode == RIG_MODE_CWR) {
-            tunef(10, true);
-            setFilter_l ( -1 );
-            setFilter_h ( -1 );
-            CWU_filter_l += 10;
-            CWU_filter_h += 10;
-          }
-        }
-        break;
+       }
+       break;
     case 85: // U
         setFilter_l ( -1 );
         break;
@@ -3337,11 +3437,14 @@ void Main_Widget::setFilter_l ( int n )
     if ( *filter_l < *filter_h - step && n >= 1 )
         *filter_l += step * n;
 
-printf("filter_l: %d\n", *filter_l );
+    //printf("filter_l: %d\n", *filter_l );
 
     if (mode == RIG_MODE_CW || mode == RIG_MODE_USB)
         if (*filter_l < 0)
             *filter_l = 0;
+    if (mode == RIG_MODE_CW)
+        if (*filter_l > CW_tone)
+            *filter_l = CW_tone;
     if (mode == RIG_MODE_CWR)
         if (*filter_l > -CW_tone)
             *filter_l = -CW_tone;
@@ -3361,11 +3464,14 @@ void Main_Widget::setFilter_h ( int n )
     if ( *filter_h > *filter_l + step && n <= -1 )
         *filter_h += step * n;
 
-printf("filter_h: %d\n", *filter_h );
+    //printf("filter_h: %d\n", *filter_h );
 
     if (mode == RIG_MODE_CWR || mode == RIG_MODE_LSB)
         if (*filter_h > 0)
             *filter_h = 0;
+    if (mode == RIG_MODE_CWR)
+        if (*filter_h < -CW_tone)
+            *filter_h = -CW_tone;
     if (mode == RIG_MODE_CW)
         if (*filter_h < CW_tone)
             *filter_h = CW_tone;
@@ -3396,6 +3502,9 @@ void Main_Widget::setLowerFilterScale ( int x )
     if (mode == RIG_MODE_CW || mode == RIG_MODE_USB)
         if (stop_band < 0)
             stop_band = 0;
+    if (mode == RIG_MODE_CW)
+        if (stop_band > CW_tone)
+            stop_band = CW_tone;
     if (mode == RIG_MODE_CWR)
         if (stop_band > -CW_tone)
             stop_band = -CW_tone;
@@ -3423,6 +3532,9 @@ void Main_Widget::setUpperFilterScale ( int x )
     if (mode == RIG_MODE_CWR || mode == RIG_MODE_LSB)
         if (stop_band > 0)
             stop_band = 0;
+    if (mode == RIG_MODE_CWR)
+        if (stop_band < -CW_tone)
+            stop_band = -CW_tone;
     if (mode == RIG_MODE_CW)
         if (stop_band < CW_tone)
             stop_band = CW_tone;
@@ -3893,6 +4005,9 @@ void Main_Widget::readSpectrum()
         // wrapped data.
     }
 
+    if (fftTimer->interval() != specTimer )
+       fftTimer->setInterval(specTimer);
+
     //drawSpectrogram();
     //if ( SPEC_state ) plotSpectrum ( spectrum_head );
     repaint();
@@ -3909,7 +4024,11 @@ void Main_Widget::drawSpectrogram( int y ) //ok
     static bool timeline = false;
     int spectrum_d[def_spec];
 
-    int spectrogramTop = ctlFrame->height() + pbScale->height() + spectrumFrame->height() + freqScale->height();
+    int spectrogramTop;
+    if (spectrumOnTop)
+       spectrogramTop = ctlFrame->height() + pbScale->height() + spectrumFrame->height() + freqScale->height();
+    else
+       spectrogramTop = ctlFrame->height();
 
     pwr_range = specApertureHigh - specApertureLow;
     //if(spec_debug)
@@ -4004,9 +4123,11 @@ void Main_Widget::drawSpectrogram( int y ) //ok
            // f1 is the lower-BP filter location
            // f2 is the upper-BP filter location
            if (*filter_l == 0) sx1 = -1;
-             else if (*filter_l < 0) sx1 = 0;
+             else if (*filter_l < 0) sx1 = -1;
+               else sx1 = -2;
            if (*filter_h == 0) sx2 = -1;
-             else if (*filter_h < 0) sx2 = 0;
+             else if (*filter_h < 0) sx2 = -1;
+               else sx2 = -2;
 #if SPEC_SHIFT
            f1 = (spectrogram->width() / 2 + sx1 - specOffset) - (int)((rx_delta_f - *filter_l) / bin_bw / hScale);
            f2 = (spectrogram->width() / 2 + sx2 - specOffset) - (int)((rx_delta_f - *filter_h) / bin_bw / hScale);
@@ -4022,7 +4143,8 @@ void Main_Widget::drawSpectrogram( int y ) //ok
         if (specTimeMarkers) {
 
             int step;
-            int span = ( ( ( ( spectrogramRefresh * FFT_TIMER ) * spectrogram->height() ) / 2 ) / 1000 );
+            //int span = ( ( ( ( spectrogramRefresh * FFT_TIMER ) * spectrogram->height() ) / 2 ) / 1000 );
+            int span = ( ( ( ( spectrogramRefresh * specTimer ) * spectrogram->height() ) / 2 ) / 1000 );
             if (span < 10)
               step = 5;
             else if (span < 15)
@@ -4100,7 +4222,12 @@ void Main_Widget::drawFreqScale() // ok
 {
 
 // no3m
-    int FreqScaleTop = ctlFrame->height() + pbScale->height() + spectrumFrame->height();
+    int FreqScaleTop;
+    if (spectrumOnTop)
+        FreqScaleTop = ctlFrame->height() + pbScale->height() + spectrumFrame->height();
+    else
+        FreqScaleTop = ctlFrame->height() + pbScale->height() + spectrumFrame->height() + spectrogram->height();
+
     char f_text[10];
     int tick;
     int label;
@@ -4160,7 +4287,9 @@ void Main_Widget::drawFreqScale() // ok
 
        int band_l, band_h;
        bool marked = false;
-          // band indicator
+
+       // band indicator
+       if (freqScaleBandMarkers) {
           for (int i = 0; i < 12 && !marked; i++) {
 #if SPEC_SHIFT
                 band_l = int ( ((float)spectrogram->width()/2.0 - float (specOffset)) - ( ( (float)rx_f - float (band_limits[i][0]) ) / ( bin_bw * hScale ) ) - 1.0 );
@@ -4178,15 +4307,17 @@ void Main_Widget::drawFreqScale() // ok
                                    qBound(0, band_h, spectrumFrame->width()) - qBound(0, band_l, spectrumFrame->width()),
                                    4
                                  ),
-                            QColor( 170, 0, 127 ) // purple
+                            QColor (0, 85, 127 ) // blu
+                            //QColor( 170, 0, 127 ) // purple
                             //QColor( 0, 100, 0 ) // green
                           );
              }
           }
+       }
 
-    //////// wspr and digi segments
-       marked = false;
-       //int band_l, band_h;
+       //////// wspr and digi segments
+       if (freqScaleDigiMarkers) {
+          marked = false;
           for (int i = 0; i < 12 && !marked; i++) {
              band_l = int ( ((float)spectrogram->width()/2.0 - float (specOffset)) - ( ( (float)rx_f - float (wspr_limits[i][0]) ) / ( bin_bw * hScale ) ) - 1.0 );
              band_h = int ( ((float)spectrogram->width()/2.0 - float (specOffset)) - ( ( (float)rx_f - float (wspr_limits[i][1]) ) / ( bin_bw * hScale ) ) - 1.0 );
@@ -4197,14 +4328,15 @@ void Main_Widget::drawFreqScale() // ok
                 p.fillRect( QRect( qBound(0, band_l, spectrumFrame->width()),
                                    0,
                                    qBound(0, band_h, spectrumFrame->width()) - qBound(0, band_l, spectrumFrame->width()),
+                                   //3
                                    4
                                  ),
-                            QColor (0, 100, 0 ) // green
+                            //QColor (0, 100, 0 ) // green
+                            QColor (0, 150, 0 ) // green2
                           );
              }
           }
-       marked = false;
-       //int band_l, band_h;
+          marked = false;
           for (int i = 0; i < 12 && !marked; i++) {
              band_l = int ( ((float)spectrogram->width()/2.0 - float (specOffset)) - ( ( (float)rx_f - float (jtmode_limits[i][0]) ) / ( bin_bw * hScale ) ) - 1.0 );
              band_h = int ( ((float)spectrogram->width()/2.0 - float (specOffset)) - ( ( (float)rx_f - float (jtmode_limits[i][1]) ) / ( bin_bw * hScale ) ) - 1.0 );
@@ -4215,12 +4347,19 @@ void Main_Widget::drawFreqScale() // ok
                 p.fillRect( QRect( qBound(0, band_l, spectrumFrame->width()),
                                    0,
                                    qBound(0, band_h, spectrumFrame->width()) - qBound(0, band_l, spectrumFrame->width()),
+                                   //3
                                    4
                                  ),
-                            QColor (220, 73, 0 ) // org
+                            //QColor (220, 73, 0 ) // org
+                            //QColor (202, 172, 0 ) // yel
+                            //QColor( 170, 0, 127 ) // purple
+                            //QColor (0, 85, 127 ) // blu
+                            //QColor (85, 85, 0 ) //olive
+                            QColor (130, 130, 0 ) //olive2
                           );
              }
           }
+       }
 
 #if SPEC_SHIFT
        int start_f = rx_f - int ((bin_bw) * (spectrogram->width()/2 - specOffset) * hScale); // hz freq
@@ -4341,9 +4480,11 @@ void Main_Widget::drawPassBandScale()
     // f1 is the lower-BP filter location
     // f2 is the upper-BP filter location
     if (*filter_l == 0) sx1 = -1;
-      else if (*filter_l < 0) sx1 = 0;
+      else if (*filter_l < 0) sx1 = -1;
+        else sx1 = -2;
     if (*filter_h == 0) sx2 = -1;
-      else if (*filter_h < 0) sx2 = 0;
+      else if (*filter_h < 0) sx2 = -1;
+        else sx2 = -2;
 
       int cw_offset;
         switch ( mode ) {
@@ -4369,7 +4510,11 @@ void Main_Widget::drawPassBandScale()
 
     QPainter p;
     p.begin( this );
-    p.translate( QPoint(0, spectrogramFrame->y() ));
+    if (spectrumOnTop)
+       p.translate( QPoint(0, spectrogramFrame->y() ));
+    else
+       p.translate( QPoint(0, ctlFrame->height() + spectrogram->height() ));
+
     p.setFont( *font1 );
     //p.eraseRect( 0, TOPFRM_V, pbScale->width()+1, pbScale->height() );
     p.fillRect(QRect(0, 0,pbScale->width()+1, pbScale->height()), QColor( 0, 0, 0 ) ); // faster?
@@ -4450,7 +4595,11 @@ void Main_Widget::plotSpectrum( int y )
     QPainter p;
     p.begin( this );
 
-    p.translate( QPoint(0, ctlFrame->height() + pbScale->height() ));
+    if (spectrumOnTop)
+       p.translate( QPoint(0, ctlFrame->height() + pbScale->height() ));
+    else
+       p.translate( QPoint(0, pbScale->height() + ctlFrame->height() + spectrogram->height() ));
+
     //p.eraseRect( 0, 0, spectrumFrame->width(), spectrumFrame->height()  ); // erase last spectrogram
     p.fillRect( QRect(0, 0, spectrumFrame->width(), spectrumFrame->height()), QColor( 0, 0, 0 ) ); // faster ??
 
@@ -4458,23 +4607,8 @@ void Main_Widget::plotSpectrum( int y )
     p.setFont ( *font1 );
 
     //////////////// audio bandpass filter
-    int sx1 = 0;
-    int sx2 = 0;
-    // f1 is the lower-BP filter location
-    // f2 is the upper-BP filter location
-    if (*filter_l == 0) sx1 = -1;
-      else if (*filter_l < 0) sx1 = 0;
-    if (*filter_h == 0) sx2 = -1;
-      else if (*filter_h < 0) sx2 = 0;
-#if SPEC_SHIFT
-    f1 = (spectrogram->width() / 2 + sx1 - specOffset) - (int)((rx_delta_f - *filter_l) / bin_bw / hScale);
-    f2 = (spectrogram->width() / 2 + sx2 - specOffset) - (int)((rx_delta_f - *filter_h) / bin_bw / hScale);
-#else
-    f1 = (spectrogram->width() / 2 + sx1 - specOffset) + (int)(*filter_l / bin_bw / hScale);
-    f2 = (spectrogram->width() / 2 + sx2 - specOffset) + (int)(*filter_h / bin_bw / hScale);
-#endif
-    p.fillRect( f1 , 0, f2 - f1, spectrumFrame->height(), QColor( 30, 30, 30, 255 ) );
 
+    //////////////// dB lines
     //////////////// dB lines
     int step;
     if (spectrum_height / (specHigh - specLow) > 1)
@@ -4483,14 +4617,17 @@ void Main_Widget::plotSpectrum( int y )
        step = 10;
 
     for (int i = (specLow / 10 ) * 10; i <= specHigh + step*2; i+=step) {
-        if (i%(step*2) == 0) {
-            p.setPen( QColor( 80, 80, 80 ) );
-            p.drawLine( 0, spectrumFrame->height() - (i - specLow) *vsScale,
-                        spectrogram->width(), spectrumFrame->height() - (i - specLow) *vsScale);
-        } else {
-            p.setPen( QColor( 50, 50, 50 ) );
-            p.drawLine( 0, spectrumFrame->height() - (i - specLow) *vsScale,
-                        spectrogram->width(), spectrumFrame->height() - (i - specLow) *vsScale);
+        int y = spectrumFrame->height() - (i - specLow) *vsScale;
+        if (y >= 0 && y <= spectrumFrame->height()) {
+           if (i%(step*2) == 0) {
+               p.setPen( QColor( 80, 80, 80 ) );
+               p.drawLine( 0, y,
+                           spectrogram->width(), y);
+           } else {
+               p.setPen( QColor( 50, 50, 50 ) );
+               p.drawLine( 0, y,
+                        spectrogram->width(), y);
+           }
         }
     }
     ///////////// draw dB labels on top later
@@ -4751,6 +4888,26 @@ void Main_Widget::plotSpectrum( int y )
         }
     }
 
+    //////////////// audio bandpass filter
+    int sx1 = 0;
+    int sx2 = 0;
+    // f1 is the lower-BP filter location
+    // f2 is the upper-BP filter location
+    if (*filter_l == 0) sx1 = -1;
+      else if (*filter_l < 0) sx1 = -1;
+        else sx1 = -2;
+    if (*filter_h == 0) sx2 = -1;
+      else if (*filter_h < 0) sx2 = -1;
+        else sx2 = -2;
+#if SPEC_SHIFT
+    f1 = (spectrogram->width() / 2 + sx1 - specOffset) - (int)((rx_delta_f - *filter_l) / bin_bw / hScale);
+    f2 = (spectrogram->width() / 2 + sx2 - specOffset) - (int)((rx_delta_f - *filter_h) / bin_bw / hScale);
+#else
+    f1 = (spectrogram->width() / 2 + sx1 - specOffset) + (int)(*filter_l / bin_bw / hScale);
+    f2 = (spectrogram->width() / 2 + sx2 - specOffset) + (int)(*filter_h / bin_bw / hScale);
+#endif
+    p.fillRect( f1 , 0, f2 - f1, spectrumFrame->height(), QColor( 30, 30, 30, 127 ) );
+
 #if 1
     // peak markers
     if (specPeakMarkers && spectrumMode != SPEC_PEAK) {
@@ -4879,7 +5036,7 @@ void Main_Widget::plotSpectrum( int y )
          offset = -CW_tone;
 
       if (offset == 0) sx1 = -1;
-      else if (offset <= 0) sx1 = 0;
+      else if (offset < 0) sx1 = 0;
 #if SPEC_SHIFT
       int cw_marker = (spectrogram->width() / 2 + sx1 - specOffset) - (int)((rx_delta_f - offset) / bin_bw / hScale) -1;
 #else
@@ -4894,13 +5051,15 @@ void Main_Widget::plotSpectrum( int y )
 
     //////////////////////// dB labels
     for (int i = (specLow / 10 ) * 10; i <= specHigh + step*2; i+=step) {
-         if (i%(step*2) == 0) {
-            sprintf( f_text, "%4d", i);
-            p.setPen( QColor( 255, 255, 255 ) );
-            p.drawText( 2, spectrumFrame->height() - ((i - specLow) *vsScale) - 4 + font1Metrics->height()/2, f_text );
-            p.drawText( spectrogram->width() - font1Metrics->width(f_text) - 3, spectrumFrame->height()
-                        - ((i - specLow) *vsScale) - 4 + font1Metrics->height()/2, f_text );
-         }
+       int y = spectrumFrame->height() - ((i - specLow) *vsScale) - 4 + font1Metrics->height()/2;
+       if (y >= 0 && y <= spectrumFrame->height()) {
+          if (i%(step*2) == 0) {
+             sprintf( f_text, "%4d", i);
+             p.setPen( QColor( 255, 255, 255 ) );
+             p.drawText( 2, y, f_text );
+             p.drawText( spectrogram->width() - font1Metrics->width(f_text) - 3, y, f_text );
+          }
+       }
     }
 
     p.end();
@@ -6310,12 +6469,41 @@ void Main_Widget::updateCaptureAutoInterval ( int value )
     capture_interval = value;
 }
 
+void Main_Widget::toggleFreqScaleBandMarkers ( bool )
+{
+    if ( cfgFreqScaleBandButton->isChecked() )
+        freqScaleBandMarkers = 1;
+    else
+        freqScaleBandMarkers = 0;
+}
+
+void Main_Widget::toggleFreqScaleDigiMarkers ( bool )
+{
+    if ( cfgFreqScaleDigiButton->isChecked() )
+       freqScaleDigiMarkers = 1;
+    else
+       freqScaleDigiMarkers = 0;
+}
+
 void Main_Widget::setSpectrumLines ( )
 {
     if ( specLinesButton->isChecked() )
         specLines = 1;
     else
         specLines = 0;
+}
+
+void Main_Widget::setSpectrumOnTop ( )
+{
+    bool tmp = spectrumOnTop;
+    if ( spectrumOnTopButton->isChecked() )
+        spectrumOnTop = 1;
+    else
+        spectrumOnTop = 0;
+
+    if (tmp != spectrumOnTop) {
+       windowResize = true;
+    }
 }
 
 void Main_Widget::setSpectrumAvgLine ( )
@@ -6358,7 +6546,7 @@ void Main_Widget::setSpectrumScrolling ( int value )
     if (spectrumScrolling != value) {
       spectrumScrolling = value;
       windowResize = true;
-      capture_cntr = 0;
+      //capture_cntr = 0;
     }
 }
 
@@ -6426,7 +6614,8 @@ void Main_Widget::autoCapture ()
 {
     capture_cntr++;
     if (capture_auto) {
-        if (capture_cntr >= (((spectrogramRefresh * FFT_TIMER) * spectrogram->height()) / 1000) ) {
+        //if (capture_cntr >= (((spectrogramRefresh * FFT_TIMER) * spectrogram->height()) / 1000) ) {
+        if (capture_cntr >= (((spectrogramRefresh * specTimer) * spectrogram->height()) / 1000) ) {
             screenshot( 1 );
             capture_cntr = 0;
         }
@@ -6719,3 +6908,74 @@ void Main_Widget::resetSpecOffset ( int )
    setSpecOffset ( specOffset_tmp - specOffset);
 }
 
+//////// adjusts filter to be symmetric based on lower edge in AM, SAM, DSB, FM and CW/CWR modes
+void Main_Widget::adjustSymmetricFilter ( int step )
+{
+   if ( mode == RIG_MODE_LSB || mode == RIG_MODE_USB ) return;
+
+   if ( mode == RIG_MODE_DSB || mode == RIG_MODE_AM || mode == RIG_MODE_SAM || mode == RIG_MODE_FM ) {
+      if (*filter_l >= -10 && step < 0)
+         step = (*filter_l + 10) / 10;
+
+      setFilter_l (-step);
+      setFilter_h (-(*filter_h + *filter_l) / 10);
+   } else if ( mode == RIG_MODE_CW ) {
+      if (*filter_l >= CW_tone - 10 && step < 0)
+        //step = (*filter_l + 10) / 10;
+        step = 0;
+
+      setFilter_l (-step);
+      setFilter_h ( ((CW_tone - *filter_l) + CW_tone - *filter_h) / 10);
+   } else if ( mode == RIG_MODE_CWR ) {
+       if (*filter_h <= -CW_tone + 10 && step < 0)
+        //step = (*filter_h - 10) / 10;
+        step = 0;
+
+      setFilter_h (step);
+      setFilter_l ( ((-CW_tone - *filter_h) - CW_tone - *filter_l) / 10);
+   }
+}
+
+/////// shifts passband in CW mode (shift+scrollwheel)
+void Main_Widget::adjustPassbandTuning ( int step )
+{
+   if ( mode == RIG_MODE_CW &&
+        ( ( *filter_l > 0 && *filter_l < CW_tone && *filter_h > CW_tone )
+          || ( ( *filter_l == 0 || *filter_h == CW_tone ) && step > 0 )
+          || (*filter_l == CW_tone && step < 0)
+        )
+      )
+   {
+        setFilter_l (step);
+        setFilter_h (step);
+   } else if ( mode == RIG_MODE_CWR &&
+               ( ( *filter_l < -CW_tone && *filter_h > -CW_tone && *filter_h < 0 )
+                 || ( (*filter_l == -CW_tone || *filter_h == 0) && step > 0)
+                 || (*filter_h == -CW_tone && step < 0)
+               )
+             )
+   {
+      setFilter_l (-step);
+      setFilter_h (-step);
+   }
+}
+
+void Main_Widget::resetPassbandTuning ( int )
+{
+   int offset;
+   if ( mode == RIG_MODE_CW ) {
+      offset = ( CW_tone - (*filter_l + ((*filter_h - *filter_l) / 2 )) ) / 10;
+      setFilter_l (offset);
+      setFilter_h (offset);
+   } else if (mode == RIG_MODE_CWR ) {
+      offset = ( -CW_tone - (*filter_h + ((*filter_l - *filter_h) / 2 )) ) / 10;
+      setFilter_l (offset);
+      setFilter_h (offset);
+   }
+}
+
+void Main_Widget::updateSpecTimer ( int value )
+{
+   specTimer = 1000 / value;
+   //printf("specTimer: %d\n", specTimer);
+}

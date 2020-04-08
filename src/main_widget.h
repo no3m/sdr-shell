@@ -132,6 +132,7 @@ class Main_Widget : public QWidget
         	QSpinBox *NR_TapsSpinBox, *NR_DelaySpinBox;
 	        QSpinBox *SpectrogramRefreshInput;
         	QSpinBox *SpectrogramNumAVGInput;
+        	QSpinBox *cfgSpecTimerInput;
 	        QSpinBox *cfgCaptureAutoSpinBox;
         	QDoubleSpinBox *NR_GainSpinBox, *NR_LeakageSpinBox;
 	        QSpinBox *ANF_TapsSpinBox, *ANF_DelaySpinBox;
@@ -180,6 +181,7 @@ class Main_Widget : public QWidget
                 bool freqScaleABSMode;
                 int CW_tone;
                 int spectrumFrameHeight;
+                int specTimer;
 
 		Varilabel *TRX_label;
 		Varilabel *NR_label;
@@ -313,10 +315,13 @@ class Main_Widget : public QWidget
         	QRadioButton *specAvgLineButton;
         	QRadioButton *specAperLinesButton;
 	        QRadioButton *specLinesButton;
+	        QRadioButton *spectrumOnTopButton;
         	QRadioButton *specPeakMarkersButton;
 		QRadioButton *cfgUseUSBsoftrock;
 		QRadioButton *cfgDualConversion;
 	        QRadioButton *cfgCaptureAuto;
+		QRadioButton *cfgFreqScaleBandButton;
+		QRadioButton *cfgFreqScaleDigiButton;
 
 		QPalette p;
 
@@ -341,6 +346,7 @@ class Main_Widget : public QWidget
 	        bool specAvgLine;
 	        bool specAperLines;
         	bool specLines;
+        	bool spectrumOnTop;
 	        int spectrumScrolling;
         	bool windowResize;
 	        int sample_rate;
@@ -428,6 +434,9 @@ class Main_Widget : public QWidget
         	int spectrogramRefreshCounter;
 	        int spectrogramPos;
                 int specOffset;
+                bool freqScaleBandMarkers;
+		bool freqScaleDigiMarkers;
+                QTimer *fftTimer;
 
 		int spectrum_history[SPECTRUM_HISTORY_SIZE][MAX_DEFSPEC];
         	int spectrum_peak[MAX_DEFSPEC];
@@ -567,6 +576,8 @@ class Main_Widget : public QWidget
 	        void updateSpotAmpl ( double );
         	void setSpotToneVals ( );
 	        void toggle_spotTone ( int );
+                void toggleFreqScaleBandMarkers ( bool );
+                void toggleFreqScaleDigiMarkers ( bool );
         	void setSpotTone ( );
                 void setSpectrumFillColor();
                 void setSpectrumLineColor();
@@ -626,6 +637,7 @@ class Main_Widget : public QWidget
         	void setSpectrumAperLines ( );
         	void toggleSpectrumAperLines ( int );
 	        void setSpectrumLines ( );
+	        void setSpectrumOnTop ( );
         	void setSpectrumPeakMarkers ( );
 		void setSpectrumType ( );
 		void setSpectrumDefaults ( );
@@ -676,6 +688,10 @@ class Main_Widget : public QWidget
                 void setSpecOffset ( int );
                 void centerFilter ( int );
                 void resetSpecOffset ( int );
+                void adjustSymmetricFilter ( int );
+                void adjustPassbandTuning ( int );
+                void resetPassbandTuning ( int );
+                void updateSpecTimer ( int );
 
 	protected:
 		void keyPressEvent ( QKeyEvent * );

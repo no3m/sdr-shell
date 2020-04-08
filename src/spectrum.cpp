@@ -34,6 +34,9 @@ void Spectrum::mouseReleaseEvent( QMouseEvent *e )
           emit dummy ( e->x() );
        if ( e->button() == Qt::LeftButton && e->x() == x0)
           emit centerPB ( e->x() );
+    } else if (QApplication::keyboardModifiers().testFlag(Qt::ShiftModifier) == true) {
+       if ( e->button() == Qt::MidButton )
+          emit resetpbt ( e->x() );
     } else {
        if ( e->button() == Qt::MidButton )
           emit resetZoom ( e->x() );
@@ -52,8 +55,12 @@ void Spectrum::wheelEvent(QWheelEvent *event)
     int numSteps = numDegrees / 15;
 
     if (QApplication::keyboardModifiers().testFlag(Qt::ControlModifier) == true)
-       emit zoom( numSteps );
+       emit zoom ( numSteps );
+    if (QApplication::keyboardModifiers().testFlag(Qt::ShiftModifier) == true)
+       emit pbt ( numSteps );
+    else if (QApplication::keyboardModifiers().testFlag(Qt::AltModifier) == true)
+       emit filter (numSteps);
     else
-       emit tunewheel( numSteps );
+       emit tunewheel ( numSteps );
 }
 
