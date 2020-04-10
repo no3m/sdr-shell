@@ -842,7 +842,7 @@ void Main_Widget::init()
 
     QLabel *cfgspectrogramAvgGaussLabel = new QLabel ( cfgSpectrogram );
     cfgspectrogramAvgGaussLabel->setText ( "Gaussian Avg Bins: " );
-    cfgspectrogramAvgGaussLabel->setGeometry ( 10, 120, 150, 20 );
+    cfgspectrogramAvgGaussLabel->setGeometry ( 10, 120, 160, 20 );
     cfgspectrogramAvgGaussLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     SpectrogramAvgGaussSpinBox = new QSpinBox ( cfgSpectrogram );
     SpectrogramAvgGaussSpinBox->setGeometry ( 180, 120, 70, 20 );
@@ -2718,9 +2718,9 @@ void Main_Widget::loadSettings()
     spectrogramNumAVG = settings->value(
                 "/sdr-shell/spectrogramNumAVG", 10).toInt();
     spectrogramAvgGaussBins = settings->value(
-                "/sdr-shell/spectrogramAvgGaussBins", 1).toInt();
+                "/sdr-shell/spectrogramAvgGaussBins", 0).toInt();
     spectrumAvgGaussBins = settings->value(
-                "/sdr-shell/spectrumAvgGaussBins", 1).toInt();
+                "/sdr-shell/spectrumAvgGaussBins", 0).toInt();
     spectrumFillColor = settings->value( "/sdr-shell/spectrumFillColor", QColor(Qt::yellow)).value<QColor>();
     spectrumLineColor = settings->value( "/sdr-shell/spectrumLineColor", QColor(Qt::yellow)).value<QColor>();
     spectrumGradient = settings->value( "/sdr-shell/spectrumGradient", false).toBool();
@@ -4146,9 +4146,10 @@ void Main_Widget::drawSpectrogram( int y ) //ok
           this->scroll(0,-1,QRect(0,spectrogramTop,spectrumFrame->width(),spectrogram->height()));
         }
 
-        if (hScale > 0.99)
-           p.drawImage( 0, spectrogramPos, spectrogramLine.scaled(spectrogram->width(), 1, Qt::IgnoreAspectRatio, Qt::FastTransformation) );
-        else
+        // fast transformation loses signals when zoomed out
+        //if (hScale > 0.99)
+        //   p.drawImage( 0, spectrogramPos, spectrogramLine.scaled(spectrogram->width(), 1, Qt::IgnoreAspectRatio, Qt::FastTransformation) );
+        //else
            p.drawImage( 0, spectrogramPos, spectrogramLine.scaled(spectrogram->width(), 1, Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
 
         if ( filterLine ) {
