@@ -70,7 +70,7 @@
 #define RXMETERPTS (5)
 #define TXMETERPTS (9)
 
-#define SPECTRUM_HISTORY_SIZE (1000)
+#define SPECTRUM_HISTORY_SIZE (800)
 
 #define ONE_OVER_F_GUARD_FREQUENCY (2000)  /*This is for the usbsoftrock which uses 
 only the upper half of the spectrum in order to omit the 1/f noise near DC */
@@ -140,7 +140,10 @@ class Main_Widget : public QWidget
 	        QDoubleSpinBox *NB_ThresholdSpinBox;
         	QDoubleSpinBox *SDROM_ThresholdSpinBox;
 	        QDoubleSpinBox *preampGainSpinBox, *attGainSpinBox;
+		QDoubleSpinBox *SpectrogramAvgAttackSpinBox, *SpectrogramAvgDecaySpinBox;
 		QSpinBox *cfgSpecAvgInput, *cfgSpecLowInput, *cfgSpecHighInput;
+                QSpinBox *SpectrogramAvgGaussSpinBox;
+                QSpinBox *SpectrumAvgGaussSpinBox;
                 QSlider *rxIqGainCourseSlider, *rxIqGainFineSlider, *rxIqPhaseCourseSlider, *rxIqPhaseFineSlider;
 		QPixmap *rxPix, *txPix;
 		QFrame *trxFrame;
@@ -182,6 +185,12 @@ class Main_Widget : public QWidget
                 int CW_tone;
                 int spectrumFrameHeight;
                 int specTimer;
+                double spectrogramAvgAttack;
+		double spectrogramAvgDecay;
+                double spectrumAvgAttack;
+		double spectrumAvgDecay;
+                int spectrogramAvgGaussBins;
+                int spectrumAvgGaussBins;
 
 		Varilabel *TRX_label;
 		Varilabel *NR_label;
@@ -514,6 +523,7 @@ class Main_Widget : public QWidget
 		void loadMemoryCells();
 		void loadCommandCells();
                 void saveSpectrum();
+                void gaussian_kernel ( float * , int );
 
 	public:
                 Main_Widget();
@@ -692,6 +702,12 @@ class Main_Widget : public QWidget
                 void adjustPassbandTuning ( int );
                 void resetPassbandTuning ( int );
                 void updateSpecTimer ( int );
+		void updateSpectrogramAvgAttack ( double );
+		void updateSpectrogramAvgDecay ( double );
+		void updateSpectrumAvgAttack ( double );
+		void updateSpectrumAvgDecay ( double );
+		void updateSpectrogramAvgGaussBins ( int );
+		void updateSpectrumAvgGaussBins ( int );
 
 	protected:
 		void keyPressEvent ( QKeyEvent * );

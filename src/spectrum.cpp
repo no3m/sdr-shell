@@ -56,7 +56,7 @@ void Spectrum::wheelEvent(QWheelEvent *event)
 
     if (QApplication::keyboardModifiers().testFlag(Qt::ControlModifier) == true)
        emit zoom ( numSteps );
-    if (QApplication::keyboardModifiers().testFlag(Qt::ShiftModifier) == true)
+    else if (QApplication::keyboardModifiers().testFlag(Qt::ShiftModifier) == true)
        emit pbt ( numSteps );
     else if (QApplication::keyboardModifiers().testFlag(Qt::AltModifier) == true)
        emit filter (numSteps);

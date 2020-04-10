@@ -696,7 +696,7 @@ void Main_Widget::init()
     if (spectrumOnTop) spectrumOnTopButton->setChecked(true);
 
     QLabel *cfgSpecTimerLabel = new QLabel ( cfgSpecDisplay );
-    cfgSpecTimerLabel->setText ( "FFTs/sec: " );
+    cfgSpecTimerLabel->setText ( "Frames per sec.: " );
     cfgSpecTimerLabel->setGeometry ( 10, 100, 160, 20 );
     cfgSpecTimerLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     cfgSpecTimerInput = new QSpinBox ( cfgSpecDisplay );
@@ -722,7 +722,7 @@ void Main_Widget::init()
 
     // Spectrum Scale
     QLabel *cfgSpecScaleLabel = new QLabel ( cfgSpecDisplay );
-    cfgSpecScaleLabel->setText ( "Spectrum Scale (dB): " );
+    cfgSpecScaleLabel->setText ( "Spectrum Scale: " );
     cfgSpecScaleLabel->setGeometry ( 10, 140, 160, 20 );
     cfgSpecScaleLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     cfgSpecLowInput = new QSpinBox ( cfgSpecDisplay );
@@ -771,7 +771,7 @@ void Main_Widget::init()
     // Spectrogram display
     QGroupBox *cfgSpectrogram = new QGroupBox( cfgFrame3 );
     cfgSpectrogram->setTitle("Waterfall Display");
-    cfgSpectrogram->setGeometry( 5, 360, 330, 140 );
+    cfgSpectrogram->setGeometry( 5, 360, 330, 120 );
     SpectrogramFilterButton = new QRadioButton( tr("Filter Lines"), cfgSpectrogram);
     SpectrogramFilterButton->setGeometry ( 10, 20, 150, 20 );
     SpectrogramFilterButton->setAutoExclusive(false);
@@ -788,7 +788,7 @@ void Main_Widget::init()
     // scrolling style
     QLabel *cfgSpecScrollingLabel = new QLabel ( cfgSpectrogram );
     cfgSpecScrollingLabel->setText ( "Scrolling Type: " );
-    cfgSpecScrollingLabel->setGeometry ( 10, 40, 160, 20 );
+    cfgSpecScrollingLabel->setGeometry ( 10, 60, 160, 20 );
     cfgSpecScrollingLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     cfgSpecScrolling = new QComboBox (cfgSpectrogram);
     cfgSpecScrolling->insertItem(0, "Waterfall Down");
@@ -797,63 +797,22 @@ void Main_Widget::init()
     cfgSpecScrolling->insertItem(3, "Linrad Rev");
     cfgSpecScrolling->insertItem(4, "SDR-shell");
     cfgSpecScrolling->insertItem(5, "SDR-shell Rev");
-    cfgSpecScrolling->setGeometry ( 180, 40, 150, 20 );
+    cfgSpecScrolling->setGeometry ( 180, 60, 150, 20 );
     cfgSpecScrolling->setCurrentIndex(spectrumScrolling);
     connect( cfgSpecScrolling, SIGNAL( activated ( int ) ), this, SLOT ( setSpectrumScrolling ( int ) ) );
 
     QLabel *cfgSpectrogramRefreshLabel = new QLabel ( cfgSpectrogram );
-    cfgSpectrogramRefreshLabel->setText ( "FFTs/line: " );
-    cfgSpectrogramRefreshLabel->setGeometry ( 10, 60, 160, 20 );
+    cfgSpectrogramRefreshLabel->setText ( "Waterfall Refresh: " );
+    cfgSpectrogramRefreshLabel->setGeometry ( 10, 80, 160, 20 );
     cfgSpectrogramRefreshLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     SpectrogramRefreshInput = new QSpinBox ( cfgSpectrogram );
-    SpectrogramRefreshInput->setGeometry ( 180, 60, 70, 20 );
+    SpectrogramRefreshInput->setGeometry ( 180, 80, 70, 20 );
     SpectrogramRefreshInput->setMinimum ( 1 );
-    SpectrogramRefreshInput->setMaximum ( 600 );
+    SpectrogramRefreshInput->setMaximum ( 100 );
     SpectrogramRefreshInput->setValue ( spectrogramRefresh );
     connect( SpectrogramRefreshInput, SIGNAL( valueChanged ( int ) ),
              this, SLOT ( updateSpectrogramRefresh ( int ) ) );
 
-    QLabel *cfgspectrogramAvgAttackLabel = new QLabel ( cfgSpectrogram );
-    cfgspectrogramAvgAttackLabel->setText ( "Avg (IIR) Attack: " );
-    cfgspectrogramAvgAttackLabel->setGeometry ( 10, 80, 160, 20 );
-    cfgspectrogramAvgAttackLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-    SpectrogramAvgAttackSpinBox = new QDoubleSpinBox ( cfgSpectrogram );
-    SpectrogramAvgAttackSpinBox->setGeometry ( 180, 80, 70, 20 );
-    SpectrogramAvgAttackSpinBox->setMinimum( 0.01 );
-    SpectrogramAvgAttackSpinBox->setMaximum( 1.0 );
-    SpectrogramAvgAttackSpinBox->setDecimals( 2 );
-    SpectrogramAvgAttackSpinBox->setSingleStep( 0.01);
-    SpectrogramAvgAttackSpinBox->setValue ( ( double ) spectrogramAvgAttack );
-    connect ( SpectrogramAvgAttackSpinBox, SIGNAL ( valueChanged (double ) ),
-              this, SLOT ( updateSpectrogramAvgAttack (double ) ) );
-    QLabel *cfgspectrogramAvgDecayLabel = new QLabel ( cfgSpectrogram );
-    cfgspectrogramAvgDecayLabel->setText ( "Avg (IIR) Decay : " );
-    cfgspectrogramAvgDecayLabel->setGeometry ( 10, 100, 160, 20 );
-    cfgspectrogramAvgDecayLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-    SpectrogramAvgDecaySpinBox = new QDoubleSpinBox ( cfgSpectrogram );
-    SpectrogramAvgDecaySpinBox->setGeometry ( 180, 100, 70, 20 );
-    SpectrogramAvgDecaySpinBox->setMinimum( 0.01 );
-    SpectrogramAvgDecaySpinBox->setMaximum( 1.0 );
-    SpectrogramAvgDecaySpinBox->setDecimals( 2 );
-    SpectrogramAvgDecaySpinBox->setSingleStep( 0.01);
-    SpectrogramAvgDecaySpinBox->setValue ( ( double ) spectrogramAvgDecay );
-    connect ( SpectrogramAvgDecaySpinBox, SIGNAL ( valueChanged (double ) ),
-              this, SLOT ( updateSpectrogramAvgDecay (double ) ) );
-
-    QLabel *cfgspectrogramAvgGaussLabel = new QLabel ( cfgSpectrogram );
-    cfgspectrogramAvgGaussLabel->setText ( "Gaussian Avg Bins: " );
-    cfgspectrogramAvgGaussLabel->setGeometry ( 10, 120, 150, 20 );
-    cfgspectrogramAvgGaussLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-    SpectrogramAvgGaussSpinBox = new QSpinBox ( cfgSpectrogram );
-    SpectrogramAvgGaussSpinBox->setGeometry ( 180, 120, 70, 20 );
-    SpectrogramAvgGaussSpinBox->setMinimum( 0 );
-    SpectrogramAvgGaussSpinBox->setMaximum( 20 );
-    SpectrogramAvgGaussSpinBox->setSingleStep( 1 );
-    SpectrogramAvgGaussSpinBox->setValue ( ( int ) spectrogramAvgGaussBins );
-    connect ( SpectrogramAvgGaussSpinBox, SIGNAL ( valueChanged ( int ) ),
-              this, SLOT ( updateSpectrogramAvgGaussBins ( int ) ) );
-
-#if 0
     QLabel *cfgspectrogramNumAVGLabel = new QLabel ( cfgSpectrogram );
     cfgspectrogramNumAVGLabel->setText ( "Averaging Samples: " );
     cfgspectrogramNumAVGLabel->setGeometry ( 10, 100, 160, 20 );
@@ -865,12 +824,11 @@ void Main_Widget::init()
     SpectrogramNumAVGInput->setValue ( spectrogramNumAVG );
     connect( SpectrogramNumAVGInput, SIGNAL( valueChanged ( int ) ),
              this, SLOT ( updateSpectrogramNumAVG ( int ) ) );
-#endif
 
     // no3m
     QGroupBox *cfgColorPalette = new QGroupBox( cfgFrame3 );
     cfgColorPalette->setTitle("Color Palette");
-    cfgColorPalette->setGeometry( 5, 520, 330, 40 );
+    cfgColorPalette->setGeometry( 5, 500, 330, 40 );
     cfgPalette = new QComboBox (cfgColorPalette);
     cfgPalette->insertItem(0, "SDR-shell");
     cfgPalette->insertItem(1, "GQRX" );
@@ -2670,14 +2628,6 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/att_state", 0 ).toInt();
     attGain = settings->value(
                 "/sdr-shell/attGain", -6 ).toDouble();
-    spectrogramAvgAttack = settings->value(
-                "/sdr-shell/spectrogramAvgAttack", 1.0 ).toDouble();
-    spectrogramAvgDecay = settings->value(
-                "/sdr-shell/spectrogramAvgDecay", 1.0 ).toDouble();
-    spectrumAvgAttack = settings->value(
-                "/sdr-shell/spectrumAvgAttack", 1.0 ).toDouble();
-    spectrumAvgDecay = settings->value(
-                "/sdr-shell/spectrumAvgDecay", 1.0 ).toDouble();
     spotAmpl = settings->value (
                 "/sdr-shell/spotAmpl", -10 ).toDouble();
     spotFreq = settings->value (
@@ -2717,10 +2667,6 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/specaperlines", true).toBool();
     spectrogramNumAVG = settings->value(
                 "/sdr-shell/spectrogramNumAVG", 10).toInt();
-    spectrogramAvgGaussBins = settings->value(
-                "/sdr-shell/spectrogramAvgGaussBins", 1).toInt();
-    spectrumAvgGaussBins = settings->value(
-                "/sdr-shell/spectrumAvgGaussBins", 1).toInt();
     spectrumFillColor = settings->value( "/sdr-shell/spectrumFillColor", QColor(Qt::yellow)).value<QColor>();
     spectrumLineColor = settings->value( "/sdr-shell/spectrumLineColor", QColor(Qt::yellow)).value<QColor>();
     spectrumGradient = settings->value( "/sdr-shell/spectrumGradient", false).toBool();
@@ -2949,12 +2895,6 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/freqScaleBandMarkers", freqScaleBandMarkers );
     settings->setValue ( "/sdr-shell/freqScaleDigiMarkers", freqScaleDigiMarkers );
     settings->setValue ( "/sdr-shell/CW_tone", CW_tone );
-    settings->setValue ( "/sdr-shell/spectrogramAvgAttack", spectrogramAvgAttack );
-    settings->setValue ( "/sdr-shell/spectrogramAvgDecay", spectrogramAvgDecay );
-    settings->setValue ( "/sdr-shell/spectrumAvgAttack", spectrumAvgAttack );
-    settings->setValue ( "/sdr-shell/spectrumAvgDecay", spectrumAvgDecay );
-    settings->setValue ( "/sdr-shell/spectrogramAvgGaussBins", spectrogramAvgGaussBins );
-    settings->setValue ( "/sdr-shell/spectrumAvgGaussBins", spectrumAvgGaussBins );
 
     // Save window geometry
     settings->setValue ( "/sdr-shell/g_left", geometry().left() );
@@ -3233,10 +3173,12 @@ void Main_Widget::process_key ( int key )
     case 78: // n
         spectrumFrameHeight -= 1;
         windowResize = true;
+        //repaint();
         break;
     case 77: // m
         spectrumFrameHeight += 1;
         windowResize = true;
+        //repaint();
         break;
     case 44: // ,
        if (mode == RIG_MODE_CW || mode == RIG_MODE_CWR) {
@@ -3979,7 +3921,7 @@ void Main_Widget::readMeter()
 //
 void Main_Widget::readSpectrum()
 {
-    int j, k;
+    int j, k, l, m, n;
     int label, stamp;
     float raw_spectrum[def_spec];
     float a;
@@ -3988,26 +3930,70 @@ void Main_Widget::readSpectrum()
     updated++;
     pCmd->sendCommand ("reqSpectrum %d\n", getpid() );
 
+    if (spec_width == def_spec) {
 #if SPEC_SHIFT
-    // center spectrum data on rx_f
-    pSpectrum->fetch (&stamp, &label, raw_spectrum, def_spec);
 
-    for (j = int ((def_spec + int (rx_delta_f/bin_bw))%def_spec), k=0; j < def_spec; ++j, ++k)
-       spectrum[k] = raw_spectrum[j];
+         // center spectrum data on rx_f
 
-    for (j = 0; j < int ((def_spec + int (rx_delta_f/bin_bw))%def_spec); ++j, ++k)
-       spectrum[k] = raw_spectrum[j];
+         pSpectrum->fetch (&stamp, &label, raw_spectrum, def_spec);
+
+         for (j = int ((def_spec + int (rx_delta_f/bin_bw))%def_spec), k=0; j < def_spec; ++j, ++k)
+               spectrum[k] = raw_spectrum[j];
+         for (j = 0; j < int ((def_spec + int (rx_delta_f/bin_bw))%def_spec); ++j, ++k)
+               spectrum[k] = raw_spectrum[j];
 
 #else
-    pSpectrum->fetch (&stamp, &label, spectrum, def_spec);
+        pSpectrum->fetch (&stamp, &label, spectrum, def_spec);
+#endif
+    } else {
+        pSpectrum->fetch (&stamp, &label, raw_spectrum, def_spec);
+
+        // spectrum from dttsp is centered at Osc.
+        // if Osc != 0, then some bins on one end are wrapped data.  Zero them.
+        // this is only a visible problem when scaling the data...
+#if 0
+        if (rx_delta_f < 0) {
+            float bin_bw = sample_rate/(float)def_spec;
+            a = abs(rx_delta_f) / bin_bw;
+            j = def_spec - (int)a;
+            if (once)
+                printf("Osc=%d bins=%.1f j=%d\n",
+                       rx_delta_f, a, j);
+            for(; j < def_spec; j++) {
+                raw_spectrum[j] = 0;
+            }
+        }
 #endif
 
-    if (fftTimer->interval() != specTimer ) {
-       //fftTimer->setInterval(specTimer);
-       fftTimer->start(specTimer);
-       //printf("specTimer: %d\n", specTimer);
+
+        // resample spectrum to be smaller
+        // use the max value of N samples
+        // j = raw sample index
+        // k = downsampled index
+        n = def_spec / spec_width;
+        for (j = k = 0; j < def_spec; j += n, k++) {
+            a = raw_spectrum[j];
+
+            for (l = j+1, m=1; m < n; l++, m++) {
+                if (raw_spectrum[l] > a) {
+                    a = raw_spectrum[l];
+                }
+            }
+
+            spectrum[k] = a;
+        }
+        for ( ; k < def_spec; k++) {
+            spectrum[k] = 0;
+        }
+        // if the dttsp Osc frequency is not zero, one end or the other has
+        // wrapped data.
     }
 
+    if (fftTimer->interval() != specTimer )
+       fftTimer->setInterval(specTimer);
+
+    //drawSpectrogram();
+    //if ( SPEC_state ) plotSpectrum ( spectrum_head );
     repaint();
 }
 
@@ -4015,10 +4001,13 @@ void Main_Widget::drawSpectrogram( int y ) //ok
 {
     int x, x1, x2, y1, n;
     int f1, f2;
+    //static int y = 0;
     int pwr;
     float pwr_range;
     bool spec_debug = false;
     static bool timeline = false;
+    int spectrogram_data[def_spec];
+    //int spectrogram_avg[def_spec];
     static int spectrogram_avg[MAX_DEFSPEC];
     static bool spectrogram_avg_init = true;
 
@@ -4053,66 +4042,93 @@ void Main_Widget::drawSpectrogram( int y ) //ok
         p.end();
     }
 
-    // initial avg array with current value
-    if (spectrogram_avg_init) {
-       for ( x = 0; x < def_spec; ++x ) {
-          spectrogram_avg[x] = spectrum_history[y][x];
-       }
-       spectrogram_avg_init = false;
-    }
+           if (spectrogram_avg_init) {
+              memset(spectrogram_avg, 0, sizeof(int) * MAX_DEFSPEC);
+              spectrogram_avg_init = false;
+           }
 
     spectrogramRefreshCounter++;
     if (spectrogramRefreshCounter >= spectrogramRefresh) {
         spectrogramRefreshCounter = 0;
+// xxxx
+
+#if 0
+printf("old routine");
+        // old routine
+        if (spectrogramAVG) {
+            // Average the last N samples of spectrum data
+            memset(spectrogram_avg, 0, sizeof(int) * def_spec);
+            for (y1 = y, n=0; n < spectrogramNumAVG && n < SPECTRUM_HISTORY_SIZE; n++) {
+                for ( x = 1; x < def_spec; x++ ) {
+                    spectrogram_avg[x] += spectrum_history[y1][x]; // mean
+                    //spectrogram_avg[x] += spectrum_history[y1][x] * spectrum_history[y1][x]; // rms
+                }
+                y1--;
+                if (y1 < 0)
+                    y1 = SPECTRUM_HISTORY_SIZE - 1;
+            }
+            for ( x = 1; x < def_spec; x++ ) {
+                spectrogram_avg[x] = spectrogram_avg[x] / n; // mean
+                //spectrogram_avg[x] = sqrt ( spectrogram_avg[x] / spectrogramNumAVG); // rms
+            }
+        }
+#endif
 
         x1 = def_spec/2 - spectrum_width/2 + specOffset * hScale;
         x2 = x1 + spectrum_width;
 
+
         // avg ffts between refreshes
-        int spectrogram_data[def_spec];
-        for ( x = 0; x < def_spec; ++x ) {
-           spectrogram_data[x] = 0;
+        memset(spectrogram_data, 0, sizeof(int) * def_spec);
+        //for ( x = 0; x < def_spec; ++x ) {
+        for (x = x1; x < x2; ++x) {
            for (n = 0, y1 = y; n < spectrogramRefresh; ++n) {
               spectrogram_data[x] += spectrum_history[y1][x] * spectrum_history[y1][x]; // rms
+              //spectrogram_data[x] += spectrum_history[y1][x]; // mean
               y1--;
               if (y1 < 0) y1 = SPECTRUM_HISTORY_SIZE - 1;
            }
            spectrogram_data[x] = sqrt ( spectrogram_data[x] / spectrogramRefresh ); // rms
+           //spectrogram_data[x] /= spectrogramRefresh; // mean
         }
 
-        if (spectrogramAvgGaussBins > 0) {
-           // Gaussian smoothing across frequency domain
-           int spectrogram_smoothing[def_spec];
-           int bins = spectrogramAvgGaussBins;
-           int len = ( bins * 2 ) + 1;
-           float coeff[ len ];
-           gaussian_kernel ( coeff, bins );
-           for ( x = 0 ; x < def_spec ; ++x ) {
-              spectrogram_smoothing[ x ] = 0;
-              if ( x - bins > 0 && x + bins < def_spec ) {
-                 for ( int j=0 ; j < len ; ++j ) {
-                    spectrogram_smoothing[ x ] += spectrogram_data[ x + j - bins ] * coeff[ j ];
-                 }
-              } else {
-                    spectrogram_smoothing[ x ] = spectrogram_data[ x ];
-              }
+
+
+#if 1
+//this.waterfall.Attack = 0.9D;
+//this.spectrumAnalyzer.Attack = 0.9D;
+//this.waterfall.Decay = 0.5D;
+//this.spectrumAnalyzer.Decay = 0.3D;
+//var ratio = _powerSpectrum[i] < _temp[i] ? Attack : Decay;
+//_powerSpectrum[i] = (byte) Math.Round(_powerSpectrum[i] * (1 - ratio) + _temp[i] * ratio);
+        // IIR implementation w/ attack/decay
+        // process every FFT
+        //if (spectrogramAVG) {
+           //float a = 2.0 / ( 1.0 + spectrogramNumAVG );
+           float attack = 0.15;
+           float decay = 0.07;
+           float ratio;
+           for ( x = 0; x < def_spec; ++x ) {
+              //if (spectrogram_avg_first) {
+              //   spectrogram_avg[x] = spectrum_history[y][x];
+              //} else {
+                 //if (spectrogram_avg[x] < spectrum_history[y][x])
+                 if (spectrogram_avg[x] < spectrogram_data[x])
+                    ratio = attack;
+                 else
+                    ratio = decay;
+
+                 spectrogram_avg[x] = ( (spectrogram_data[x] - spectrogram_avg[x]) * ratio ) + spectrogram_avg[x]; // exponential / IIR
+                 //spectrogram_avg[x] = ( (spectrum_history[y][x] - spectrogram_avg[x]) * ratio ) + spectrogram_avg[x]; // exponential / IIR
+                 //spectrogram_avg[x] = ( (spectrum_history[y][x] - spectrogram_avg[x]) * a ) + spectrogram_avg[x]; // exponential / IIR
+                 //spectrogram_avg[x] = (((spectrogramNumAVG - 1) * spectrogram_avg[x]) + spectrum_history[y][x] ) / spectrogramNumAVG; // simple
+              //}
            }
+           //if (spectrogram_avg_first) spectrogram_avg_first = false;
+        //}
+#endif
 
-           for ( x = 0 ; x < def_spec ; ++x ) {
-              spectrogram_data[x] = spectrogram_smoothing[ x ];
-           }
-        }
 
-        float ratio;
-        for ( x = 0; x < def_spec; ++x ) {
-           if (spectrogram_avg[x] < spectrogram_data[x])
-              ratio = spectrogramAvgAttack;
-           else
-              ratio = spectrogramAvgDecay;
-
-           //avg = ( current * a ) + (1 - a) * avg
-           spectrogram_avg[x] = ( (spectrogram_data[x] - spectrogram_avg[x]) * ratio ) + spectrogram_avg[x]; // exponential / IIR
-        }
 
         if(spec_debug)
         {
@@ -4125,9 +4141,14 @@ void Main_Widget::drawSpectrogram( int y ) //ok
         for ( x = x1; x < x2; x++)		// for number of fft samples per line..
         {
             // Compute the power (magnified)
-            pwr = (int)((spectrogram_avg[x] - specApertureLow) * (apertureSize / pwr_range));
-
-            if ( pwr > apertureSize - 1 ) pwr = apertureSize - 1;
+            if (spectrogramAVG) {
+                pwr = (int)((spectrogram_avg[x] - specApertureLow) * (apertureSize / pwr_range));
+            } else {
+                //pwr = (int)((spectrum[ x ] + specCal - specApertureLow) * (apertureSize / pwr_range));
+                //pwr = (int)((spectrum_history[y][x] - specApertureLow) * (apertureSize / pwr_range));
+                pwr = (int)((spectrogram_data[x] - specApertureLow) * (apertureSize / pwr_range));
+            }
+            if ( pwr > apertureSize -1 ) pwr = apertureSize -1;
             else if ( pwr < 0 ) pwr = 0;
 
             uint *p = (uint *)spectrogramLine.scanLine(0) + (x - x1); // Set pixel color
@@ -4787,15 +4808,15 @@ void Main_Widget::plotSpectrum( int y )
     // auto-aperature
     if (autoSpecAperture > 0) {
         specApertureLow = background_avg + apertureAutoDelta;
-        //if (spectrogramAVG) {
-           //int adj = log (spectrogramNumAVG) * 5;
-           //if (adj > 30) adj = 30;
-           //if (autoSpecAperture == 2)
-           //  specApertureHigh = specApertureLow + 60 - adj;
-        //} else {
+        if (spectrogramAVG) {
+           int adj = log (spectrogramNumAVG) * 5;
+           if (adj > 30) adj = 30;
+           if (autoSpecAperture == 2)
+             specApertureHigh = specApertureLow + 60 - adj;
+        } else {
            if (autoSpecAperture == 2)
              specApertureHigh = specApertureLow + 60;
-        //}
+        }
         setCA_label();
     }
 
@@ -4810,7 +4831,7 @@ void Main_Widget::plotSpectrum( int y )
        float coeff[ len ];
        gaussian_kernel ( coeff, bins );
        for ( int i = x1 ; i < x2 ; ++i ) {
-          if ( i - bins > x1 && i + bins < x2 ) {
+          if ( i - bins > x1 || i + bins < x2 ) {
              for ( int j=0 ; j < len ; ++j ) {
                 if (specAveraging > 1) {
                    spectrum_smoothing[ i ] += spectrum_avg[ i + j - bins ] * coeff[ j ];
@@ -6514,26 +6535,6 @@ void Main_Widget::updateSpectrogramNumAVG ( int value )
     spectrogramNumAVG = value;
 }
 
-void Main_Widget::updateSpectrogramAvgAttack ( double value )
-{
-    spectrogramAvgAttack = value;
-}
-
-void Main_Widget::updateSpectrogramAvgDecay ( double value )
-{
-    spectrogramAvgDecay = value;
-}
-
-void Main_Widget::updateSpectrumAvgAttack ( double value )
-{
-    spectrumAvgAttack = value;
-}
-
-void Main_Widget::updateSpectrumAvgDecay ( double value )
-{
-    spectrumAvgDecay = value;
-}
-
 void Main_Widget::setSDROM_Threshold ( double value )
 {
     if(verbose) fprintf ( stderr, "SDROM_Threshold spinbox changed to %f\n",value );
@@ -6630,16 +6631,6 @@ void Main_Widget::setSpectrumLines ( )
         specLines = 1;
     else
         specLines = 0;
-}
-
-void Main_Widget::updateSpectrogramAvgGaussBins ( int value )
-{
-    spectrogramAvgGaussBins = value;
-}
-
-void Main_Widget::updateSpectrumAvgGaussBins ( int value )
-{
-    spectrumAvgGaussBins = value;
 }
 
 void Main_Widget::setSpectrumOnTop ( )
