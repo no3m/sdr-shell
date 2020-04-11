@@ -44,7 +44,7 @@ void Main_Widget::init()
 {
     QString version;
     setFocusPolicy ( Qt::TabFocus );
-    setMinimumWidth ( 1024 ); // no3m
+    setMinimumWidth ( 1060 ); // no3m
     setMinimumHeight ( 350 ); // no3m
 
     //setAttribute( Qt::WA_OpaquePaintEvent, true);
@@ -218,9 +218,9 @@ void Main_Widget::init()
     QRect geometry = desktop->screenGeometry(desktop->screenNumber(this));
 
     cfgFrame = new QFrame();
-    cfgFrame->setGeometry ( 50, 50, 360, 550 );
-    cfgFrame->setMinimumWidth ( 360 );
-    cfgFrame->setMaximumWidth ( 360 );
+    cfgFrame->setGeometry ( 50, 50, 380, 550 );
+    cfgFrame->setMinimumWidth ( 380 );
+    cfgFrame->setMaximumWidth ( 380 );
     cfgFrame->setMinimumHeight ( 550 );
     cfgFrame->setMaximumHeight ( 550 );
     cfgFrame->setWindowTitle("SDR-Shell : Config ");
@@ -253,7 +253,7 @@ void Main_Widget::init()
     spectrumTab->setFont ( *font1 );
     spectrumTab->addTab ( cfgFrame8, "Spectrum" );
     spectrumTab->addTab ( cfgFrame9, "Spectrogram" );
-    spectrumTab->setGeometry ( 2, 150, 348, 355 );
+    spectrumTab->setGeometry ( 5, 150, 360, 350 );
 
     // Station Callsign
     QGroupBox *cfgCallBox = new QGroupBox ( cfgFrame1 );
@@ -1936,7 +1936,6 @@ void Main_Widget::init()
     connect ( SPECMODE_label, SIGNAL ( mouseRelease ( int ) ),
               this, SLOT ( toggle_SPECMODE ( int ) ) );
 
-#if 0
     QPixmap wfmodenorm_pix ( wfnorm_xpm );
     WFMODE_label = new Varilabel ( ctlFrame2 );
     WFMODE_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
@@ -1947,8 +1946,7 @@ void Main_Widget::init()
     WFMODE_label->setGeometry ( SPECMODE_label->x() + SPECMODE_label->width() - 1, 0, 35, 17);
     connect ( WFMODE_label, SIGNAL ( mouseRelease ( int ) ),
               this, SLOT ( toggle_WFMODE ( int ) ) );
-#endif
-#if 0
+
     // -----------------------------------------------------------------------
     // Spacer for filling up empty space
     Spacer_label = new QLabel ( ctlFrame2 );
@@ -1957,7 +1955,6 @@ void Main_Widget::init()
     //Spacer_label->setPalette( QColor( 0, 0, 255 ) );
     Spacer_label->setPalette( QColor( 0, 0, 0 ) );
     Spacer_label->setAutoFillBackground( true );
-#endif
 
     // -----------------------------------------------------------------------
     CFG_label = new Varilabel ( ctlFrame2 );
@@ -2056,8 +2053,7 @@ void Main_Widget::init()
         p.setColor(QPalette::Active, QPalette::WindowText, QColor( 255, 255, 255) );
         c_cell[i]->setPalette(p);
         c_cell[i]->setGeometry (
-                    SPECMODE_label->x() + SPECMODE_label->width() + i * (font1Metrics->maxWidth() * 4),
-                    //WFMODE_label->x() + WFMODE_label->width() + 5 + i * (font1Metrics->maxWidth() * 4),
+                    WFMODE_label->x() + WFMODE_label->width() + 5 + i * (font1Metrics->maxWidth() * 4),
                     //Zoom_label->x() + Zoom_label->width() - 1 + i * (font1Metrics->maxWidth() * 4),
                     //Zoom_label->x() + Zoom_label->width() - 1 + i * 22,
                     0,
@@ -2522,7 +2518,6 @@ void Main_Widget::updateLayout()
                 1,
                 font1Metrics->maxWidth() * 5,
                 15 );
-#if 0
     Spacer_label->setGeometry (
                 //AGC_label->x() + AGC_label->width() + 1,
                 //Zoom_label->x() + Zoom_label->width() + 1,
@@ -2530,7 +2525,6 @@ void Main_Widget::updateLayout()
             1,
             HELP_label->x() - ( AGC_label->x() + AGC_label->width() ) - 2,
             15 );
-#endif
 
     spectrum_width = int(spectrumFrame->width() * hScale);
 
@@ -4672,14 +4666,16 @@ void Main_Widget::plotSpectrum( int y )
 {
     //printf("plotSpectrum( int y ) \n");
     int x, y1, x1, x2, n, specVShift, spectrumFrame_width_less1;
+    int f;
     int f1, f2;
     char f_text[10];
     bool debug = false;
-
+    //int spectrum_avg[def_spec];
     static int spectrum_avg[MAX_DEFSPEC];
-    static bool spectrum_avg_init = true;
-    //int spectrum_data[def_spec];
+    int spectrum_smoothing[def_spec];
     int spectrum_display[spectrumFrame->width()];
+    memset(spectrum_display, 0, sizeof(int) * spectrumFrame->width());
+    static bool first = true;
 
     spectrumFrame_width_less1 = spectrum_width - 1;
     specVShift = specLow + 140; // -140 reference
@@ -4740,50 +4736,49 @@ void Main_Widget::plotSpectrum( int y )
     }
     ///////////// draw dB labels on top later
 
-    if (spectrum_avg_init) {
-       for ( x = 0; x < def_spec; ++x ) {
-          spectrum_avg[x] = spectrum_history[y][x];
+// xxxx
+#if 1
+    if (first) {
+       memset(spectrum_avg, 0, sizeof(int) * MAX_DEFSPEC);
+       first = false;
+    }
+    // exponential moving average (IIR filter) in time-domain of spectrum data // no3m
+    if (specAveraging > 0) {
+       float a = 2.0 / ( 1.0 + specAveraging );
+       //float a;
+       float attack = 0.9f;
+       float decay = 0.3f;
+       for ( x = 0; x < def_spec; x++ ) {
+             //avg = ( current * a ) + (1 - a) * avg // exponential / IIR
+             //if ( spectrum_avg[x] < spectrum_history[y][x] )
+             //   a = attack;
+             //else
+             //   a = decay;
+             spectrum_avg[x] = ( (spectrum_history[y][x] - spectrum_avg[x]) * a ) + spectrum_avg[x]; // exponential / IIR
+             //spectrum_avg[x] = (((specAveraging - 1) * spectrum_avg[x]) + spectrum_history[y][x] ) / specAveraging; // simple
        }
-       spectrum_avg_init = false;
+    }
+#endif
+#if 0
+  // Average the last N samples of spectrum data
+    if (specAveraging > 1) {
+        memset(spectrum_avg, 0, sizeof(int) * MAX_DEFSPEC);
+        for (y1 = y, n=0; n < specAveraging && n < spectrogram->height(); n++) {
+            for ( x = 1; x < def_spec; x++ ) {
+                spectrum_avg[x] += spectrum_history[y1][x];
+            }
+            y1--;
+            if (y1 < 0)
+                y1 = spectrogram->height() - 1;
+        }
+        for ( x = 1; x < def_spec; x++ ) {
+            //spectrum_data[x] = spectrum_data[x] / specAveraging;
+            spectrum_avg[x] = spectrum_avg[x] / n;
+        }
     }
 
-    // construct dataset from latest spectrum FFT, add gaussian avg if needed
-    int bins = spectrumAvgGaussBins;
-    int len = ( bins * 2 ) + 1;
-    float coeff[ len ];
-    if (spectrumAvgGaussBins > 0)
-       gaussian_kernel ( coeff, bins );
-
-    float ratio;
-    int data;
-    for ( x = 0 ; x < def_spec ; ++x ) {
-       if (spectrumAvgGaussBins > 0) {
-          if ( x - bins > 0 && x + bins < def_spec ) {
-             data = 0;
-             for ( int j = 0 ; j < len ; ++j ) {
-                data += spectrum_history[ y ][ x + j - bins ] * coeff[ j ];
-             }
-          } else
-             data = spectrum_history[ y ][ x ];
-
-       } else
-          data = spectrum_history[ y ][ x ];
-
-       // time-domain IIR filter // no3m
-       if (spectrum_avg[x] < data)
-          ratio = spectrumAvgAttack;
-       else
-          ratio = spectrumAvgDecay;
-
-       //avg = ( current * a ) + (1 - a) * avg
-       spectrum_avg[x] = ( (data - spectrum_avg[x]) * ratio ) + spectrum_avg[x];
-
-       // store new peaks
-       if (spectrumMode == SPEC_PEAK)
-          if (spectrum_avg[x] > spectrum_peak[x])
-             spectrum_peak[x] = spectrum_avg[x];
-    }
-
+    //y1 =  spectrogram->height() + spectrumFrame->height();
+#endif
     //spectrum averages
     int spec_avg = 0;
     int spec_avg0 = 0;
@@ -4791,18 +4786,56 @@ void Main_Widget::plotSpectrum( int y )
 
     // calculate spectrum and background averages
     if (specAvgLine || specPeakMarkers || autoSpecAperture > 0) {
-
+#if 0
+            // only average samples within displayed spectrum
+            // average a lot of samples to smooth out jitter
+            int k = 0;
+            for (y1 = y, n=0; n < 200 && n < SPECTRUM_HISTORY_SIZE; ++n) {
+                for ( x = x1; x < x2; ++x ) {
+                    spec_avg += spectrum_history[y1][x];
+                }
+                spec_avg /= (x2 - x1);
+                if (n == 0) spec_avg0 = spec_avg;
+                for ( x = x1; x < x2; ++x ) {
+                   // remove signals
+                   if (spectrum_history[y1][x] < spec_avg + 4) {
+                      background_avg += spectrum_history[y1][x];
+                      k++;
+                   }
+                }
+                spec_avg = 0;
+                y1--;
+                if (y1 < 0)
+                    y1 = SPECTRUM_HISTORY_SIZE - 1;
+            }
+            if (k > 0){
+               background_avg /= k;
+            } else {
+               background_avg = spec_avg0;
+            }
+#endif
+#if 1
+        // original routine
         // only average samples within displayed spectrum
         for (int i=x1; i < x2; ++i){
-            spec_avg += spectrum_avg[i];
+            if (specAveraging > 1) {
+                spec_avg += spectrum_avg[i];
+            } else {
+                spec_avg += spectrum_history[y][i];
+            }
         }
         spec_avg /= (x2 - x1);
 
         // remove signals
         int n = 0;
         for (int i=x1; i < x2; ++i){
+            int spec_tmp;
 
-            int spec_tmp = spectrum_avg[i];
+            if (specAveraging > 1)
+                spec_tmp = spectrum_avg[i];
+            else
+                spec_tmp = spectrum_history[y][i];
+
             if (spec_tmp < spec_avg + 4) {
                 background_avg += spec_tmp;
                 ++n;
@@ -4813,6 +4846,7 @@ void Main_Widget::plotSpectrum( int y )
         } else {
             background_avg = spec_avg;
         }
+#endif
     }
 
     // auto-aperature
@@ -4830,9 +4864,98 @@ void Main_Widget::plotSpectrum( int y )
         setCA_label();
     }
 
+// xxxx
+
+    if (spectrumMode == SPEC_AVG || specPeakMarkers) {
+#if 1
+       // Gaussian smoothing across frequency domain
+       memset(spectrum_smoothing, 0, sizeof(int) * def_spec);
+       int bins = 3;
+       int len = ( bins * 2 ) + 1;
+       float coeff[ len ];
+       gaussian_kernel ( coeff, bins );
+       for ( int i = x1 ; i < x2 ; ++i ) {
+          if ( i - bins > x1 && i + bins < x2 ) {
+             for ( int j=0 ; j < len ; ++j ) {
+                if (specAveraging > 1) {
+                   spectrum_smoothing[ i ] += spectrum_avg[ i + j - bins ] * coeff[ j ];
+                } else {
+                   spectrum_smoothing[ i ] += spectrum_history[ y ][ i + j - bins ] * coeff[ j ];
+                }
+             }
+          } else {
+             if (specAveraging > 1) {
+                spectrum_smoothing[ i ] = spectrum_avg[ i ];
+             } else {
+                spectrum_smoothing[ i ] = spectrum_history[ y ][ i ];
+             }
+          }
+       }
+#endif
+#if 0
+        // spectra smoothing across 5 bins
+        memset(spectrum_smoothing, 0, sizeof(int) * def_spec);
+        int k;
+        for (int i=x1; i<x2; ++i) {
+           k=0;
+           for (int j = -2; j < 3; ++j) {
+              if (i + j > 0 && i + j < def_spec) {
+                 if (specAveraging > 1) {
+                    //spectrum_smoothing[i] += spectrum_avg[i+j] * spectrum_avg[i+j]; // rms
+                    spectrum_smoothing[i] += spectrum_avg[i+j]; // mean
+                 } else {
+                    //spectrum_smoothing[i] += spectrum_history[y][i+j] * spectrum_history[y][i+j]; // rms
+                    spectrum_smoothing[i] += spectrum_history[y][i+j]; // mean
+                 }
+                 ++k;
+              }
+           }
+           //spectrum_smoothing[i] = sqrt (spectrum_smoothing[i] / k); // rms
+           spectrum_smoothing[i] /= k; // mean
+        }
+#endif
+#if 0
+        if (specAveraging > 1) {
+            spectrum_smoothing[0] = (spectrum_avg[0] + spectrum_avg[1]) / 2;
+            spectrum_smoothing[1] = (spectrum_avg[0] + spectrum_avg[1] + spectrum_avg[2]) / 3;
+            spectrum_smoothing[def_spec-1] = (spectrum_avg[def_spec-1] + spectrum_avg[def_spec-2]) / 2;
+            spectrum_smoothing[def_spec-2] = (spectrum_avg[def_spec-1] + spectrum_avg[def_spec-2]+ spectrum_avg[def_spec-3]) / 3;
+            for (int i=2; i < def_spec-2; i++){
+                spectrum_smoothing[i] = (spectrum_avg[i] + spectrum_avg[i+1] + spectrum_avg[i-1] +
+                        spectrum_avg[i+2] + spectrum_avg[i-2]) / 5;
+            }
+        } else {
+            spectrum_smoothing[0] = (spectrum_history[y][0] + spectrum_history[y][1]) / 2;
+            spectrum_smoothing[1] = (spectrum_history[y][0] + spectrum_history[y][1] + spectrum_history[y][2]) / 3;
+            spectrum_smoothing[def_spec-1] = (spectrum_history[y][def_spec-1] + spectrum_history[y][def_spec-2]) / 2;
+            spectrum_smoothing[def_spec-2] = (spectrum_history[y][def_spec-1] + spectrum_history[y][def_spec-2] + spectrum_history[y][def_spec-3]) / 3;
+            for (int i=2; i < def_spec-2; i++){
+                spectrum_smoothing[i] = (spectrum_history[y][i] + spectrum_history[y][i+1] + spectrum_history[y][i-1] +
+                        spectrum_history[y][i+2] + spectrum_history[y][i-2]) / 5;
+            }
+        }
+#endif
+    }
+
+    // store new peaks
+    if (spectrumMode == SPEC_PEAK) {
+        //for (int i=0; i<def_spec; i++) {
+        for (int i=x1; i<x2; i++) {
+            if (specAveraging > 1) {
+                if (spectrum_avg[i] > spectrum_peak[i]) {
+                    spectrum_peak[i] = spectrum_avg[i];
+                }
+            } else {
+                if (spectrum_history[y][i] > spectrum_peak[i]) {
+                    spectrum_peak[i] = spectrum_history[y][i];
+                }
+            }
+        }
+    }
+
     /////////////////////////////////////////////////// map scaled spectrum
     // process extra samples to avoid junk data at end of scaled spectrum due to float division casted to int
-    for ( x = 0 ; x < spectrum_width ; ) {
+    for ( x = 0 ; x < spectrum_width + 1 ; ) {
 
         int sx = int (float (x) / hScale); // current scaled point
         if (sx > spectrumFrame->width()) break;
@@ -4858,30 +4981,39 @@ void Main_Widget::plotSpectrum( int y )
         if (hScale < 0.99) {
            if (spectrumMode == SPEC_PEAK)
               slope = float ( spectrum_peak[ x_next + x1 ] - spectrum_peak[ x + x1 ] ) / float ( sx_next - sx );
-           else
+           else if (spectrumMode == SPEC_AVG)
+              slope = float ( spectrum_smoothing[ x_next + x1 ] - spectrum_smoothing[ x + x1 ] ) / float ( sx_next - sx );
+           else if (specAveraging > 1)
               slope = float ( spectrum_avg[ x_next + x1 ] - spectrum_avg[ x + x1 ] ) / float ( sx_next - sx );
+           else
+              slope = float ( spectrum_history[y][x_next + x1 ] - spectrum_history[y][ x + x1 ] ) / float ( sx_next - sx );
         }
 
         if (hScale > 0.99) { // 1:1 or zoomed out
            int max = -999;
            for (int i = 0; i < x_next - x ; ++i) {
-              if (spectrumMode == SPEC_PEAK) {
-                 if (spectrum_peak[ x + x1 + i ] > max)
+              if (spectrumMode == SPEC_PEAK && spectrum_peak[ x + x1 + i ] > max)
                     max = spectrum_peak[ x + x1 + i ];
-
-              } else if (spectrum_avg[ x + x1 + i ] > max)
+              else if (spectrumMode == SPEC_AVG && spectrum_smoothing[ x + x1 + i ] > max)
+                    max = spectrum_smoothing[ x + x1 + i ];
+              else if (specAveraging > 1 && spectrum_avg[ x + x1 + i ] > max)
                     max = spectrum_avg[ x + x1 + i ];
+              else if (spectrum_history[y][ x + x1 + i ] > max)
+                    max = spectrum_history[y][ x + x1 + i ];
            }
            spectrum_display[sx] = max;
         }
 
         if (hScale < 0.99) { // zoomed in; interpolate missing bins with simple linear slope
             for (int i = 0; i < sx_next - sx && sx + i < spectrumFrame->width() ; ++i) {
-               //spectrum_display[sx+i] = -999; // shouldn't need this
                if (spectrumMode == SPEC_PEAK)
                   spectrum_display[sx+i] = int ( float (spectrum_peak[ x + x1]) + ( slope * float (i) ) );
-               else
+               else if (spectrumMode == SPEC_AVG)
+                  spectrum_display[sx+i] = int ( float (spectrum_smoothing[ x + x1 ]) + ( slope * float (i) ) );
+               else if (specAveraging > 1)
                   spectrum_display[sx+i] = int ( float (spectrum_avg[ x + x1 ]) + ( slope * float (i) ) );
+               else
+                  spectrum_display[sx+i] = int ( float (spectrum_history[y][ x + x1 ]) + ( slope * float (i) ) );
             }
         }
 
@@ -4960,7 +5092,7 @@ void Main_Widget::plotSpectrum( int y )
     }
 
 
-#if 0
+#if 1
     // peak markers
     if (specPeakMarkers && spectrumMode != SPEC_PEAK) {
         p.setPen(QColor(255, 0, 0, 255)); // red
@@ -6776,16 +6908,16 @@ void Main_Widget::toggle_SPECMODE ( int )
     QPixmap specmodepeak_pix ( peak_xpm );
 
     if (spectrumMode == SPEC_NORM) { // switch to SPEC_AVG
-    //    spectrumMode = SPEC_AVG;
-    //    SPECMODE_label->setPixmap ( specmodeavg_pix );
+        spectrumMode = SPEC_AVG;
+        SPECMODE_label->setPixmap ( specmodeavg_pix );
 
-    //} else if (spectrumMode == SPEC_AVG) { // switch SPEC_PEAK
+    } else if (spectrumMode == SPEC_AVG) { // switch SPEC_PEAK
+        spectrumMode = SPEC_PEAK;
         SPECMODE_label->setPixmap ( specmodepeak_pix );
 
         for (int i=0; i<def_spec; i++) {
             spectrum_peak[i] = -140;
         }
-        spectrumMode = SPEC_PEAK;
 
     } else { // switch to SPEC_NORM
         spectrumMode = SPEC_NORM;

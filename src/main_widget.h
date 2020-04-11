@@ -141,6 +141,7 @@ class Main_Widget : public QWidget
         	QDoubleSpinBox *SDROM_ThresholdSpinBox;
 	        QDoubleSpinBox *preampGainSpinBox, *attGainSpinBox;
 		QDoubleSpinBox *SpectrogramAvgAttackSpinBox, *SpectrogramAvgDecaySpinBox;
+		QDoubleSpinBox *SpectrumAvgAttackSpinBox, *SpectrumAvgDecaySpinBox;
 		QSpinBox *cfgSpecAvgInput, *cfgSpecLowInput, *cfgSpecHighInput;
                 QSpinBox *SpectrogramAvgGaussSpinBox;
                 QSpinBox *SpectrumAvgGaussSpinBox;
