@@ -93,8 +93,6 @@ only the upper half of the spectrum in order to omit the 1/f noise near DC */
 #define FFT_TIMER 50
 #define DEFAPERTURE_SIZE 256
 
-#define SPEC_SHIFT 1
-
 const int FREQUENCY_UPDATE = 2;
 const int OFFSET = 10000;
 
@@ -427,8 +425,6 @@ class Main_Widget : public QWidget
 
 		int once;
 
-		float spectrum[MAX_DEFSPEC];
-		float oscope[MAX_DEFSPEC];
 		float specApertureLow, specApertureHigh;
 	        float specApertureLowTmp;
 	        float specApertureHighTmp;
@@ -524,7 +520,6 @@ class Main_Widget : public QWidget
 		void updateLayout();
 		void loadMemoryCells();
 		void loadCommandCells();
-                void saveSpectrum();
                 void gaussian_kernel ( float * , int );
 
 	public:
