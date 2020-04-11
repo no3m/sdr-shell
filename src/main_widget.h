@@ -142,7 +142,7 @@ class Main_Widget : public QWidget
 	        QDoubleSpinBox *preampGainSpinBox, *attGainSpinBox;
 		QDoubleSpinBox *SpectrogramAvgAttackSpinBox, *SpectrogramAvgDecaySpinBox;
 		QDoubleSpinBox *SpectrumAvgAttackSpinBox, *SpectrumAvgDecaySpinBox;
-		QSpinBox *cfgSpecAvgInput, *cfgSpecLowInput, *cfgSpecHighInput;
+		QSpinBox *cfgSpecLowInput, *cfgSpecHighInput;
                 QSpinBox *SpectrogramAvgGaussSpinBox;
                 QSpinBox *SpectrumAvgGaussSpinBox;
                 QSlider *rxIqGainCourseSlider, *rxIqGainFineSlider, *rxIqPhaseCourseSlider, *rxIqPhaseFineSlider;
@@ -276,6 +276,8 @@ class Main_Widget : public QWidget
 		QLabel *cfgRigLabel;
 		QLabel *cfgSpeedLabel;
 		QLabel *cfgPortLabel;
+		QLabel *cfgSpecTimerLabel2;
+		QLabel *cfgSpectrogramRefreshLabel2;
 
 		Spectrum *spectrogram;
 		Spectrum *spectrumFrame;
@@ -437,7 +439,6 @@ class Main_Widget : public QWidget
 		float hScale;
 		float vsScale;		// vertical Spectrum scale
 		float bin_bw;
-		int specAveraging;		// number of spectrum data points to average on each display
 		int specLow, specHigh;
         	int spectrogramRefresh;
 	        int spectrogramNumAVG;
@@ -634,7 +635,6 @@ class Main_Widget : public QWidget
 	        void setFFTWindow ( int );
         	void setSpectrumPalette ( int );
 	        void initSpectrumPalette ( );
-		void updateSpecAvg ( int );
 		void updateSpecLow ( int );
 		void updateSpecHigh ( int );
         	void updateSpectrogramRefresh ( int );

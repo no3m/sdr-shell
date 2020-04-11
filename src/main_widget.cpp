@@ -715,20 +715,10 @@ void Main_Widget::init()
     cfgSpecTimerInput->setValue ( 1000 / specTimer );
     connect ( cfgSpecTimerInput, SIGNAL ( valueChanged ( int ) ),
               this, SLOT ( updateSpecTimer ( int ) ) );
-#if 0
-    // Spectrum Averaging
-    QLabel *cfgSpecAvgInputLabel = new QLabel ( cfgSpecDisplay );
-    cfgSpecAvgInputLabel->setText ( "Moving Avg Samples: " );
-    cfgSpecAvgInputLabel->setGeometry ( 10, 160, 160, 20 );
-    cfgSpecAvgInputLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-    cfgSpecAvgInput = new QSpinBox ( cfgSpecDisplay );
-    cfgSpecAvgInput->setGeometry ( 180, 160, 70, 20 );
-    cfgSpecAvgInput->setMinimum ( 0 );
-    cfgSpecAvgInput->setMaximum ( 255 );
-    cfgSpecAvgInput->setValue ( specAveraging );
-    connect ( cfgSpecAvgInput, SIGNAL ( valueChanged ( int ) ),
-              this, SLOT ( updateSpecAvg ( int ) ) );
-#endif
+    cfgSpecTimerLabel2 = new QLabel ( cfgSpecDisplay );
+    cfgSpecTimerLabel2->setText ( "(t=" + QString::number(specTimer) + "ms)" );
+    cfgSpecTimerLabel2->setGeometry ( 255, 140, 100, 20 );
+    cfgSpecTimerLabel2->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
 
     // Spectrum Scale
     QLabel *cfgSpecScaleLabel = new QLabel ( cfgSpecDisplay );
@@ -876,6 +866,10 @@ void Main_Widget::init()
     SpectrogramRefreshInput->setValue ( spectrogramRefresh );
     connect( SpectrogramRefreshInput, SIGNAL( valueChanged ( int ) ),
              this, SLOT ( updateSpectrogramRefresh ( int ) ) );
+    cfgSpectrogramRefreshLabel2 = new QLabel ( cfgSpectrogram );
+    cfgSpectrogramRefreshLabel2->setText ( "(t=" + QString::number(specTimer*spectrogramRefresh) + "ms)" );
+    cfgSpectrogramRefreshLabel2->setGeometry ( 255, 80, 100, 20 );
+    cfgSpectrogramRefreshLabel2->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
 
     QLabel *cfgspectrogramAvgAttackLabel = new QLabel ( cfgSpectrogram );
     cfgspectrogramAvgAttackLabel->setText ( "Avg (IIR) Attack: " );
@@ -2752,8 +2746,6 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/spotAmpl", -10 ).toDouble();
     spotFreq = settings->value (
                 "/sdr-shell/spotFreq", 700 ).toDouble();
-    specAveraging = settings->value(
-                "/sdr-shell/specavg", 0 ).toInt();
     specLow = settings->value(
                 "/sdr-shell/speclow", -140 ).toInt();
     specHigh = settings->value(
@@ -2995,7 +2987,6 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/spotAmpl", spotAmpl );
     settings->setValue ( "/sdr-shell/spotFreq", spotFreq );
     settings->setValue ( "/sdr-shell/specfill", specLineFill );
-    settings->setValue ( "/sdr-shell/specavg", specAveraging );
     settings->setValue ( "/sdr-shell/speclow", specLow );
     settings->setValue ( "/sdr-shell/spechigh", specHigh );
     settings->setValue ( "/sdr-shell/specrefresh", spectrogramRefresh );
@@ -4250,22 +4241,44 @@ void Main_Widget::drawSpectrogram( int y ) //ok
         if (specTimeMarkers) {
 
             int step;
+            int sec = true;
             //int span = ( ( ( ( spectrogramRefresh * FFT_TIMER ) * spectrogram->height() ) / 2 ) / 1000 );
-            int span = ( ( ( ( spectrogramRefresh * specTimer ) * spectrogram->height() ) / 2 ) / 1000 );
-            if (span < 10)
+            int ms = spectrogramRefresh * specTimer;
+            if (ms < 40)
+              step = 2;
+            else if (ms < 100)
               step = 5;
-            else if (span < 15)
+            else if (ms < 200)
               step = 10;
-            else if (span < 30)
+            else if (ms < 300)
               step = 15;
-            else if (span < 60)
+            else if (ms < 600)
               step = 30;
-            else
+            else if (ms < 1200)
               step = 60;
+            else if (ms < 2400) {
+              step = 2;
+              sec = false;
+            } else if (ms < 6000) {
+              step = 5;
+              sec = false;
+            } else if ( ms < 12000) {
+              step = 10;
+              sec = false;
+            } else if ( ms < 18000) {
+              step = 15;
+              sec = false;
+            } else if ( ms < 36000) {
+              step = 30;
+              sec = false;
+            } else {
+              step = 60;
+              sec = false;
+            }
 
             QTime t;
             t.start();
-            if (t.second() % step == 0) {
+            if ( (t.second() % step == 0 && sec) || (t.minute() % step == 0 && t.second() % 60 == 0 && !sec) ) {
                 if (timeline == true) {
                     QPen pen( Qt::DotLine );
                     pen.setColor( QColor( 255, 255, 255 ) );
@@ -4747,7 +4760,7 @@ void Main_Widget::plotSpectrum( int y )
        spectrum_avg_init = false;
     }
 
-    // construct dataset from latest spectrum FFT, add gaussian avg if needed
+    // construct dataset from latest spectrum FFT, apply gaussian avg if needed
     int bins = spectrumAvgGaussBins;
     int len = ( bins * 2 ) + 1;
     float coeff[ len ];
@@ -4856,21 +4869,23 @@ void Main_Widget::plotSpectrum( int y )
         // find slope between current and next scaled point // might be outside of spectrum_width
         float slope = 0.0;
         if (hScale < 0.99) {
-           if (spectrumMode == SPEC_PEAK)
+           if (spectrumMode == SPEC_PEAK) {
               slope = float ( spectrum_peak[ x_next + x1 ] - spectrum_peak[ x + x1 ] ) / float ( sx_next - sx );
-           else
+           } else {
               slope = float ( spectrum_avg[ x_next + x1 ] - spectrum_avg[ x + x1 ] ) / float ( sx_next - sx );
+           }
         }
 
         if (hScale > 0.99) { // 1:1 or zoomed out
            int max = -999;
            for (int i = 0; i < x_next - x ; ++i) {
               if (spectrumMode == SPEC_PEAK) {
-                 if (spectrum_peak[ x + x1 + i ] > max)
+                 if (spectrum_peak[ x + x1 + i ] > max) {
                     max = spectrum_peak[ x + x1 + i ];
-
-              } else if (spectrum_avg[ x + x1 + i ] > max)
+                 }
+              } else if (spectrum_avg[ x + x1 + i ] > max) {
                     max = spectrum_avg[ x + x1 + i ];
+              }
            }
            spectrum_display[sx] = max;
         }
@@ -4878,10 +4893,11 @@ void Main_Widget::plotSpectrum( int y )
         if (hScale < 0.99) { // zoomed in; interpolate missing bins with simple linear slope
             for (int i = 0; i < sx_next - sx && sx + i < spectrumFrame->width() ; ++i) {
                //spectrum_display[sx+i] = -999; // shouldn't need this
-               if (spectrumMode == SPEC_PEAK)
+               if (spectrumMode == SPEC_PEAK) {
                   spectrum_display[sx+i] = int ( float (spectrum_peak[ x + x1]) + ( slope * float (i) ) );
-               else
+               } else {
                   spectrum_display[sx+i] = int ( float (spectrum_avg[ x + x1 ]) + ( slope * float (i) ) );
+               }
             }
         }
 
@@ -4960,7 +4976,6 @@ void Main_Widget::plotSpectrum( int y )
     }
 
 
-#if 0
     // peak markers
     if (specPeakMarkers && spectrumMode != SPEC_PEAK) {
         p.setPen(QColor(255, 0, 0, 255)); // red
@@ -4970,10 +4985,10 @@ void Main_Widget::plotSpectrum( int y )
 
         while (i < spectrum_width) {
 
-            if (spectrum_smoothing[i+x1] > (background_avg + 8)){ // found sig above bg avg
+            if (spectrum_avg[i+x1] > (background_avg + 7)){ // found sig above bg avg
                 int j = i + 1;
                 while (j < spectrumFrame_width_less1) {
-                    if (spectrum_smoothing[j+x1] < (background_avg + 8)) break; // found other side of signal
+                    if (spectrum_avg[j+x1] < (background_avg + 7)) break; // found other side of signal
                     j++;
                 }
                 // not a good signal
@@ -4982,39 +4997,15 @@ void Main_Widget::plotSpectrum( int y )
                     continue;
                 } else {
                     // peak position
-                    if (spectrumMode == SPEC_AVG) {
-                        s = spectrum_smoothing[i+x1];
-                        ipk = i;
-                        for (int l = i; l <= j; l++) {
-                            if (spectrum_smoothing[l+x1] > s) {
-                                ipk = l;
-                                s = spectrum_smoothing[l+x1];
-                            }
-                        }
-                        i = j;
-                    } else {
-                        if (specAveraging > 1) {
-                            s = spectrum_avg[i+x1];
-                            ipk = i;
-                            for (int l = i; l <= j; l++) {
-                                if (spectrum_avg[l+x1] > s) {
-                                    ipk = l;
-                                    s = spectrum_avg[l+x1];
-                                }
-                            }
-                            i = j;
-                        } else {
-                            s = spectrum_history[y][i+x1];
-                            ipk = i;
-                            for (int l = i; l <= j; l++) {
-                                if (spectrum_history[y][l+x1] > s) {
-                                    ipk = l;
-                                    s = spectrum_history[y][l+x1];
-                                }
-                            }
-                            i = j;
+                    s = spectrum_avg[i+x1];
+                    ipk = i;
+                    for (int l = i; l <= j; l++) {
+                        if (spectrum_avg[l+x1] > s) {
+                            ipk = l;
+                            s = spectrum_avg[l+x1];
                         }
                     }
+                    i = j;
 
                     // mark signal
                     ipk = int (float (ipk) / hScale); // scale
@@ -5027,7 +5018,6 @@ void Main_Widget::plotSpectrum( int y )
             i++;
         }
     }
-#endif
 
     /////////////////// draw spectrum average line
     if (specAvgLine && spectrumMode != SPEC_PEAK) {
@@ -5859,11 +5849,6 @@ void Main_Widget::setSpectrumDefaults()
     pCmd->sendCommand ("setSpectrumPolyphase %d\n", polyphaseFFT );
 }
 
-void Main_Widget::updateSpecAvg ( int avg )
-{
-    specAveraging = avg;
-}
-
 void Main_Widget::setLineFill ( )
 {
     if ( specLineFillButton->isChecked() )
@@ -6440,6 +6425,7 @@ int Main_Widget::rigGetPTT ( ) {
 void Main_Widget::updateSpectrogramRefresh ( int value )
 {
     spectrogramRefresh = value;
+    cfgSpectrogramRefreshLabel2->setText ( "t=" + QString::number(specTimer*spectrogramRefresh) + "ms" );
 }
 
 void Main_Widget::updateSpectrogramNumAVG ( int value )
@@ -7061,6 +7047,8 @@ void Main_Widget::updateSpecTimer ( int value )
 {
    specTimer = 1000 / value;
    //printf("specTimer: %d\n", specTimer);
+   cfgSpecTimerLabel2->setText ( "t=" + QString::number(specTimer) + "ms" );
+   cfgSpectrogramRefreshLabel2->setText ( "t=" + QString::number(specTimer*spectrogramRefresh) + "ms" );
 }
 
 void Main_Widget::gaussian_kernel ( float *coeff, int r )
