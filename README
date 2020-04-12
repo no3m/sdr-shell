@@ -54,8 +54,11 @@ Changes, additions, etc.:
 
 * CW mode changes
   > Frequency LCD readout indicates supressed carrier +/- "BFO" offset
+  > yellow dotted dial line indicates supressed carrier (ie. dial freq in other modes)
+  > red dial line indicates supressed carrier +/- bfo offset (ie. signal frequency)
   > BFO offset shown in passband scale
   > change BFO with ',' to decrease or '.' to increase
+    * filter will be shifted an equal amount (affects both CWL/CWU filters regardless of current mode)
   > switching between CWL and CWU will flip around signal frequency
   > ALT + scrollwheel adjusts the filter symmetrically (also works for AM/SAM/DSB/FM modes)
   > SHIFT + scrollwheel adjusts filter offset, analogous to PBT (passband tuning)
