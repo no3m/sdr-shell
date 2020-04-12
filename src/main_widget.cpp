@@ -519,6 +519,7 @@ void Main_Widget::init()
     connect ( cfgHwGain, SIGNAL ( valueChanged ( double ) ),
               this, SLOT ( updateHwGain ( double ) ) );
 
+#if 0
     QGroupBox *cfgIqGainSliders = new QGroupBox ( cfgFrame2 );
     cfgIqGainSliders->setTitle ( "RX IQ Gain Sliders (alt.)" );
     cfgIqGainSliders->setGeometry( 5, 150, 330, 100);
@@ -586,6 +587,7 @@ void Main_Widget::init()
     rxIqPhaseFineSlider->setValue ( 0 );
     connect ( rxIqPhaseFineSlider, SIGNAL ( valueChanged ( int ) ),
               this, SLOT ( updateIQPhaseSlider ( int ) ) );
+#endif
 
     // Polyphase FFT
     QGroupBox *cfgPolyFFTGroup = new QGroupBox( cfgFrame3 );
