@@ -79,7 +79,7 @@ only the upper half of the spectrum in order to omit the 1/f noise near DC */
 
 #define NUM_BANDMEMS 10
 #define NUM_MEMS 8
-#define	NUM_CMD	8
+#define	NUM_CMD	4
 
 #define TOPFRM_V 38
 #define BOTFRM_V 17
@@ -92,6 +92,8 @@ only the upper half of the spectrum in order to omit the 1/f noise near DC */
 
 #define FFT_TIMER 50
 #define DEFAPERTURE_SIZE 256
+
+#define CPU_POLL 0
 
 const int FREQUENCY_UPDATE = 2;
 const int OFFSET = 10000;
@@ -361,6 +363,7 @@ class Main_Widget : public QWidget
         	bool windowResize;
 	        int sample_rate;
 	        int def_spec;
+		int rigCtlPort;
         	bool spotTone;
 		int tuneCenter;		// where to put tune center when using usbsoftrock
 		int spec_width;		// spectrum display width
@@ -532,6 +535,7 @@ class Main_Widget : public QWidget
                 void set_MeterPort( int );
                 void set_SampleRate( int );
                 void set_SpectrumSize( int );
+		void set_RigCtlPort ( int );
                 void set_Host( char * );
                 void set_Verbose( bool );
                 void set_InitFile(char *);
@@ -553,8 +557,9 @@ class Main_Widget : public QWidget
 		void tune ( int );
 		void tuneff ( int );
 		void tunewheel ( int );
+#if CPU_POLL
 		void processorLoad();
-
+#endif
 		void setTuneStep ( int );
 		void toggle_NR ( int );
 		void toggle_ANF ( int );

@@ -25,6 +25,7 @@ Main_Widget::Main_Widget()
     txCMDPort=19005;
     meterPort=19003;
     spectrumPort=19002;
+    rigCtlPort=19009;
     host = NULL;
     usbPort =19004;
     verbose = false;
@@ -44,7 +45,7 @@ void Main_Widget::init()
 {
     QString version;
     setFocusPolicy ( Qt::TabFocus );
-    setMinimumWidth ( 1024 ); // no3m
+    setMinimumWidth ( 920 ); // no3m
     setMinimumHeight ( 350 ); // no3m
 
     //setAttribute( Qt::WA_OpaquePaintEvent, true);
@@ -1745,13 +1746,13 @@ void Main_Widget::init()
         f_cell[i] = new MemoryCell(ctlFrame2);
         f_cell[i]->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
         f_cell[i]->setFont(*font1);
-        f_cell[i]->setGeometry((i*21+1), 1, 20, 15);
-        f_cell[i]->setPalette( QColor( 0, 0, 0 ) );
+        //f_cell[i]->setGeometry((i*21+1), 0, 20, 17);
+        //f_cell[i]->setPalette( QColor( 0, 0, 0 ) );
         f_cell[i]->setAutoFillBackground( true );
         p = f_cell[i]->palette();
         p.setColor(QPalette::Active, QPalette::WindowText, QColor( 255, 255, 255) );
         f_cell[i]->setPalette(p);
-        f_cell[i]->setGeometry((i*21+1), 1, 20, 15);
+        f_cell[i]->setGeometry((i*21), 0, 22, 17);
         f_cell[i]->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         snprintf(buffer, 256, "F%d", (i+1));
         f_cell[i]->setText (buffer);
@@ -1933,6 +1934,7 @@ void Main_Widget::init()
               this, SLOT ( toggle_SPECMODE ( int ) ) );
 
 #if 0
+    // -----------------------------------------------------------------------
     QPixmap wfmodenorm_pix ( wfnorm_xpm );
     WFMODE_label = new Varilabel ( ctlFrame2 );
     WFMODE_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
@@ -1944,15 +1946,18 @@ void Main_Widget::init()
     connect ( WFMODE_label, SIGNAL ( mouseRelease ( int ) ),
               this, SLOT ( toggle_WFMODE ( int ) ) );
 #endif
-#if 0
+
+#if CPU_POLL
     // -----------------------------------------------------------------------
-    // Spacer for filling up empty space
-    Spacer_label = new QLabel ( ctlFrame2 );
-    Spacer_label->setFont ( *font1 );
-    Spacer_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-    //Spacer_label->setPalette( QColor( 0, 0, 255 ) );
-    Spacer_label->setPalette( QColor( 0, 0, 0 ) );
-    Spacer_label->setAutoFillBackground( true );
+    CPU_label = new QLabel ( ctlFrame2 );
+    CPU_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
+    CPU_label->setFont ( *font1 );
+    CPU_label->setPalette( QColor( 0, 0, 0 ) );
+    CPU_label->setAutoFillBackground( true );
+    p = CPU_label->palette();
+    p.setColor(QPalette::Active, QPalette::WindowText, QColor( 0, 180, 255) );
+    CPU_label->setPalette(p);
+    CPU_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 #endif
 
     // -----------------------------------------------------------------------
@@ -1981,6 +1986,7 @@ void Main_Widget::init()
     HELP_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
     connect ( HELP_label, SIGNAL ( mouseRelease ( int ) ), this, SLOT ( setHelp ( int ) ) );
 
+    // -----------------------------------------------------------------------
     Capture_label = new Varilabel ( ctlFrame2 );
     Capture_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
     Capture_label->setFont ( *font1 );
@@ -1998,17 +2004,6 @@ void Main_Widget::init()
     connect ( Capture_label, SIGNAL ( mouseRelease ( int ) ), this, SLOT ( screenshot ( int ) ) );
 
     // -----------------------------------------------------------------------
-    CPU_label = new QLabel ( ctlFrame2 );
-    CPU_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
-    CPU_label->setFont ( *font1 );
-    CPU_label->setPalette( QColor( 0, 0, 0 ) );
-    CPU_label->setAutoFillBackground( true );
-    p = CPU_label->palette();
-    p.setColor(QPalette::Active, QPalette::WindowText, QColor( 0, 180, 255) );
-    CPU_label->setPalette(p);
-    CPU_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-
-    // -----------------------------------------------------------------------
     //ctlFrame1->setGeometry ( 1, 1, 641, 31 );
     signalFrame->setGeometry ( 1, 3, 170, 27 );
     dBmLabel->setGeometry ( 140, 14, 35, 12 );
@@ -2023,7 +2018,7 @@ void Main_Widget::init()
     subFrame->setGeometry ( 655, 0, 33, 32 ); // RIT, SPLT
     rit->setGeometry ( 689, 1, 130, 30 ); // RIT/SPLT value
 
-
+    // -----------------------------------------------------------------------
     logoFrame = new QFrame ( ctlFrame );
     logoFrame->setPalette( QColor( 0, 0, 0 ) );
     //logoFrame->setPalette( QColor( 0, 0, 255 ) );
@@ -2052,7 +2047,7 @@ void Main_Widget::init()
         p.setColor(QPalette::Active, QPalette::WindowText, QColor( 255, 255, 255) );
         c_cell[i]->setPalette(p);
         c_cell[i]->setGeometry (
-                    SPECMODE_label->x() + SPECMODE_label->width() + i * (font1Metrics->maxWidth() * 4),
+                    SPECMODE_label->x() - 1 + SPECMODE_label->width() + i * (font1Metrics->maxWidth() * 4),
                     //WFMODE_label->x() + WFMODE_label->width() + 5 + i * (font1Metrics->maxWidth() * 4),
                     //Zoom_label->x() + Zoom_label->width() - 1 + i * (font1Metrics->maxWidth() * 4),
                     //Zoom_label->x() + Zoom_label->width() - 1 + i * 22,
@@ -2187,7 +2182,9 @@ void Main_Widget::init()
     setTxIQPhase();
     setTxGain( 0 );
     setTxGain( 1 );
+#if CPU_POLL
     processorLoad();
+#endif
     hScale = 1.0;
     freqScaleABSMode = true; // absolute vs. relative scale
     specOffset = 0;
@@ -2230,10 +2227,12 @@ void Main_Widget::init()
     updateLayout();
     centerFilter(0);
 
+#if CPU_POLL
     // timers
     QTimer *cpuTimer = new QTimer ( this );
     connect ( cpuTimer, SIGNAL ( timeout() ), this, SLOT ( processorLoad() ) );
     cpuTimer->start( 5000 );
+#endif
 
     QTimer *meterTimer = new QTimer ( this );
     connect ( meterTimer, SIGNAL ( timeout() ), this, SLOT ( readMeter() ) );
@@ -2389,22 +2388,21 @@ void Main_Widget::paintEvent ( QPaintEvent * )
 {
     if (updated) {
         //if(verbose) fprintf( stderr, "+");
+#if 1
+        if (windowResize == true) {
+           QPainter p;
+           p.begin( this );
+           p.fillRect( QRect( 0, ctlFrame2->y() - 10, width(), 10 ), QColor( 0, 0, 0 ) );
+           p.end();
+        }
+#endif
         updateLayout();
         if ( SPEC_state ) {
             plotSpectrum( spectrum_head );	// plots the spectrum display
             drawSpectrogram( spectrum_head );			// update the spectrogram (middle) display
 
         } else {
-#if 0
-            // no3m
-            QPainter p;
-            p.begin( this );
-            p.scale(1.0, 1.0);
-            QPen pen( Qt::DashLine );
-            pen.setColor( QColor( 255, 0, 0 ) );
-            p.setPen( pen );
-            p.drawLine(0, TOPFRM_V + spectrumFrame->height() + pbScale->height(), spectrum_width, TOPFRM_V + spectrumFrame->height() + pbScale->height());
-#endif
+
         }
 
         drawPassBandScale();
@@ -2494,36 +2492,35 @@ void Main_Widget::updateLayout()
                 1,
                 88,
                 30 );
+#if CPU_POLL
     CPU_label->setGeometry (
-                ctlFrame2->width() - font1Metrics->maxWidth() * 11,
+                width() - font1Metrics->maxWidth() * 11,
                 1,
                 font1Metrics->maxWidth() * 11,
                 15 );
-    CFG_label->setGeometry (
-                ctlFrame2->width() - CPU_label->width() - font1Metrics->maxWidth() * 4 - 2,
-                1,
-                font1Metrics->maxWidth() * 4,
-                15 );
-    HELP_label->setGeometry (
-                ctlFrame2->width() - CPU_label->width() - CFG_label->width() - font1Metrics->maxWidth() * 5 - 2,
-                1,
-                font1Metrics->maxWidth() * 5,
-                15 );
-    // no3m
-    Capture_label->setGeometry (
-                ctlFrame2->width() - CPU_label->width() - CFG_label->width() - HELP_label->width() - font1Metrics->maxWidth() * 5 - 2,
-                1,
-                font1Metrics->maxWidth() * 5,
-                15 );
-#if 0
-    Spacer_label->setGeometry (
-                //AGC_label->x() + AGC_label->width() + 1,
-                //Zoom_label->x() + Zoom_label->width() + 1,
-                c_cell[(NUM_CMD-1)]->x() + c_cell[(NUM_CMD-1)]->width() + 1,
-            1,
-            HELP_label->x() - ( AGC_label->x() + AGC_label->width() ) - 2,
-            15 );
 #endif
+    CFG_label->setGeometry (
+                //ctlFrame2->width() - CPU_label->width() - font1Metrics->maxWidth() * 4 - 2,
+#if CPU_POLL
+                CPU_label->x() - font1Metrics->maxWidth() * 4,
+#else
+                width() - font1Metrics->maxWidth() * 4,
+#endif
+                0,
+                font1Metrics->maxWidth() * 4,
+                17 );
+    HELP_label->setGeometry (
+                //ctlFrame2->width() - CPU_label->width() - CFG_label->width() - font1Metrics->maxWidth() * 5 - 2,
+                CFG_label->x() - font1Metrics->maxWidth() * 5 + 1,
+                0,
+                font1Metrics->maxWidth() * 5,
+                17 );
+    Capture_label->setGeometry (
+                //ctlFrame2->width() - CPU_label->width() - CFG_label->width() - HELP_label->width() - font1Metrics->maxWidth() * 5 - 2,
+                HELP_label->x() - font1Metrics->maxWidth() * 5 + 1,
+                0,
+                font1Metrics->maxWidth() * 5,
+                17 );
 
     spectrum_width = int(spectrumFrame->width() * hScale);
 
@@ -4068,7 +4065,7 @@ void Main_Widget::drawSpectrogram( int y ) //ok
 {
     int x, x1, x2, y1, n;
     int f1, f2;
-    int pwr;
+    int pwr, max;
     float pwr_range;
     bool spec_debug = false;
     static int timeline = 0;
@@ -4181,12 +4178,17 @@ void Main_Widget::drawSpectrogram( int y ) //ok
         int spectrogram_data[def_spec];
         for ( x = 0; x < def_spec; ++x ) {
            spectrogram_data[x] = 0;
+           //max = -999;
            for (n = 0, y1 = y; n < spectrogramRefresh; ++n) {
-              spectrogram_data[x] += spectrum_history[y1][x] * spectrum_history[y1][x]; // rms
+              //spectrogram_data[x] += spectrum_history[y1][x] * spectrum_history[y1][x]; // rms
+              spectrogram_data[x] += spectrum_history[y1][x]; // mean
+              //if (spectrum_history[y1][x] > max) max = spectrum_history[y1][x]; // maximum
               y1--;
               if (y1 < 0) y1 = SPECTRUM_HISTORY_SIZE - 1;
            }
-           spectrogram_data[x] = sqrt ( spectrogram_data[x] / spectrogramRefresh ); // rms
+           //spectrogram_data[x] = sqrt ( spectrogram_data[x] / spectrogramRefresh ); // rms
+           spectrogram_data[x] /= spectrogramRefresh; // mean
+           //spectrogram_data[x] = max; // maximum
         }
 
         int bins = spectrogramAvgGaussBins;
@@ -4251,7 +4253,7 @@ void Main_Widget::drawSpectrogram( int y ) //ok
         }
 
         if (hScale > 0.99) { // 1:1 or zoomed out
-           int max = -999;
+           max = -999;
            for (int i = 0; i < x_next - x ; ++i) {
               if (spectrogram_avg[ x + x1 + i ] > max) {
                  max = spectrogram_avg[ x + x1 + i ];
@@ -5287,6 +5289,7 @@ void Main_Widget::focusOutEvent ( QFocusEvent * )
     ctlFrame->setAutoFillBackground(true);
 }
 
+#if CPU_POLL
 void Main_Widget::processorLoad()
 {
     char tmp[20];
@@ -5296,6 +5299,7 @@ void Main_Widget::processorLoad()
     snprintf ( tmp, 20, "CPU: %5.2f\n", loadavg[0] );
     CPU_label->setText ( tmp );
 }
+#endif
 
 void Main_Widget::toggle_NR ( int )
 {
@@ -6242,7 +6246,7 @@ void Main_Widget::initHamlib ()
 
 void Main_Widget::initRigCtl ()
 {
-    rigCtl = new RigCtlServer ( this, this );
+    rigCtl = new RigCtlServer ( this, this, rigCtlPort );
 }
 
 void Main_Widget::updateUSBOffset ( int offset )
@@ -6900,6 +6904,11 @@ void Main_Widget::set_SpectrumSize( int size)
 {
     def_spec = size;
     if(verbose) fprintf ( stderr, "def_spec = %d\n", def_spec );
+}
+
+void Main_Widget::set_RigCtlPort( int port )
+{
+    rigCtlPort = port;
 }
 
 void Main_Widget::centerFilter ( int )

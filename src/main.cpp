@@ -22,6 +22,7 @@ int main (int argc, char **argv)
         {"spectrum-size", required_argument, 0, 'z'},
         {"host", required_argument, 0, 'h'},
         {"usbsoftrock-port", required_argument, 0, 'u'},
+        {"rigctl-port", required_argument, 0, 'g'},
         {"conf-file", required_argument, 0, 'l'},
         {"help", no_argument, 0, '?'},
         {"?", no_argument, 0, '?'},
@@ -37,7 +38,7 @@ int main (int argc, char **argv)
     // The function getopt_long stores the option index here.
     int option_index = 0;
 
-    while ( (c = getopt_long ( argc, argv, "v?h:r:s:m:t:f:z:h:u:l:",
+    while ( (c = getopt_long ( argc, argv, "v?h:r:s:m:t:f:z:h:u:g:l:",
                                long_options, &option_index )) != -1 )
     {
         switch ( c )
@@ -51,6 +52,9 @@ int main (int argc, char **argv)
             break;
         case 'z':
             w->set_SpectrumSize(atoi(optarg));
+            break;
+        case 'g':
+            w->set_RigCtlPort(atoi(optarg));
             break;
         case 'h':
             w->set_Host(optarg);
@@ -91,6 +95,9 @@ int main (int argc, char **argv)
                         "-s or --spectrum-port=<portnum> \n"
                         "   Use port <portnum> as conduit for spectrum data\n"
                         "   Default is 19002\n"
+			"-g or --rigctl-port=<portnum> \n"
+			"   Use port <portnum> as conduit for rigctl/hamlib commands\n"
+			"   Default is 19009\n"
                         "-m or --meter-port=<portnum> \n"
                         "   Use port <portnum> as conduit for meter data\n"
                         "   Default is 19003\n"

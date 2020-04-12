@@ -29,13 +29,13 @@ Changes, additions, etc.:
     * SDR-shell style normal or reverse
   > click "CA" label (footer) to quick toggle aperature lines on/off
   > user configurable FFT/sec (Spectrum/Spectrogram)
-  > user configurable FFT/line (Spectrogram)
+  > user configurable FFT/line (Spectrogram), mean avg of FFTs if > 1
   > IIR filter (EMA) in time domain w/ user configurable attack and decay
     * Spectrum and Spectrogram have separate settings
     * Setting both attack and decay to 1.0 turns off averaging
   > Gaussian averaging in frequency domain
     * Spectrum and Spectrogram have separate settings
-    * User configurable numnber of bins to average (2n+1)
+    * User configurable number of bins to average (2n+1)
     * Setting Bins to 0 turns off averaging
   
 * frequency scale under spectum
@@ -91,6 +91,10 @@ Changes, additions, etc.:
    > valid settings are 4096 (default) or 8192 depending on DEFSPEC in sdr-core
    > no need to set if using default 4096
    > 8192 requires running modified sdr-core
+
+* added --rigctl-port=<portnum> (or -g) command line option
+   > set rigctl/hamlib port to avoid conflict with running multiple instances
+   > default is 19009 (originally 19090)
 
 ================================
 

@@ -45,7 +45,7 @@ class RigCtlServer : public QObject {
 	Q_OBJECT
 
 	public:
-		RigCtlServer(QObject *parent = 0, Main_Widget *main = 0);
+		RigCtlServer(QObject *parent = 0, Main_Widget *main = 0, int port = 19090);
 
 	public slots:
 		void newConnection(void);
