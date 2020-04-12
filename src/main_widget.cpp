@@ -1179,11 +1179,11 @@ void Main_Widget::init()
     // -----------------------------------------------------------------------
     // Help frame
     helpFrame = new QFrame();
-    helpFrame->setGeometry ( 50, 50, 380, 650 );
+    helpFrame->setGeometry ( 50, 50, 380, 500 );
     helpFrame->setMinimumWidth ( 380 );
     helpFrame->setMaximumWidth ( 380 );
-    helpFrame->setMinimumHeight ( 650 );
-    helpFrame->setMaximumHeight ( 650 );
+    helpFrame->setMinimumHeight ( 500 );
+    helpFrame->setMaximumHeight ( 500 );
     helpFrame->setWindowTitle("SDR-Shell : Help ");
 
     QFrame *helpFrame1 = new QFrame( helpFrame );
@@ -1195,11 +1195,12 @@ void Main_Widget::init()
                            helpFrame->height() - 2 );
 
     QTextEdit *helpFText = new QTextEdit ( helpFrame1 );
-    helpFText->setGeometry ( 2, 2, 360, 460 );
+    helpFText->setGeometry ( 2, 2, 370, 460 );
     helpFText->setReadOnly ( true );
     helpFText->append ( helptext );
     helpFText->setWordWrapMode(QTextOption::WordWrap);
     helpFText->setLineWrapMode(QTextEdit::WidgetWidth);
+    helpFrame->move(geometry.x() + geometry.width()/2 - cfgFrame->width()/2, geometry.y() + geometry.height()/2 - cfgFrame->height()/2);
 
     // -----------------------------------------------------------------------
     // DSP frame
