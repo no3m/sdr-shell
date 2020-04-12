@@ -10,59 +10,84 @@ Changes, additions, etc.:
 
 * Major changes to spectrum and spectrogram:
 
-  > zooming does not changes font size, etc.
-  > moved Spectrum above spectrogram
+  > properly centered spectrum
+  > re-implemented zooming
+    * no effect on font size, etc.
+    * linear interpolation when zoomed in, decimate w/ max value when zoomed out
+  > user configurable Spectrum above or below spectrogram
+  > user configurable Spectrum height -> 'N' to decrease, 'M' to increase
   > Many spectrogram color palette options (ie. WSJTX, FLDigi, GMFSK, Rocky, etc.) [main config: Spectrum]
   > custom colors for spectrum (separate dot/line and fill colors)
-  > Spectrum dots, lines (connect dots), fill w/ solid or gradient option [main config: Spectrum]
-  > Spectrum peak markers, average line, toggle on/off paerature lines [main config: Spectrum]
-  > Spectrum normal, average, and peak modes [button on bottom panel = SPEC NORM, etc.]
-  > Waterfall normal and moving average modes [button on bottom panel = WF NORM, etc.], num samples configurable
+  > Spectrum dots or lines (connect dots), fill w/ solid or gradient option [main config: Spectrum]
+  > Spectrum peak markers, average line, toggle on/off aperature lines [main config: Spectrum]
+  > Spectrum normal and peak modes [button on bottom panel = SPEC NORM / SPEC PEAK, etc.]
   > Waterfall time markers /w automatic period [main config: Spectrum]
   > Manual or automatic aperature settings for waterfall (ie. gain and contrast) [MAN/AUTO button bottom panel]  
   > Numerous spectrogram scrolling options [main config: Spectrum]:
     * Waterfall down / up
     * Linrad style normal and reverse
     * SDR-shell style normal or reverse
-  > changed inhernet zooming rendering 
-    * spectrogram: QImage scaling w/ smooth transformation (bilinear)
-    * spectrum: decimate w/ max (zoom > 1.0), interpolate w/ linear slope (zoom < 1.0)
   > click "CA" label (footer) to quick toggle aperature lines on/off
-
+  > user configurable FFT/sec (Spectrum/Spectrogram)
+  > user configurable FFT/line (Spectrogram)
+  > IIR filter (EMA) in time domain w/ user configurable attack and decay
+    * Spectrum and Spectrogram have separate settings
+    * Setting both attack and decay to 1.0 turns off averaging
+  > Gaussian averaging in frequency domain
+    * Spectrum and Spectrogram have separate settings
+    * User configurable numnber of bins to average (2n+1)
+    * Setting Bins to 0 turns off averaging
+  
 * frequency scale under spectum
 
   > mouse scroolwheel + Cntrl key zooming (increments by factor of +/- 0.1).  Also works w/ "Zoom + -" label in footer
   > middle click resets to 1:1 zoom
   > left click (tune), hover (show freq), and scroolwheel (tune) same as spectrogram / spectrum
   > right click to toggle between absolute (ie. 7040...7050) and relative (-1000...-500) scales (relative like original SDR-shell)
-  > purple band indicator inlay behind scale ticks
+  > purple band indicator inlay behind scale ticks (user option)
+  > Digital/WSPR segment inlays (user option)
 
 * panning from one edge to other of spectrum at any zoom level (except full zoom out)
   > left click and drag spectrum or freq scale
   > left click + cntrl centers panning on filter passband
   > middle click + cntrl resets panning (centers on dial freq)
 
+* CW mode changes
+  > Frequency LCD readout indicates supressed carrier +/- "BFO" offset
+  > BFO offset shown in passband scale
+  > change BFO with ',' to decrease or '.' to increase
+  > switching between CWL and CWU will flip around signal frequency
+  > ALT + scrollwheel adjusts the filter symmetrically (also works for AM/SAM/DSB/FM modes)
+  > SHIFT + scrollwheel adjusts filter offset, analogous to PBT (passband tuning)
+  > SHIFT + middle click resets filter to center of passband
+
+* Filters
+  > "lower edge" of filter lower limit limited to 0 in LSB/USB/CWL/CWU modes
+  > "lower edge" of filter upper limit limited to BFO offset in CWL/CWU modes
+  > "upper edge" of filter lower limit limit to BFO offset in CWL/CWU modes
+
 * frequency at mouse location over spectrum/spectrogram/frequency-scale is rounded to nearest step size (selected LCD readout)
 
 * spectrum/spectrogram/frequency-scale left click to change frequency is rounded to nearest step size (selected LCD digit)
 
-* added AGC off back in, also sets output gain to compensate
+* added AGC OFF back in, also sets output gain to compensate
 
 * added preamp and attenuator buttons (both configurable gain - right click to set) [DSP: Gain]
 
 * added noise blanker #2 (ie. SDROM) (right click NB2 to set parameters) [DSP: NB}
 
-* added receive spot tone with user configurable parameters [main config: General]
+* added receive spot tone with user configurable parameters tone / amplitude [main config: General]
 
 * tuning direction same for softrock vs. rockbound modes
 
 * fixed memory read/write/display issues w/ rockbound mode
 
-* UTC time displayed under logo
+* UTC time displayed in passband scale
 
 * added --spectrum-size=<size> command line or SDR_DEFSPEC env variable option:
    > valid settings are 4096 (default) or 8192 depending on DEFSPEC in sdr-core
    > no need to set if using default 4096
+   > 8192 requires running modified sdr-core
 
 ================================
 
