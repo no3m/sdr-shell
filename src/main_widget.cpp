@@ -718,7 +718,7 @@ void Main_Widget::init()
     connect ( cfgSpecTimerInput, SIGNAL ( valueChanged ( int ) ),
               this, SLOT ( updateSpecTimer ( int ) ) );
     cfgSpecTimerLabel2 = new QLabel ( cfgSpecDisplay );
-    cfgSpecTimerLabel2->setText ( "(t=" + QString::number(specTimer) + "ms)" );
+    cfgSpecTimerLabel2->setText ( "(t=" + QString::number(double(float(specTimer)/1000.0f), 'f', 3) + "s)" );
     cfgSpecTimerLabel2->setGeometry ( 255, 140, 100, 20 );
     cfgSpecTimerLabel2->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
 
@@ -864,12 +864,12 @@ void Main_Widget::init()
     SpectrogramRefreshInput = new QSpinBox ( cfgSpectrogram );
     SpectrogramRefreshInput->setGeometry ( 180, 80, 70, 20 );
     SpectrogramRefreshInput->setMinimum ( 1 );
-    SpectrogramRefreshInput->setMaximum ( 600 );
+    SpectrogramRefreshInput->setMaximum ( 510 );
     SpectrogramRefreshInput->setValue ( spectrogramRefresh );
     connect( SpectrogramRefreshInput, SIGNAL( valueChanged ( int ) ),
              this, SLOT ( updateSpectrogramRefresh ( int ) ) );
     cfgSpectrogramRefreshLabel2 = new QLabel ( cfgSpectrogram );
-    cfgSpectrogramRefreshLabel2->setText ( "(t=" + QString::number(specTimer*spectrogramRefresh) + "ms)" );
+    cfgSpectrogramRefreshLabel2->setText ( "(t=" + QString::number(double(float(specTimer*spectrogramRefresh)/1000.0f), 'f', 3) + "s)" );
     cfgSpectrogramRefreshLabel2->setGeometry ( 255, 80, 100, 20 );
     cfgSpectrogramRefreshLabel2->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
 
@@ -4071,7 +4071,7 @@ void Main_Widget::drawSpectrogram( int y ) //ok
     int pwr;
     float pwr_range;
     bool spec_debug = false;
-    static bool timeline = false;
+    static int timeline = 0;
     static int spectrogram_avg[MAX_DEFSPEC];
     static bool spectrogram_avg_init = true;
 
@@ -4112,6 +4112,56 @@ void Main_Widget::drawSpectrogram( int y ) //ok
           spectrogram_avg[x] = spectrum_history[y][x];
        }
        spectrogram_avg_init = false;
+    }
+
+    if (specTimeMarkers && (timeline == 0 || timeline == 2)) {
+
+            int step;
+            int sec = true;
+            int ms = spectrogramRefresh * specTimer;
+            if (ms < 40)
+              step = 2;
+            else if (ms < 100)
+              step = 5;
+            else if (ms < 200)
+              step = 10;
+            else if (ms < 300)
+              step = 15;
+            else if (ms < 600)
+              step = 30;
+            else if (ms < 1200)
+              step = 60;
+            else if (ms < 2400) {
+              step = 2;
+              sec = false;
+            } else if (ms < 6000) {
+              step = 5;
+              sec = false;
+            } else if ( ms < 12000) {
+              step = 10;
+              sec = false;
+            } else if ( ms < 18000) {
+              step = 15;
+              sec = false;
+            } else if ( ms < 36000) {
+              step = 30;
+              sec = false;
+            } else {
+              step = 60;
+              sec = false;
+            }
+
+            QTime t;
+            t.start();
+            if ( (t.second() % step == 0 && sec) || (t.minute() % step == 0 && t.second() % 60 == 0 && !sec) ){
+               if (timeline == 0) {
+                  timeline = 1;
+               }
+            } else {
+               if (timeline == 2) {
+                  timeline = 0;
+               }
+            }
     }
 
     spectrogramRefreshCounter++;
@@ -4268,64 +4318,19 @@ void Main_Widget::drawSpectrogram( int y ) //ok
            p.drawPoint(f2,spectrogramPos);
         }
 
-        if (specTimeMarkers) {
 
-            int step;
-            int sec = true;
-            //int span = ( ( ( ( spectrogramRefresh * FFT_TIMER ) * spectrogram->height() ) / 2 ) / 1000 );
-            int ms = spectrogramRefresh * specTimer;
-            if (ms < 40)
-              step = 2;
-            else if (ms < 100)
-              step = 5;
-            else if (ms < 200)
-              step = 10;
-            else if (ms < 300)
-              step = 15;
-            else if (ms < 600)
-              step = 30;
-            else if (ms < 1200)
-              step = 60;
-            else if (ms < 2400) {
-              step = 2;
-              sec = false;
-            } else if (ms < 6000) {
-              step = 5;
-              sec = false;
-            } else if ( ms < 12000) {
-              step = 10;
-              sec = false;
-            } else if ( ms < 18000) {
-              step = 15;
-              sec = false;
-            } else if ( ms < 36000) {
-              step = 30;
-              sec = false;
-            } else {
-              step = 60;
-              sec = false;
-            }
+        if (timeline == 1) {
+           QPen pen( Qt::DotLine );
+           pen.setColor( QColor( 255, 255, 255 ) );
+           p.setPen( pen );
+           p.drawLine(0, spectrogramPos, spectrumFrame->width(), spectrogramPos);
+           p.setPen( Qt::white );
+           if (spectrumScrolling == 0 || spectrumScrolling == 2 || spectrumScrolling == 5)
+              p.drawText(1, spectrogramPos + font1Metrics->ascent() + 1, QDateTime::currentDateTimeUtc().time().toString());
+           else
+              p.drawText(1, spectrogramPos - 1, QDateTime::currentDateTimeUtc().time().toString());
 
-            QTime t;
-            t.start();
-            if ( (t.second() % step == 0 && sec) || (t.minute() % step == 0 && t.second() % 60 == 0 && !sec) ) {
-                if (timeline == true) {
-                    QPen pen( Qt::DotLine );
-                    pen.setColor( QColor( 255, 255, 255 ) );
-                    p.setPen( pen );
-                    p.drawLine(0, spectrogramPos, spectrumFrame->width(), spectrogramPos);
-                    p.setPen( Qt::white );
-                    if (spectrumScrolling == 0 || spectrumScrolling == 2 || spectrumScrolling == 5)
-                      p.drawText(1, spectrogramPos + font1Metrics->ascent() + 1, QDateTime::currentDateTimeUtc().time().toString());
-                    else
-                      p.drawText(1, spectrogramPos - 1, QDateTime::currentDateTimeUtc().time().toString());
-
-                    timeline = false;
-                }
-
-            } else {
-                timeline = true;
-            }
+           timeline = 2;
         }
 
         if (spectrumScrolling == 2) { // linrad
@@ -4940,7 +4945,7 @@ void Main_Widget::plotSpectrum( int y )
             p.drawLine( x,
                         spectrumFrame->height() - 1,
                         x,
-                        qBound(0, (int)(spectrumFrame->height() - (spectrum_display[x] - specVShift) *vsScale), spectrumFrame->height() - 1) );
+                        qBound(-1, (int)(spectrumFrame->height() - (spectrum_display[x] - specVShift) *vsScale), spectrumFrame->height() ) );
         }
     }
 
@@ -4970,15 +4975,15 @@ void Main_Widget::plotSpectrum( int y )
         if (specLines) {
             // connect last and current points to avoid fill overwrite
             p.drawLine( x-1,
-                        qBound( 0, int ( spectrumFrame->height() - ( ( spectrum_display[x-1] - specVShift ) *vsScale ) ), spectrumFrame->height() - 1 ),
+                        qBound( -1, int ( spectrumFrame->height() - ( ( spectrum_display[x-1] - specVShift ) *vsScale ) ), spectrumFrame->height() ),
                         x,
-                        qBound( 0, int ( spectrumFrame->height() - ( ( spectrum_display[x] - specVShift ) *vsScale ) ), spectrumFrame->height() - 1 )
+                        qBound( -1, int ( spectrumFrame->height() - ( ( spectrum_display[x] - specVShift ) *vsScale ) ), spectrumFrame->height() )
                       );
 
         } else {
 
             p.drawPoint( x,
-                         qBound(0, int ( spectrumFrame->height() - ( ( spectrum_display[x] - specVShift ) *vsScale ) ), spectrumFrame->height() - 1) );
+                         qBound(-1, int ( spectrumFrame->height() - ( ( spectrum_display[x] - specVShift ) *vsScale ) ), spectrumFrame->height() ) );
 
         }
     }
@@ -6388,7 +6393,7 @@ int Main_Widget::rigGetPTT ( ) {
 void Main_Widget::updateSpectrogramRefresh ( int value )
 {
     spectrogramRefresh = value;
-    cfgSpectrogramRefreshLabel2->setText ( "t=" + QString::number(specTimer*spectrogramRefresh) + "ms" );
+    cfgSpectrogramRefreshLabel2->setText ( "(t=" + QString::number(double(float(specTimer*spectrogramRefresh)/1000.0f), 'f', 3) + "s)" );
 }
 
 void Main_Widget::updateSpectrogramNumAVG ( int value )
@@ -6993,8 +6998,8 @@ void Main_Widget::updateSpecTimer ( int value )
 {
    specTimer = 1000 / value;
    //printf("specTimer: %d\n", specTimer);
-   cfgSpecTimerLabel2->setText ( "t=" + QString::number(specTimer) + "ms" );
-   cfgSpectrogramRefreshLabel2->setText ( "t=" + QString::number(specTimer*spectrogramRefresh) + "ms" );
+   cfgSpecTimerLabel2->setText ( "(t=" + QString::number(double(float(specTimer)/1000.0f), 'f', 3) + "s)" );
+   cfgSpectrogramRefreshLabel2->setText ( "(t=" + QString::number(double(float(specTimer*spectrogramRefresh)/1000.0f), 'f', 3) + "s)" );
 }
 
 void Main_Widget::gaussian_kernel ( float *coeff, int r )

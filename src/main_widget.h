@@ -70,7 +70,7 @@
 #define RXMETERPTS (5)
 #define TXMETERPTS (9)
 
-#define SPECTRUM_HISTORY_SIZE (800)
+#define SPECTRUM_HISTORY_SIZE (512)
 
 #define ONE_OVER_F_GUARD_FREQUENCY (2000)  /*This is for the usbsoftrock which uses 
 only the upper half of the spectrum in order to omit the 1/f noise near DC */
