@@ -4226,6 +4226,7 @@ void Main_Widget::drawSpectrogram( int y ) //ok
     /////////////////////////////////////////////////// map scaled spectrum
     // process extra samples to avoid junk data at end of scaled spectrum due to float division casted to int
     int spectrogram_display[spectrogram->width()];
+    for ( x = spectrogram->width() - 10 ; x < spectrogram->width(); ++x ) spectrogram_display[x] = -999;
     for ( x = 0 ; x < spectrum_width ; ) {
 
         int sx = int (float (x) / hScale); // current scaled point
