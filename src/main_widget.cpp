@@ -2186,9 +2186,9 @@ void Main_Widget::init()
 #if CPU_POLL
     processorLoad();
 #endif
-    hScale = 1.0;
-    freqScaleABSMode = true; // absolute vs. relative scale
-    specOffset = 0;
+    //hScale = 1.0;
+    //freqScaleABSMode = true; // absolute vs. relative scale
+    //specOffset = 0;
 
     if ( useHamlib )
     {
@@ -2226,7 +2226,7 @@ void Main_Widget::init()
     setRX_gain ( );
 
     updateLayout();
-    centerFilter(0);
+    if (specOffset == -1) centerFilter(0);
 
 #if CPU_POLL
     // timers
@@ -2755,6 +2755,12 @@ void Main_Widget::loadSettings()
                 "/sdr-shell/freqScaleBandMarkers", false ).toBool();
     freqScaleDigiMarkers = settings->value(
                 "/sdr-shell/freqScaleDigiMarkers", false ).toBool();
+    freqScaleABSMode = settings->value(
+                "/sdr-shell/freqScaleABSMode", true ).toBool();
+    hScale = settings->value(
+                "/sdr-shell/hScale", 1.0 ).toDouble();
+    specOffset = settings->value(
+                "/sdr-shell/specOffset", -1 ).toInt();
 
     updateSpecHigh(specHigh);
 
@@ -3007,6 +3013,9 @@ void Main_Widget::saveSettings()
     settings->setValue ( "/sdr-shell/freqScaleBandMarkers", freqScaleBandMarkers );
     settings->setValue ( "/sdr-shell/freqScaleDigiMarkers", freqScaleDigiMarkers );
     settings->setValue ( "/sdr-shell/CW_tone", CW_tone );
+    settings->setValue ( "/sdr-shell/hScale", hScale );
+    settings->setValue ( "/sdr-shell/freqScaleABSMode", freqScaleABSMode );
+    settings->setValue ( "/sdr-shell/specOffset", specOffset );
     settings->setValue ( "/sdr-shell/spectrogramAvgAttack", spectrogramAvgAttack );
     settings->setValue ( "/sdr-shell/spectrogramAvgDecay", spectrogramAvgDecay );
     settings->setValue ( "/sdr-shell/spectrumAvgAttack", spectrumAvgAttack );
@@ -4650,6 +4659,7 @@ void Main_Widget::drawPassBandScale()
 
     QPainter p;
     p.begin( this );
+
     if (spectrumOnTop)
        p.translate( QPoint(0, spectrogramFrame->y() ));
     else
@@ -4858,7 +4868,7 @@ void Main_Widget::plotSpectrum( int y )
            //  specApertureHigh = specApertureLow + 60 - adj;
         //} else {
            if (autoSpecAperture == 2)
-             specApertureHigh = specApertureLow + 60;
+             specApertureHigh = specApertureLow + 50;
         //}
         setCA_label();
     }
@@ -6615,7 +6625,7 @@ void Main_Widget::initSpectrumPalette ( )
     apertureSize = 256;
     switch(spectrumPalette) {
     case 1: palette = &gqrxPalette; apertureAutoDelta = -12; break;
-    case 2: palette = &linradPalette; apertureAutoDelta = -4; break;
+    case 2: palette = &linradPalette; apertureAutoDelta = -6; break;
     case 3: palette = &winradPalette; apertureAutoDelta = 0; break;
     case 4: palette = &ghpsdrPalette; apertureAutoDelta = -2; break;
     case 5: palette = &spectranPalette; apertureAutoDelta = -2; break;
@@ -6636,8 +6646,8 @@ void Main_Widget::initSpectrumPalette ( )
     case 20: palette = &no3m1linPalette; apertureAutoDelta = -3; break;
     case 21: palette = &no3m1negPalette; apertureAutoDelta = -20; break;
     case 22: palette = &no3m1linnegPalette; apertureAutoDelta = -9; break;
-    case 23: palette = &linradPalette2; apertureAutoDelta = -4; break;
-    default: palette = &linradPalette; apertureAutoDelta = -4; break;
+    case 23: palette = &linradPalette2; apertureAutoDelta = -6; break;
+    default: palette = &linradPalette; apertureAutoDelta = -6; break;
     }
     for(int i = 0; i < 256; i++) {
         spec_b[i] = ((*palette)[i] >> 16) & 0x000000ff;
