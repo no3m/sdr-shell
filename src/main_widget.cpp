@@ -957,6 +957,7 @@ void Main_Widget::init()
     cfgPalette->insertItem(21, "NO3M Grey Neg" );
     cfgPalette->insertItem(22, "NO3M GreyLin Neg" );
     cfgPalette->insertItem(23, "Linrad2" );
+    cfgPalette->insertItem(24, "Linrad3" );
     cfgPalette->setGeometry ( 10, 20, 200, 20 );
     cfgPalette->setCurrentIndex(spectrumPalette);
     connect( cfgPalette, SIGNAL( activated ( int ) ), this, SLOT ( setSpectrumPalette ( int ) ) );
@@ -6647,6 +6648,7 @@ void Main_Widget::initSpectrumPalette ( )
     case 21: palette = &no3m1negPalette; apertureAutoDelta = -20; break;
     case 22: palette = &no3m1linnegPalette; apertureAutoDelta = -9; break;
     case 23: palette = &linradPalette2; apertureAutoDelta = -6; break;
+    case 24: palette = &linradPalette3; apertureAutoDelta = -6; break;
     default: palette = &linradPalette; apertureAutoDelta = -6; break;
     }
     for(int i = 0; i < 256; i++) {
