@@ -730,7 +730,7 @@ void Main_Widget::init()
     cfgSpecScaleLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     cfgSpecLowInput = new QSpinBox ( cfgSpecDisplay );
     cfgSpecLowInput->setGeometry ( 180, 160, 70, 20 );
-    cfgSpecLowInput->setMinimum ( -140 );
+    cfgSpecLowInput->setMinimum ( -150 );
     cfgSpecLowInput->setMaximum ( -80 );
     cfgSpecLowInput->setSingleStep( 5 );
     cfgSpecLowInput->setValue ( specLow );
@@ -738,7 +738,7 @@ void Main_Widget::init()
               this, SLOT ( updateSpecLow ( int ) ) );
     cfgSpecHighInput = new QSpinBox ( cfgSpecDisplay );
     cfgSpecHighInput->setGeometry ( 250, 160, 70, 20 );
-    cfgSpecHighInput->setMinimum ( -60 );
+    cfgSpecHighInput->setMinimum ( -80 );
     cfgSpecHighInput->setMaximum ( 0 );
     cfgSpecHighInput->setSingleStep( 5 );
     cfgSpecHighInput->setValue ( specHigh );
@@ -3406,6 +3406,22 @@ void Main_Widget::process_key ( int key )
         setCA_label();
         break;
     case 86: // v
+        if ( specApertureHigh < 120 )
+            specApertureHigh = specApertureHigh + 1;
+        setCA_label();
+        break;
+    case 65: // a
+        if ( specApertureLow > 1 )
+            specApertureLow = specApertureLow - 1;
+        if ( specApertureHigh > 0 &&
+             specApertureHigh > specApertureLow + 10 )
+            specApertureHigh = specApertureHigh - 1;
+        setCA_label();
+        break;
+    case 83: // s
+        if ( specApertureLow < 120 &&
+             specApertureLow < specApertureHigh - 10 )
+            specApertureLow = specApertureLow + 1;
         if ( specApertureHigh < 120 )
             specApertureHigh = specApertureHigh + 1;
         setCA_label();
