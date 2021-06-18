@@ -117,7 +117,7 @@ void RigCtlSocket::readyRead() {
 		// See dump_state in rigctl_parse.c for what this means.
 		out << "0\n"; // protocol version
 		out << RIG_MODEL_NETRIGCTL << "\n";
-		out << RIG_ITU_REGION2 << "\n";
+		//out << RIG_ITU_REGION2 << "\n"; // removed in hamlib 4?
                 // Not sure exactly what to send here but this seems to work
                 out << "150000.000000 30000000.000000  0x900af -1 -1 0x10 000003 0x3\n"; //("%"FREQFMT" %"FREQFMT" 0x%x %d %d 0x%x 0x%x\n",start,end,modes,low_power,high_power,vfo,ant)
                 out << "0 0 0 0 0 0 0\n";
